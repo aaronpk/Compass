@@ -17,4 +17,5 @@ $app->get('/', function () use ($app) {
 
 $app->post('/auth/start', 'IndieAuth@start');
 $app->get('/auth/callback', 'IndieAuth@callback');
+$app->get('/auth/github', 'IndieAuth@github');
 $app->get('/auth/logout', 'IndieAuth@logout');

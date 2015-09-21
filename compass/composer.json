@@ -9,7 +9,8 @@
         "laravel/lumen-framework": "5.1.*",
         "vlucas/phpdotenv": "~1.0",
         "p3k/quartz-db": "0.1.*",
-        "indieauth/client": "0.1.*"
+        "indieauth/client": "0.1.*",
+        "guzzlehttp/guzzle":"~6.0"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.0",

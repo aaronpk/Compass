@@ -12,5 +12,9 @@
 */
 
 $app->get('/', function () use ($app) {
-    return $app->welcome();
+  return view('index');
 });
+
+$app->post('/auth/start', 'IndieAuth@start');
+$app->get('/auth/callback', 'IndieAuth@callback');
+$app->get('/auth/logout', 'IndieAuth@logout');

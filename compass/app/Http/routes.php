@@ -11,11 +11,11 @@
 |
 */
 
-$app->get('/', function () use ($app) {
-  return view('index');
-});
+$app->get('/', 'Controller@index');
 
 $app->post('/auth/start', 'IndieAuth@start');
 $app->get('/auth/callback', 'IndieAuth@callback');
 $app->get('/auth/github', 'IndieAuth@github');
 $app->get('/auth/logout', 'IndieAuth@logout');
+
+$app->post('/database/create', 'Controller@createDatabase');

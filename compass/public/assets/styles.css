@@ -1,0 +1,67 @@
+
+.splash {
+  width: 500px;
+  margin: 60px auto 0 auto;
+  border-radius: 6px;
+}
+
+.splash .logo {
+  width: 200px;
+  margin: 0 auto;
+}
+
+.splash .login {
+  width: 300px;
+  margin: 0 auto;
+}
+.splash .login input {
+  width: 200px;
+}
+
+
+.corner-logo {
+  position: absolute;
+  top: 6px;
+  left: 20px;
+}
+.logged-in {
+  position: absolute;
+  top: 6px;
+  right: 20px;
+  font-size: 80%;
+}
+.logged-in span {
+  margin-left: 16px;
+}
+
+
+.dashboard {
+  max-width: 500px;
+  margin: 60px auto 0 auto;
+}
+
+.databases {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.databases li {
+  margin: 0;
+  padding: 0;
+  margin-bottom: 20px;
+}
+.databases .db {
+  font-size: 22px;
+}
+.databases a {
+  text-decoration: none;
+}
+
+.databases .error {
+  padding: 6px 10px;
+  color: #a94442;
+  background-color: #f2dede;
+  border: 1px #ebccd1 solid;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}

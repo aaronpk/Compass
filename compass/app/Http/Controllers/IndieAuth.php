@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use GuzzleHttp;
+use DB;
 
 class IndieAuth extends BaseController
 {
@@ -82,6 +83,7 @@ class IndieAuth extends BaseController
     if($token && array_key_exists('me', $token)) {
       session()->flush();
       session(['me' => $token['me']]);
+      $this->_userLoggedIn($token['me']);
     }
 
     return redirect('/');
@@ -135,7 +137,9 @@ class IndieAuth extends BaseController
             $data = json_decode($res->getBody());
             if(property_exists($data, 'login')) {
               session()->flush();
-              session(['me' => 'https://github.com/' . $data->login]);
+              $me = 'https://github.com/' . $data->login;
+              session(['me' => $me]);
+              $this->_userLoggedIn($me);
               return redirect('/');
             } else {
               return view('auth/error', ['error' => 'Login failed']);
@@ -155,6 +159,23 @@ class IndieAuth extends BaseController
       }
     } else {
       return view('auth/error', ['error' => 'Could not verify login from GitHub: ' . $res->getBody()]);
+    }
+  }
+
+  private function _userLoggedIn($url) {
+    // Create the user record if it doesn't exist yet
+    $user = DB::select('SELECT *
+      FROM users
+      WHERE url = ?', [$url]);
+    if(count($user)) {
+      DB::update('UPDATE users SET last_login = ?', [date('Y-m-d H:i:s')]);
+      session(['user_id' => $user[0]->id]);
+    } else {
+      DB::insert('INSERT INTO users (url, created_at, last_login) VALUES(?,?,?)', [$url, date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
+      $user = DB::select('SELECT *
+        FROM users
+        WHERE url = ?', [$url]);
+      session(['user_id' => $user[0]->id]);
     }
   }
 

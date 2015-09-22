@@ -2,15 +2,17 @@
 
 @section('content')
 
-@if(session('me'))
-  <p>{{ session('me') }}</p>
-  <p><a href="/auth/logout">sign out</a></p>
-@else
-Log in: 
+<div class="splash">
 
-<form action="/auth/start" method="post">
-  <input type="url" name="me">
-</form>
-@endif
+  <div class="logo"><img src="/assets/compass.svg" width="200"></div>
+
+  <form action="/auth/start" method="post" class="pure-form login">
+    <fieldset>
+      <input type="url" name="me">
+      <button type="submit" class="pure-button pure-button-primary">Sign in</button>
+    </fieldset>
+  </form>
+
+</div>
 
 @endsection

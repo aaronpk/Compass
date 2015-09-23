@@ -23,6 +23,9 @@ $app->get('/settings/{name:[A-Za-z0-9]+}', 'Controller@settings');
 $app->post('/settings/{name:[A-Za-z0-9]+}', 'Controller@updateSettings');
 $app->post('/database/create', 'Controller@createDatabase');
 
+$app->get('/api/query', 'Api@query');
+$app->post('/api/input', 'Api@input');
+
 // Event::listen('illuminate.query', function($query){
 //   Log::debug($query);
 // });

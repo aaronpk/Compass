@@ -51,7 +51,7 @@ jQuery(function($){
     var db_name = $("#database").data("name");
     var db_token = $("#database").data("token");
 
-    $.get("/api/query?map="+db_name+"&date="+$(this).data('date')+"&tz=America/Los_Angeles&token="+db_token, function(data){
+    $.get("/api/query?date="+$(this).data('date')+"&tz=America/Los_Angeles&token="+db_token, function(data){
       visible_data.push(data);
       visible_layers.push(L.geoJson(data, {
         style: geojsonLineOptions

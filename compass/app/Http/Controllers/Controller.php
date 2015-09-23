@@ -135,9 +135,9 @@ class Controller extends BaseController
         DB::table('database_users')->where('database_id','=',$db->id)->where('user_id','=',$user->id)->delete();
       }
 
-      return json_encode([
+      return response(json_encode([
         'result' => 'ok'
-      ]);
+      ]))->header('Content-Type', 'application/json');
 
     } else if($request->input('add_user')) {
       // Find user if it exists already

@@ -2,12 +2,7 @@
 
 @section('content')
 
-<div class="corner-logo"><img src="/assets/compass.svg" height="40"/></div>
-
-<div class="logged-in">
-  <span>{{ $displayURL }}</span>
-  <span><a href="/auth/logout">sign out</a></span>
-</div>
+@include('partials/logged-in')
 
 <div class="dashboard">
 
@@ -17,11 +12,11 @@
     <li class="db"><a href="/map/{{ $database->name }}">{{ $database->name }}</a></li>
     @endforeach
     <li>
-      <a href="javascript:$('.databases .create').removeClass('hidden');$('.create-link').addClass('hidden');" class="pure-button create-link {{ session('error') ? 'hidden' : '' }}">create database</a>
-      @if(session('error'))
-        <div class="error">{{ session('error') }}</div>
+      <a href="javascript:$('.databases .create').removeClass('hidden');$('.create-link').addClass('hidden');" class="pure-button create-link {{ session('create-error') ? 'hidden' : '' }}">create database</a>
+      @if(session('create-error'))
+        <div class="error">{{ session('create-error') }}</div>
       @endif
-      <span class="create {{ session('error') ? '' : 'hidden' }}">
+      <span class="create {{ session('create-error') ? '' : 'hidden' }}">
         <form action="/database/create" method="post" class="pure-form">
           <input type="text" name="name" value="{{ session('database-name') }}">
           <button type="submit" class="pure-button pure-button-primary">Create</button>

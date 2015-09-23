@@ -18,4 +18,6 @@ $app->get('/auth/callback', 'IndieAuth@callback');
 $app->get('/auth/github', 'IndieAuth@github');
 $app->get('/auth/logout', 'IndieAuth@logout');
 
+$app->get('/map/{name:[A-Za-z0-9]+}', 'Controller@map');
+$app->get('/settings/{name:[A-Za-z0-9]+}', 'Controller@settings');
 $app->post('/database/create', 'Controller@createDatabase');

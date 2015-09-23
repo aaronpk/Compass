@@ -77,13 +77,13 @@ class Controller extends BaseController
       return redirect('/');
 
     // Verify this user has access to the database
-    $check = DB::select('SELECT * 
-      FROM `databases` d
-      JOIN database_users u ON d.id = u.database_id
-      WHERE u.user_id = ? AND d.name = ?', [session('user_id'), $name]);
-    if(count($check) == 0) {
+    $db = DB::table('databases')
+      ->where('created_by','=',session('user_id'))
+      ->where('name','=',$name)
+      ->first();
+    if(!$db)
       return redirect('/');
-    }
+
 
 
 
@@ -94,17 +94,73 @@ class Controller extends BaseController
       return redirect('/');
 
     // Only the person that created the database can modify it
-    $db = DB::select('SELECT * 
-      FROM `databases`
-      WHERE created_by = ? AND name = ?', [session('user_id'), $name]);
-    if(count($db) == 0) {
+    $db = DB::table('databases')
+      ->where('created_by','=',session('user_id'))
+      ->where('name','=',$name)
+      ->first();
+    if(!$db)
       return redirect('/');
-    }
+
+    $users = DB::select('SELECT u.*
+      FROM users u
+      JOIN database_users d ON u.id = d.user_id
+      WHERE d.database_id = ?
+      ORDER BY u.url', [$db->id]);
 
     return view('settings', [
       'displayURL' => self::displayURL(),
-      'database' => $db[0]
+      'database' => $db,
+      'users' => $users
     ]);
+  }
+
+  public function updateSettings(Request $request, $name) {
+    if(!session('user_id'))
+      return redirect('/');
+
+    // Only the person that created the database can modify it
+    $db = DB::table('databases')
+      ->where('created_by','=',session('user_id'))
+      ->where('name','=',$name)
+      ->first();
+    if(!$db)
+      return redirect('/');
+    
+    if($request->input('remove_user')) {
+
+      $user = DB::table('users')->where('url','=',$request->input('remove_user'))->first();
+      if($user) {
+        DB::table('database_users')->where('database_id','=',$db->id)->where('user_id','=',$user->id)->delete();
+      }
+
+      return json_encode([
+        'result' => 'ok'
+      ]);
+
+    } else if($request->input('add_user')) {
+      // Find user if it exists already
+      $user = DB::table('users')->where('url','=',$request->input('add_user'))->first();
+      if($user) {
+        $user_id = $user->id;
+      } else {
+        $user_id = DB::table('users')->insertGetId([
+          'url' => $request->input('add_user'),
+          'created_at' => date('Y-m-d H:i:s')
+        ]);
+      }
+
+      // Add access to the database
+      $exists = DB::table('database_users')->where('database_id','=',$db->id)->where('user_id','=',$user_id)->first();
+      if(!$exists) {
+        DB::table('database_users')->insert([
+          'database_id' => $db->id,
+          'user_id' => $user_id,
+          'created_at' => date('Y-m-d H:i:s')
+        ]);
+      }
+
+      return redirect('/settings/'.$db->name);
+    }
   }
 
 }

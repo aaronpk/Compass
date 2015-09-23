@@ -164,18 +164,16 @@ class IndieAuth extends BaseController
 
   private function _userLoggedIn($url) {
     // Create the user record if it doesn't exist yet
-    $user = DB::select('SELECT *
-      FROM users
-      WHERE url = ?', [$url]);
-    if(count($user)) {
+    $user = DB::table('users')->where('url','=',$url)->first();
+    if($user) {
       DB::update('UPDATE users SET last_login = ?', [date('Y-m-d H:i:s')]);
-      session(['user_id' => $user[0]->id]);
+      session(['user_id' => $user->id]);
     } else {
       DB::insert('INSERT INTO users (url, created_at, last_login) VALUES(?,?,?)', [$url, date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
       $user = DB::select('SELECT *
         FROM users
         WHERE url = ?', [$url]);
-      session(['user_id' => $user[0]->id]);
+      session(['user_id' => $user->id]);
     }
   }
 

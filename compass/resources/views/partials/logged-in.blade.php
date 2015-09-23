@@ -1,4 +1,4 @@
-<div class="corner-logo"><img src="/assets/compass.svg" height="40"/></div>
+<div class="corner-logo"><a href="/"><img src="/assets/compass.svg" height="40"/></a></div>
 
 <div class="logged-in">
   <span>{{ $displayURL }}</span>

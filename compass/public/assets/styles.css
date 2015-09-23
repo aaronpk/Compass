@@ -38,6 +38,7 @@
 .dashboard {
   max-width: 500px;
   margin: 60px auto 0 auto;
+  padding: 0 10px;
 }
 
 .databases {
@@ -64,4 +65,25 @@
   border: 1px #ebccd1 solid;
   border-radius: 4px;
   margin-bottom: 4px;
+}
+
+
+.users {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.users li {
+  margin: 0;
+  padding: 0;
+  margin-bottom: 10px;
+  position: relative;
+}
+.users .remove-user {
+  left: -18px;
+  margin-top: -6px;
+  text-decoration: none;
+  font-size: 22px;
+  position: absolute;
+  padding-right: 12px;
 }

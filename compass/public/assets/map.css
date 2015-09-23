@@ -2,6 +2,11 @@ html, body, #map {
   height: 100%;
 }
 
+.leaflet-top .leaflet-control-zoom {
+  margin-top: 60px;
+  margin-left: 26px;
+}
+
 table.calendar {
   width: 100%;
 }

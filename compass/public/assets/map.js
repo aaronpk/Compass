@@ -5,7 +5,7 @@ layer.maxZoom = 24;
 layer.maxNativeZoom = 24;
 layer.addTo(map);
 
-new L.Control.Zoom({ position: 'bottomleft' }).addTo(map);
+new L.Control.Zoom({ position: 'topleft' }).addTo(map);
 
 var geojsonLineOptions = {
   color: "#0033ff",

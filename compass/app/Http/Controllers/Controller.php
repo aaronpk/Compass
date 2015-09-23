@@ -78,7 +78,10 @@ class Controller extends BaseController
 
     // Verify this user has access to the database
     $db = DB::table('databases')
-      ->where('created_by','=',session('user_id'))
+      ->join('database_users', function($join){
+        $join->on('databases.id','=','database_users.database_id');
+      })
+      ->where('user_id','=',session('user_id'))
       ->where('name','=',$name)
       ->first();
     if(!$db)

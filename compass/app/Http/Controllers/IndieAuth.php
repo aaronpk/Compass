@@ -169,11 +169,12 @@ class IndieAuth extends BaseController
       DB::update('UPDATE users SET last_login = ?', [date('Y-m-d H:i:s')]);
       session(['user_id' => $user->id]);
     } else {
-      DB::insert('INSERT INTO users (url, created_at, last_login) VALUES(?,?,?)', [$url, date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
-      $user = DB::select('SELECT *
-        FROM users
-        WHERE url = ?', [$url]);
-      session(['user_id' => $user->id]);
+      $user_id = DB::table('users')->insertGetId([
+        'url' => $request->input('add_user'),
+        'created_at' => date('Y-m-d H:i:s'),
+        'last_login' => date('Y-m-d H:i:s'),
+      ]);
+      session(['user_id' => $user_id]);
     }
   }
 

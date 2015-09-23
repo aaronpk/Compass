@@ -85,8 +85,10 @@ class Controller extends BaseController
       return redirect('/');
 
 
-
-
+    return view('map', [
+      'displayURL' => self::displayURL(),
+      'database' => $db,
+    ]);
   }
 
   public function settings(Request $request, $name) {

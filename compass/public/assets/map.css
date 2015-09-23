@@ -1,0 +1,23 @@
+html, body, #map {
+  height: 100%;
+}
+
+table.calendar {
+  width: 100%;
+}
+.calendar th, .calendar td {
+  text-align: center;
+  width: 14%;
+}
+.calendar td a {
+  display: block;
+  text-decoration: none;
+  color: black;
+}
+.calendar td a:hover, .calendar td a.selected:hover {
+  background: #999;
+  color: white;
+}
+.calendar td a.selected {
+  background: #6699ff;
+}

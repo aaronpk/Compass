@@ -2,5 +2,5 @@
 
 <div class="logged-in">
   <span>{{ $displayURL }}</span>
-  <span><a href="/auth/logout">sign out</a></span>
+  <span class="logout"><a href="/auth/logout">sign out</a></span>
 </div>

@@ -170,7 +170,7 @@ class IndieAuth extends BaseController
       session(['user_id' => $user->id]);
     } else {
       $user_id = DB::table('users')->insertGetId([
-        'url' => $request->input('add_user'),
+        'url' => $url,
         'created_at' => date('Y-m-d H:i:s'),
         'last_login' => date('Y-m-d H:i:s'),
       ]);

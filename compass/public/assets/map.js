@@ -51,32 +51,33 @@ jQuery(function($){
     var db_name = $("#database").data("name");
     var db_token = $("#database").data("token");
 
-    $.get("/api/query?date="+$(this).data('date')+"&tz=America/Los_Angeles&token="+db_token, function(data){
-      visible_data.push(data);
-      visible_layers.push(L.geoJson(data, {
-        style: geojsonLineOptions
-      }).addTo(map));
+    $.get("/api/query?format=linestring&date="+$(this).data('date')+"&tz=America/Los_Angeles&token="+db_token, function(data){
+      if(data.coordinates && data.coordinates.length > 0) {
+        visible_data.push(data);
+        visible_layers.push(L.geoJson(data, {
+          style: geojsonLineOptions
+        }).addTo(map));
 
-      // If the new layer is completely outside the current view, zoom the map to fit all layers
-      var layer = visible_layers[visible_layers.length - 1];
-      var is_outside = false;
-      if(!map.getBounds().intersects(layer.getBounds())) {
-        is_outside = true;
-      }
-
-      if(is_outside) {
-        var full_bounds;
-        for(var i in visible_layers) {
-          layer = visible_layers[i];
-          if(full_bounds) {
-            full_bounds.extend(layer.getBounds());
-          } else {
-            full_bounds = layer.getBounds();
-          }
+        // If the new layer is completely outside the current view, zoom the map to fit all layers
+        var layer = visible_layers[visible_layers.length - 1];
+        var is_outside = false;
+        if(!map.getBounds().intersects(layer.getBounds())) {
+          is_outside = true;
         }
-        map.fitBounds(full_bounds);
-      }
 
+        if(is_outside) {
+          var full_bounds;
+          for(var i in visible_layers) {
+            layer = visible_layers[i];
+            if(full_bounds) {
+              full_bounds.extend(layer.getBounds());
+            } else {
+              full_bounds = layer.getBounds();
+            }
+          }
+          map.fitBounds(full_bounds);
+        }
+      }
     });
 
     return false;

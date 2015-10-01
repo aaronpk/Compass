@@ -12,6 +12,18 @@ use DateTime, DateTimeZone;
 class Api extends BaseController
 {
 
+  public function account(Request $request) {
+    $token = $request->input('token');
+    if(!$token)
+      return response(json_encode(['error' => 'no token provided']))->header('Content-Type', 'application/json');
+
+    $db = DB::table('databases')->where('write_token','=',$token)->first();
+    if(!$db)
+      return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
+    
+    return response(json_encode(['name' => $db->name]))->header('Content-Type', 'application/json');    
+  }
+
   public function query(Request $request) {
     $token = $request->input('token');
     if(!$token)
@@ -77,14 +89,30 @@ class Api extends BaseController
 
     $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'w');
 
+    $num = 0;
     foreach($request->input('locations') as $loc) {
       if(array_key_exists('properties', $loc) && array_key_exists('timestamp', $loc['properties'])) {
-        $date = DateTime::createFromFormat('U', $loc['properties']['timestamp']);
-        $line = $qz->add($date, $loc);
+        try {
+          if(preg_match('/^\d+\.\d+$/', $loc['properties']['timestamp']))
+            $date = DateTime::createFromFormat('U.u', $loc['properties']['timestamp']);
+          elseif(preg_match('/^\d+$/', $loc['properties']['timestamp']))
+            $date = DateTime::createFromFormat('U', $loc['properties']['timestamp']);
+          else
+            $date = new DateTime($loc['properties']['timestamp']);
+
+          if($date) {
+            $num++;
+            $qz->add($date, $loc);
+          } else {
+            Log::warning('Received invalid date: ' . $loc['properties']['timestamp']);
+          }
+        } catch(Exception $e) {
+            Log::warning('Received invalid date: ' . $loc['properties']['timestamp']);
+        }
       }
     }
 
-    return response(json_encode(['result' => 'ok']))->header('Content-Type', 'application/json');
+    return response(json_encode(['result' => 'ok', 'saved' => $num]))->header('Content-Type', 'application/json');
   }
 
 }

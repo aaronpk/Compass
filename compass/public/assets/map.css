@@ -1,16 +1,15 @@
-html, body, #map {
+html, body {
   height: 100%;
 }
 
-.leaflet-top .leaflet-control-zoom {
-  margin-top: 60px;
-  margin-left: 26px;
+#map {
+  height: calc(100% - 120px);
 }
 
 #calendar {
   z-index: 100;
   width: 200px;
-  height: calc(100% - 40px);
+  height: calc(100% - 160px);
   position: absolute;
   top: 10px;
   right: 10px;
@@ -27,7 +26,7 @@ html, body, #map {
 }
 #calendar .scroll {
   overflow: scroll;      
-  height: calc(100%);
+  height: 100%;
 }
 
 table.calendar {
@@ -49,4 +48,15 @@ table.calendar {
 }
 .calendar td a.selected {
   background: #6699ff;
+}
+
+#battery-chart {
+  width: 100%;
+}
+
+
+/* Move the map zoom controls away from the Compass logo */
+.leaflet-top .leaflet-control-zoom {
+  margin-top: 60px;
+  margin-left: 26px;
 }

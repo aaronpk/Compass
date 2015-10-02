@@ -17,6 +17,7 @@
 
     <script src="/assets/leaflet-0.7.3/leaflet.js"></script>
     <script src="/assets/leaflet-0.7.3/esri-leaflet.js"></script>
+    <script src="/assets/highcharts/js/highcharts.js"></script>
     <script src="/assets/map.js"></script>
   </body>
 </html>

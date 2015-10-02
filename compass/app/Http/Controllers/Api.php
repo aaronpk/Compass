@@ -50,17 +50,20 @@ class Api extends BaseController
     $results = $qz->queryRange($start, $end);
 
     $locations = [];
+    $properties = [];
 
     foreach($results as $id=>$record) {
       $record->date->format('U.u');
       $locations[] = $record->data;
+      $properties[] = $record->data->properties;
     }
 
     if($request->input('format') == 'linestring') {
 
       $response = array(
         'type' => 'LineString',
-        'coordinates' => array()
+        'coordinates' => array(),
+        'properties' => $properties
       );
       foreach($locations as $loc) {
         $response['coordinates'][] = $loc->geometry->coordinates;

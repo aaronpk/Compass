@@ -31,12 +31,10 @@
 </div>
 
 <div id="map"></div>
+<div id="graphs">
+  <div id="battery-chart" width="800" height="80"></div>
+</div>
 
 <div id="database" data-name="{{ $database->name }}" data-token="{{ $database->read_token }}"></div>
 
-<script>
-jQuery(function($){
-  $(".calendar a[data-date='{{ date('Y-m-d') }}']").focus().click();
-});
-</script>
 @endsection

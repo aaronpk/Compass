@@ -3,13 +3,13 @@ html, body {
 }
 
 #map {
-  height: calc(100% - 120px);
+  height: calc(100% - 160px);
 }
 
 #calendar {
   z-index: 100;
   width: 200px;
-  height: calc(100% - 160px);
+  height: calc(100% - 180px);
   position: absolute;
   top: 10px;
   right: 10px;
@@ -50,7 +50,7 @@ table.calendar {
   background: #6699ff;
 }
 
-#battery-chart {
+#battery-chart, #events-chart {
   width: 100%;
 }
 

@@ -35,12 +35,13 @@ class Api extends BaseController
 
     $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'r');
 
+    if($request->input('tz')) {
+      $tz = $request->input('tz');
+    } else {
+      $tz = 'America/Los_Angeles';
+    }
+
     if($date=$request->input('date')) {
-      if($request->input('tz')) {
-        $tz = $request->input('tz');
-      } else {
-        $tz = 'America/Los_Angeles';
-      }
       $start = DateTime::createFromFormat('Y-m-d H:i:s', $date.' 00:00:00', new DateTimeZone($tz));
       $end = DateTime::createFromFormat('Y-m-d H:i:s', $date.' 23:59:59', new DateTimeZone($tz));
     } else {
@@ -51,23 +52,44 @@ class Api extends BaseController
 
     $locations = [];
     $properties = [];
+    $events = [];
 
     foreach($results as $id=>$record) {
-      $record->date->format('U.u');
-      $locations[] = $record->data;
-      $properties[] = $record->data->properties;
+      if(property_exists($record->data->properties, 'action')) {
+        $rec = $record->data;
+        $date = $record->date;
+        $rec->properties->unixtime = (int)$date->format('U');
+        $events[] = $rec;
+      } else {
+        #$record->date->format('U.u');
+        $locations[] = $record->data;
+        $props = $record->data->properties;
+        $date = $record->date;
+        $date->setTimeZone(new DateTimeZone($tz));
+        $props->timestamp = $date->format('c');
+        $props->unixtime = (int)$date->format('U');
+        $properties[] = $props;
+      }
     }
 
     if($request->input('format') == 'linestring') {
 
-      $response = array(
+      $linestring = array(
         'type' => 'LineString',
         'coordinates' => array(),
         'properties' => $properties
       );
       foreach($locations as $loc) {
-        $response['coordinates'][] = $loc->geometry->coordinates;
+        if(property_exists($loc, 'geometry'))
+          $linestring['coordinates'][] = $loc->geometry->coordinates;
+        else
+          $linestring['coordinates'][] = null;
       }
+      
+      $response = array(
+        'linestring' => $linestring,
+        'events' => $events
+      );
 
     } else {
       $response = [

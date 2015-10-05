@@ -1,76 +1,3 @@
-Array.prototype.clean = function(deleteValue) {
-  for (var i = 0; i < this.length; i++) {
-    if (this[i] == deleteValue) {         
-      this.splice(i, 1);
-      i--;
-    }
-  }
-  return this;
-};
-
-/*
-  Array.findRanges
-  
-  Turns this:
-  
-  ["a","a","a","b","b","c","c","c","c","c","a","a","c"]
-  
-  into this:
-  
-  {
-    "a":[
-      {
-        "from":0,
-        "to":2
-      },
-      {
-        "from":10,
-        "to":11
-      }
-    ],
-    "b":[
-      {
-        "from":3,
-        "to":4
-      }
-    ],
-    "c":[
-      {
-        "from":5,
-        "to":9
-      },
-      {
-        "from":12,
-        "to":12
-      }
-    ]
-  }
-
-*/
-
-Array.prototype.findRanges = function() {
-  var buckets = {};
-  for(var i = 0; i < this.length; i++) {
-    if(!(this[i] in buckets)) {
-      buckets[this[i]] = [{
-        from: i,
-        to: i
-      }]
-    } else {
-      var last = buckets[this[i]][ buckets[this[i]].length-1 ];
-      if(i == last.to + 1) {
-        last.to = i;
-      } else {
-        buckets[this[i]].push({
-          from: i,
-          to: i
-        })
-      }
-    }
-  }
-  return buckets;
-};
-
 var map = L.map('map', { zoomControl: false }).setView([45.516, -122.660], 14, null, null, 24);
 
 var layer = L.esri.basemapLayer("Topographic");
@@ -92,14 +19,6 @@ var highlightedMarker;
 var animatedMarker;
 var timers = [];
 
-var batteryChart;
-
-/*
-Chart.defaults.global.animation = false;
-Chart.defaults.global.responsive = true;
-*/
-
-  
 function resetAnimation() {
   if(animatedMarker) {
     map.removeLayer(animatedMarker);
@@ -133,8 +52,20 @@ jQuery(function($){
     var db_name = $("#database").data("name");
     var db_token = $("#database").data("token");
 
-    $.get("/api/query?format=linestring&date="+$(this).data('date')+"&tz=America/Los_Angeles&token="+db_token, function(data){
+    $.get("/api/query?format=linestring&date="+$(this).data('date')+"&tz=America/Los_Angeles&token="+db_token, function(response){
+      var data = response.linestring;
+      
       if(data.coordinates && data.coordinates.length > 0) {
+        // For any null coordinates, fill it in with the previous location
+        var lastCoord = null;
+        for(var i in data.coordinates) {
+          if(data.coordinates[i] == null) {
+            data.coordinates[i] = lastCoord;
+          } else {
+            lastCoord = data.coordinates[i];
+          }
+        }
+        
         visible_data.push(data);
         visible_layers.push(L.geoJson(data, {
           style: geojsonLineOptions
@@ -159,117 +90,14 @@ jQuery(function($){
           }
           map.fitBounds(full_bounds);
         }
-        
-        var batteryStateBands = [];
-        var buckets = data.properties.map(function(d){return d.battery_state}).findRanges();
 
-        for(var i in buckets) {
-          for(var j=0; j<buckets[i].length; j++) {
-            switch(i) {
-              case "charging":
-                buckets[i][j].color = "rgba(193,236,171,0.4)";
-                break;
-              case "full":
-                buckets[i][j].color = "rgba(171,204,236,0.4)";
-                break;
-              case "unplugged":
-                buckets[i][j].color = "rgba(236,178,171,0.4)";
-                break;
-              default:
-                buckets[i][j].color = "#ffffff";
-                break;
-            }
-            batteryStateBands.push(buckets[i][j]);
-          }
-        }
-
-        $('#battery-chart').highcharts({
-          title: {
-            text: '',
-            style: {
-              display: 'none'
-            }
-          },
-          subtitle: {
-            text: '',
-            style: {
-              display: 'none'
-            }
-          },
-          chart: {
-            height: 80
-          },
-          legend: {
-            enabled: false
-          },
-          xAxis: {
-            categories: data.properties.map(function(d){
-              if(isNaN(d.timestamp)) {
-                return d.timestamp.substr(11,5);
-              } else {
-                var date = new Date(d.timestamp * 1000);
-                return date.getHours() + ":" + ("0" + date.getMinutes()).substr(-2);
-              }
-            }),
-            plotBands: batteryStateBands,
-            labels: {
-              style: {
-                fontSize: '8px'
-              }
-            }
-          },
-          yAxis: {
-            title: {
-              text: ''
-            },
-            plotLines: [{
-              value: 0,
-              width: 1,
-              color: '#808080'
-            }],
-            max: 100,
-            min: 0
-          },
-          series: [{
-            name: 'Battery',
-            data: data.properties.map(function(d,i){
-              return {
-                x: i, 
-                y: ('battery_level' in d ? d.battery_level * 100 : -1), 
-                state: d.battery_state
-              }
-            }),
-            tooltip: {
-              animation: true,
-              pointFormat: '{point.state}<br><b>{point.y}</b>',
-              valueSuffix: '%'
-            },
-            turboThreshold: 0
-          }]
-        });
-        $('#battery-chart').mousemove(function(event){
-          var chart = $('#battery-chart').highcharts();
-          var percent = (event.offsetX - chart.plotLeft) / chart.plotWidth;
-          if(percent >= 0 && percent <= 1) {
-            var coord = pointFromGeoJSON(visible_data[0].coordinates[Math.round(percent * visible_data[0].coordinates.length)]);
-            if(!highlightedMarker) {
-              highlightedMarker = L.marker(coord).addTo(map);
-            } else {
-              highlightedMarker.setLatLng(coord);
-            }
-          }
-        });
-                
+        showBatteryGraph(response);
       }
     });
 
     return false;
   });
-
-  function pointFromGeoJSON(geo) {
-    return L.latLng(geo[1], geo[0])
-  }
-
+  
   $('#btn-play').click(function(){
     console.log(visible_data[0].coordinates[0]);
     var point = pointFromGeoJSON(visible_data[0].coordinates[0]);
@@ -295,8 +123,22 @@ jQuery(function($){
 
   $(".calendar a[data-date='"+((new Date()).toISOString().slice(0,10))+"']").focus().click();
 
-  ////////////////////
-
-  //batteryChart = new Chart(document.getElementById("battery-chart").getContext("2d"));
-
 });
+
+function moveMarkerToPosition(point) {
+  if(point.location) {
+    var coord = pointFromGeoJSON(point.location);
+    if(coord) {
+      if(!highlightedMarker) {
+        highlightedMarker = L.marker(coord).addTo(map);
+      } else {
+        highlightedMarker.setLatLng(coord);
+      }
+    }
+  }
+}
+
+function pointFromGeoJSON(geo) {
+  return L.latLng(geo[1], geo[0])
+}
+

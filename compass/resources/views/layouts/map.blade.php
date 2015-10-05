@@ -18,6 +18,10 @@
     <script src="/assets/leaflet-0.7.3/leaflet.js"></script>
     <script src="/assets/leaflet-0.7.3/esri-leaflet.js"></script>
     <script src="/assets/highcharts/js/highcharts.js"></script>
+    <script src="/assets/extensions.js"></script>
+    <script src="/assets/speed.js"></script>
+    <script src="/assets/events.js"></script>
+    <script src="/assets/battery.js"></script>
     <script src="/assets/map.js"></script>
   </body>
 </html>

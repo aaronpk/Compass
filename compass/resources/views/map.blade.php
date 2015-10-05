@@ -32,7 +32,7 @@
 
 <div id="map"></div>
 <div id="graphs">
-  <div id="battery-chart" width="800" height="80"></div>
+  <div id="battery-chart" width="800" height="160"></div>
 </div>
 
 <div id="database" data-name="{{ $database->name }}" data-token="{{ $database->read_token }}"></div>

@@ -7,19 +7,25 @@ function collectEventSeries(data) {
       name: "Visit",
       type: 'scatter',
       color: '#8f799e',
-      y: 10,
+      y: 80,
       data: []
     },
     "paused_location_updates": {
       name: "Paused Location Updates",
       color: '#a0876e',
-      y: 20,
+      y: 70,
       data: []
     },
     "resumed_location_updates": {
       name: "Resumed Location Updates",
       color: '#819e73',
-      y: 30,
+      y: 60,
+      data: []
+    },
+    "exited_pause_region": {
+      name: "Exited Pause Region",
+      color: '#819e73',
+      y: 50,
       data: []
     },
     "did_finish_deferred_updates": {
@@ -31,19 +37,19 @@ function collectEventSeries(data) {
     "did_enter_background": {
       name: "Entered Background",
       color: '#799b9e',
-      y: 50,
+      y: 30,
       data: []
     },
     "will_resign_active": {
       name: "Will Resign Active",
       color: '#737f9e',
-      y: 60,
+      y: 20,
       data: []
     },
     "will_terminate": {
       name: "Will Terminate",
       color: '#9e7773',
-      y: 70,
+      y: 10,
       data: []
     }
   };
@@ -52,7 +58,7 @@ function collectEventSeries(data) {
     series[events[i].properties.action].data.push({
       x: new Date(events[i].properties.unixtime*1000), 
       y: series[events[i].properties.action].y,
-      location: events[i].geometry.coordinates
+      location: (events[i].geometry ? events[i].geometry.coordinates : null)
     });
   }
   

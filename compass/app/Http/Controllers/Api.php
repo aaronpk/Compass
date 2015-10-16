@@ -115,29 +115,42 @@ class Api extends BaseController
     $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'w');
 
     $num = 0;
+    $trips = 0;
     foreach($request->input('locations') as $loc) {
-      if(array_key_exists('properties', $loc) && array_key_exists('timestamp', $loc['properties'])) {
-        try {
-          if(preg_match('/^\d+\.\d+$/', $loc['properties']['timestamp']))
-            $date = DateTime::createFromFormat('U.u', $loc['properties']['timestamp']);
-          elseif(preg_match('/^\d+$/', $loc['properties']['timestamp']))
-            $date = DateTime::createFromFormat('U', $loc['properties']['timestamp']);
-          else
-            $date = new DateTime($loc['properties']['timestamp']);
-
-          if($date) {
-            $num++;
-            $qz->add($date, $loc);
-          } else {
-            Log::warning('Received invalid date: ' . $loc['properties']['timestamp']);
+      if(array_key_exists('properties', $loc)) {
+        if(array_key_exists('type', $loc['properties']) && $loc['properties']['type'] == 'trip') {
+          try {
+            
+            
+            
+            $trips++;
+            
+          } catch(Exception $e) {
+            Log::warning('Received invalid trip');
+          }         
+        } elseif(array_key_exists('timestamp', $loc['properties'])) {
+          try {
+            if(preg_match('/^\d+\.\d+$/', $loc['properties']['timestamp']))
+              $date = DateTime::createFromFormat('U.u', $loc['properties']['timestamp']);
+            elseif(preg_match('/^\d+$/', $loc['properties']['timestamp']))
+              $date = DateTime::createFromFormat('U', $loc['properties']['timestamp']);
+            else
+              $date = new DateTime($loc['properties']['timestamp']);
+  
+            if($date) {
+              $num++;
+              $qz->add($date, $loc);
+            } else {
+              Log::warning('Received invalid date: ' . $loc['properties']['timestamp']);
+            }
+          } catch(Exception $e) {
+              Log::warning('Received invalid date: ' . $loc['properties']['timestamp']);
           }
-        } catch(Exception $e) {
-            Log::warning('Received invalid date: ' . $loc['properties']['timestamp']);
         }
       }
     }
 
-    return response(json_encode(['result' => 'ok', 'saved' => $num]))->header('Content-Type', 'application/json');
+    return response(json_encode(['result' => 'ok', 'saved' => $num, 'trips' => $trips]))->header('Content-Type', 'application/json');
   }
 
 }

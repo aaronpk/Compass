@@ -8,6 +8,7 @@ use DB;
 use Quartz;
 use Log;
 use DateTime, DateTimeZone;
+use App\Jobs\TripComplete;
 
 class Api extends BaseController
 {
@@ -121,8 +122,8 @@ class Api extends BaseController
         if(array_key_exists('type', $loc['properties']) && $loc['properties']['type'] == 'trip') {
           try {
             
-            
-            
+            $this->dispatch(new TripComplete($db->id, $loc));
+
             $trips++;
             
           } catch(Exception $e) {

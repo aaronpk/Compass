@@ -21,8 +21,8 @@ class Api extends BaseController
     $db = DB::table('databases')->where('write_token','=',$token)->first();
     if(!$db)
       return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
-    
-    return response(json_encode(['name' => $db->name]))->header('Content-Type', 'application/json');    
+
+    return response(json_encode(['name' => $db->name]))->header('Content-Type', 'application/json');
   }
 
   public function query(Request $request) {
@@ -86,7 +86,7 @@ class Api extends BaseController
         else
           $linestring['coordinates'][] = null;
       }
-      
+
       $response = array(
         'linestring' => $linestring,
         'events' => $events
@@ -98,7 +98,7 @@ class Api extends BaseController
       ];
     }
 
-    return response(json_encode($response))->header('Content-Type', 'application/json');    
+    return response(json_encode($response))->header('Content-Type', 'application/json');
   }
 
   public function input(Request $request) {
@@ -119,17 +119,7 @@ class Api extends BaseController
     $trips = 0;
     foreach($request->input('locations') as $loc) {
       if(array_key_exists('properties', $loc)) {
-        if(array_key_exists('type', $loc['properties']) && $loc['properties']['type'] == 'trip') {
-          try {
-            
-            $this->dispatch(new TripComplete($db->id, $loc));
-
-            $trips++;
-            
-          } catch(Exception $e) {
-            Log::warning('Received invalid trip');
-          }         
-        } elseif(array_key_exists('timestamp', $loc['properties'])) {
+        if(array_key_exists('timestamp', $loc['properties'])) {
           try {
             if(preg_match('/^\d+\.\d+$/', $loc['properties']['timestamp']))
               $date = DateTime::createFromFormat('U.u', $loc['properties']['timestamp']);
@@ -137,10 +127,21 @@ class Api extends BaseController
               $date = DateTime::createFromFormat('U', $loc['properties']['timestamp']);
             else
               $date = new DateTime($loc['properties']['timestamp']);
-  
+
             if($date) {
               $num++;
               $qz->add($date, $loc);
+
+              if(array_key_exists('type', $loc['properties']) && $loc['properties']['type'] == 'trip') {
+                try {
+                  $job = (new TripComplete($db->id, $loc))->onQueue('compass');
+                  $this->dispatch($job);
+                  $trips++;
+                } catch(Exception $e) {
+                  Log::warning('Received invalid trip');
+                }
+              }
+
             } else {
               Log::warning('Received invalid date: ' . $loc['properties']['timestamp']);
             }

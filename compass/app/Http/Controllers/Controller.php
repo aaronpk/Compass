@@ -130,7 +130,7 @@ class Controller extends BaseController
       ->first();
     if(!$db)
       return redirect('/');
-    
+
     if($request->input('remove_user')) {
 
       $user = DB::table('users')->where('url','=',$request->input('remove_user'))->first();
@@ -163,6 +163,14 @@ class Controller extends BaseController
           'created_at' => date('Y-m-d H:i:s')
         ]);
       }
+
+      return redirect('/settings/'.$db->name);
+    } else if($request->input('micropub_endpoint')) {
+      DB::table('databases')->where('id', $db->id)
+        ->update([
+          'micropub_endpoint' => $request->input('micropub_endpoint'),
+          'micropub_token' => $request->input('micropub_token'),
+        ]);
 
       return redirect('/settings/'.$db->name);
     }

@@ -72,20 +72,23 @@ jQuery(function($){
         }).addTo(map));
 
         // If the new layer is completely outside the current view, zoom the map to fit all layers
-        var layer = visible_layers[visible_layers.length - 1];
+        var vlayer = visible_layers[visible_layers.length - 1];
         var is_outside = false;
-        if(!map.getBounds().intersects(layer.getBounds())) {
+        if(!map.getBounds().intersects(vlayer.getBounds())) {
           is_outside = true;
         }
 
         if(is_outside) {
+	        console.log('is outside');
+	        console.log(vlayer);
           var full_bounds;
           for(var i in visible_layers) {
-            layer = visible_layers[i];
-            if(full_bounds) {
-              full_bounds.extend(layer.getBounds());
-            } else {
-              full_bounds = layer.getBounds();
+	        if(visible_layers[i].getBounds) {
+	            if(full_bounds) {
+	              full_bounds.extend(visible_layers[i].getBounds());
+	            } else {
+	              full_bounds = visible_layers[i].getBounds();
+	            }
             }
           }
           map.fitBounds(full_bounds);

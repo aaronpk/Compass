@@ -137,9 +137,10 @@ class Api extends BaseController
         return response(json_encode(['error' => 'invalid date provided']))->header('Content-Type', 'application/json');
       }
     } else {
-      return response(json_encode(['error' => 'no date provided']))->header('Content-Type', 'application/json');
+      $date = new DateTime();
     }
 
+    /* ********************************************** */
     // TODO: move this logic into QuartzDB
 
     // Load the shard for the given date
@@ -163,6 +164,13 @@ class Api extends BaseController
       if($r->date > $date)
         break;
       $record = $r;
+    }
+    /* ********************************************** */
+
+    if(!$record) {
+      return response(json_encode([
+        'data'=>null
+      ]));
     }
 
     $response = [

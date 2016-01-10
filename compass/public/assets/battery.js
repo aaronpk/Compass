@@ -5,12 +5,12 @@ function pointFromGeoJSON(geo) {
 }
 
 function showBatteryGraph(response) {
-  
+
   var data = response.linestring;
-  
+
   var batteryStateBands = [];
   var buckets = data.properties.map(function(d){return d.battery_state}).findRanges();
-  
+
   for(var i in buckets) {
     for(var j=0; j<buckets[i].length; j++) {
       switch(i) {
@@ -32,7 +32,7 @@ function showBatteryGraph(response) {
       batteryStateBands.push(buckets[i][j]);
     }
   }
-  
+
   $('#battery-chart').highcharts({
     chart: {
       height: 160,
@@ -94,8 +94,8 @@ function showBatteryGraph(response) {
       yAxis: 0,
       data: data.properties.map(function(d,i){
         return {
-          x: new Date(d.unixtime*1000), // i, 
-          y: ('battery_level' in d ? Math.round(d.battery_level * 100) : -1), 
+          x: new Date(d.unixtime*1000), // i,
+          y: ('battery_level' in d ? Math.round(d.battery_level * 100) : null), 
           state: d.battery_state,
           location: data.coordinates[i]
         }

@@ -17,9 +17,11 @@
         <div class="error">{{ session('create-error') }}</div>
       @endif
       <span class="create {{ session('create-error') ? '' : 'hidden' }}">
-        <form action="/database/create" method="post" class="pure-form">
-          <input type="text" name="name" value="{{ session('database-name') }}">
-          <button type="submit" class="pure-button pure-button-primary">Create</button>
+        <form action="/database/create" method="post" class="ui form">
+          <div class="ui action input">
+            <input type="text" name="name" value="{{ session('database-name') }}">
+            <button type="submit" class="ui button primary">Create</button>
+          </div>
         </form>
       </span>
     </li>

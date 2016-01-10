@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use DB;
 use Quartz;
 use Log;
-use DateTime, DateTimeZone;
+use DateTime, DateTimeZone, DateInterval;
 use App\Jobs\TripComplete;
 
 class Api extends BaseController
@@ -104,6 +104,87 @@ class Api extends BaseController
     }
 
     return response(json_encode($response))->header('Content-Type', 'application/json');
+  }
+
+  public function last(Request $request) {
+    $token = $request->input('token');
+    if(!$token)
+      return response(json_encode(['error' => 'no token provided']))->header('Content-Type', 'application/json');
+
+    $db = DB::table('databases')->where('read_token','=',$token)->first();
+    if(!$db)
+      return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
+
+    $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'r');
+
+    if($request->input('tz')) {
+      $tz = $request->input('tz');
+    } else {
+      $tz = 'UTC';
+    }
+
+    if($input=$request->input('before')) {
+      if(preg_match('/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}/', $input)) {
+        // If the input date is given in YYYY-mm-dd HH:mm:ss format, interpret it in the timezone given
+        $date = DateTime::createFromFormat('Y-m-d H:i:s', $input, new DateTimeZone($tz));
+      } else {
+        // Otherwise, parse the string and use the timezone in the input
+        $date = new DateTime($input);
+        $date->setTimeZone(new DateTimeZone($tz));
+      }
+
+      if(!$date) {
+        return response(json_encode(['error' => 'invalid date provided']))->header('Content-Type', 'application/json');
+      }
+    } else {
+      return response(json_encode(['error' => 'no date provided']))->header('Content-Type', 'application/json');
+    }
+
+    // TODO: move this logic into QuartzDB
+
+    // Load the shard for the given date
+    $shard = $qz->shardForDate($date);
+    // If the shard doesn't exist, check one day before
+    if(!$shard->exists()) {
+      $date = $date->sub(new DateInterval('PT86400S'));
+      $shard = $qz->shardForDate($date);
+    }
+    // Now if the shard doesn't exist, return an empty result
+    if(!$shard->exists()) {
+      return response(json_encode([
+        'data'=>null
+      ]));
+    }
+
+    // Start iterating through the shard and look for the last line that is before the given date
+    $shard->init();
+    $record = false;
+    foreach($shard as $r) {
+      if($r->date > $date)
+        break;
+      $record = $r;
+    }
+
+    $response = [
+      'data' => $record->data
+    ];
+
+    if($request->input('geocode') && property_exists($record->data, 'geometry') && property_exists($record->data->geometry, 'coordinates')) {
+      $coords = $record->data->geometry->coordinates;
+      $params = [
+        'latitude' => $coords[1],
+        'longitude' => $coords[0]
+      ];
+      $ch = curl_init(env('ATLAS_BASE').'api/geocode?'.http_build_query($params));
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+      $geocode = json_decode(curl_exec($ch));
+      if($geocode) {
+        $response['geocode'] = $geocode;
+      }
+    }
+
+    return response(json_encode($response));
   }
 
   public function input(Request $request) {

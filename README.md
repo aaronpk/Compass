@@ -26,14 +26,22 @@ The open source iOS [GPS Logger](https://github.com/esripdx/GPS-Logger-iOS) will
 
 ### Reading
 
-To read a database, make a GET request with the following keys:
+To read a database, make a GET request as follows:
 
 `GET /api/query`
 
-* token - the read token for the database
-* date - specify a date to return all data on that day
-* tz - timezone string (e.g. America/Los_Angeles) which will be used to determine the absolute start/end times for the day
+* token - (required) the read token for the database
+* tz - (optional, default UTC) timezone string (e.g. America/Los_Angeles) which will be used to determine the absolute start/end times for the day
+* format - (optional, default "full") either "full" or "linestring"
+ * full - return one JSON record for each result in the database
+ * linestring - combine all the returned results into a GeoJSON linestring
+* date - specify a date to return all data on that day (YYYY-mm-dd format)
 
+`GET /api/last`
+* token - (required) the read token for the database
+* tz - (optional, default UTC) timezone string (e.g. America/Los_Angeles) which will be used to determine the absolute start/end times for the day
+* date - (optional) specify a full timestamp to return a single record before this date (the point returned will be no more than 24 hours before the given date)
+* geocode - (optional) if "true", then the location found will be reverse geocoded using [Atlas](https://atlas.p3k.io) to find the city and timezone at the location
 
 
 ## Credits

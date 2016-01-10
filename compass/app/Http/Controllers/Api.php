@@ -39,7 +39,7 @@ class Api extends BaseController
     if($request->input('tz')) {
       $tz = $request->input('tz');
     } else {
-      $tz = 'America/Los_Angeles';
+      $tz = 'UTC';
     }
 
     if($date=$request->input('date')) {
@@ -55,29 +55,30 @@ class Api extends BaseController
     $properties = [];
     $events = [];
 
-    foreach($results as $id=>$record) {
-      if(property_exists($record->data->properties, 'action')) {
-        $rec = $record->data;
-        $date = $record->date;
-        $rec->properties->unixtime = (int)$date->format('U');
-        $events[] = $rec;
-      } else {
-        #$record->date->format('U.u');
-        $locations[] = $record->data;
-        $props = $record->data->properties;
-        $date = $record->date;
-        $date->setTimeZone(new DateTimeZone($tz));
-        $props->timestamp = $date->format('c');
-        $props->unixtime = (int)$date->format('U');
-        $properties[] = $props;
-      }
-    }
-
     if($request->input('format') == 'linestring') {
+
+      foreach($results as $id=>$record) {
+        // When returning a linestring, separate out the "event" records from the "location" records
+        if(property_exists($record->data->properties, 'action')) {
+          $rec = $record->data;
+          # add a unixtime property
+          $rec->properties->unixtime = (int)$record->date->format('U');
+          $events[] = $rec;
+        } else {
+          #$record->date->format('U.u');
+          $locations[] = $record->data;
+          $props = $record->data->properties;
+          $date = $record->date;
+          $date->setTimeZone(new DateTimeZone($tz));
+          $props->timestamp = $date->format('c');
+          $props->unixtime = (int)$date->format('U');
+          $properties[] = $props;
+        }
+      }
 
       $linestring = array(
         'type' => 'LineString',
-        'coordinates' => array(),
+        'coordinates' => [],
         'properties' => $properties
       );
       foreach($locations as $loc) {
@@ -93,6 +94,10 @@ class Api extends BaseController
       );
 
     } else {
+      foreach($results as $id=>$record) {
+        $locations[] = $record->data;
+      }
+
       $response = [
         'locations' => $locations
       ];

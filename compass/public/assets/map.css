@@ -15,8 +15,8 @@ html, body {
   right: 10px;
   border: 3px #888 solid;
   background: white;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 18px;
 }
 #calendar #controls {
   position: absolute;
@@ -25,7 +25,7 @@ html, body {
   background: white;
 }
 #calendar .scroll {
-  overflow: scroll;      
+  overflow: scroll;
   height: 100%;
 }
 

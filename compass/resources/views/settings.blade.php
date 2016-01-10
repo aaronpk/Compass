@@ -6,21 +6,28 @@
 
 <div class="dashboard">
 
-  <h2>Database</h2>
+  <h2>Database: {{ $database->name }}</h2>
 
-  <div class="panel">
-    <h3>Read Token</h3>
-    <div class="token"><code>{{ $database->read_token }}</code></div>
-  </div>
+  <form class="ui form">
+    <div class="field">
+      <label>Read Token</label>
+      <input readonly="" value="{{ $database->read_token }}">
+    </div>
 
-  @if ($database->created_by == session('user_id'))
-  <div class="panel">
-    <h3>Write Token</h3>
-    <div class="token"><code>{{ $database->write_token }}</code></div>
-  </div>
-  @endif
+    @if ($database->created_by == session('user_id'))
+    <div class="field">
+      <label>Write Token <a href="#" class="show-api-endpoint">(show API endpoint)</a></label>
+      <input readonly="" value="{{ $database->write_token }}">
+    </div>
 
-  <div class="panel">
+    <div class="api-endpoint field hidden">
+      <label>API Endpoint</label>
+      <input type="text" readonly value="{{ env('BASE_URL') }}api/input?token={{ $database->write_token }}">
+    </div>
+    @endif
+  </form>
+
+  <div style="margin-top: 20px;">
     <h3>Users with Access</h3>
 
     <ul class="users">
@@ -38,9 +45,11 @@
           <div class="error">{{ session('create-error') }}</div>
         @endif
         <span class="create {{ session('create-error') ? '' : 'hidden' }}">
-          <form action="/settings/{{ $database->name }}" method="post" class="pure-form">
-            <input type="url" name="add_user" value="{{ session('add-user-url') }}" placeholder="github or indieauth url">
-            <button type="submit" class="pure-button pure-button-primary">Add User</button>
+          <form action="/settings/{{ $database->name }}" method="post">
+            <div class="ui action input">
+              <input type="url" name="add_user" value="{{ session('add-user-url') }}" placeholder="github or indieauth url">
+              <button type="submit" class="ui button primary">Add User</button>
+            </div>
           </form>
         </span>
       </li>
@@ -50,21 +59,23 @@
 
   <br><br>
 
-  <h2>Micropub Export</h2>
+  <h2>Realtime Micropub Export</h2>
 
   <p>Enter a Micropub endpoint and token below and any trips that are written to this database will be sent to the endpoint as well.</p>
 
   <div class="panel">
-    <form action="/settings/{{ $database->name }}" method="post" class="pure-form pure-form-stacked">
-      <fieldset>
+    <form action="/settings/{{ $database->name }}" method="post" class="ui form">
+      <div class="field">
         <label for="micropub_endpoint">Micropub Endpoint</label>
         <input name="micropub_endpoint" type="url" placeholder="http://example.com/micropub" class="pure-input-1" value="{{ $database->micropub_endpoint }}">
+      </div>
 
+      <div class="field">
         <label for="micropub_token">Access Token</label>
         <input name="micropub_token" type="text" placeholder="" class="pure-input-1" value="{{ $database->micropub_token }}">
+      </div>
 
-        <button type="submit" class="pure-button pure-button-primary">Save</button>
-      </fieldset>
+      <button type="submit" class="ui button primary">Save</button>
     </form>
   </div>
 
@@ -84,6 +95,9 @@ jQuery(function($){
       window.location = window.location;
     });
     return false;
+  });
+  $(".show-api-endpoint").click(function(){
+    $(".api-endpoint").removeClass("hidden");
   });
 });
 </script>

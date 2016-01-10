@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="corner-logo"><a href="/"><img src="/assets/compass.svg" height="40"/></a></div>
+@include('partials/logged-in')
 
 <div id="calendar">
   <div class="scroll">

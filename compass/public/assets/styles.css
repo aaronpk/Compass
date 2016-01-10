@@ -19,24 +19,6 @@
 }
 
 
-.corner-logo {
-  position: absolute;
-  z-index: 2000;
-  top: 6px;
-  left: 20px;
-}
-.logged-in {
-  position: absolute;
-  z-index: 2000;
-  top: 6px;
-  right: 20px;
-  font-size: 80%;
-  padding: 4px 16px;
-}
-.logged-in .logout {
-  margin-left: 16px;
-}
-
 
 .dashboard {
   max-width: 500px;

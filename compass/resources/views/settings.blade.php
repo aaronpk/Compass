@@ -45,7 +45,7 @@
           <div class="error">{{ session('create-error') }}</div>
         @endif
         <span class="create {{ session('create-error') ? '' : 'hidden' }}">
-          <form action="/settings/{{ $database->name }}" method="post">
+          <form action="/settings/{{ $database->name }}" method="post" class="ui form">
             <div class="ui action input">
               <input type="url" name="add_user" value="{{ session('add-user-url') }}" placeholder="github or indieauth url">
               <button type="submit" class="ui button primary">Add User</button>

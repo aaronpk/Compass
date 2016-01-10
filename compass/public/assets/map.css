@@ -9,9 +9,9 @@ html, body {
 #calendar {
   z-index: 100;
   width: 200px;
-  height: calc(100% - 180px);
+  height: calc(100% - 240px);
   position: absolute;
-  top: 10px;
+  top: 60px;
   right: 10px;
   border: 3px #888 solid;
   background: white;

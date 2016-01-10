@@ -91,6 +91,9 @@ class Controller extends BaseController
     return view('map', [
       'displayURL' => self::displayURL(),
       'database' => $db,
+      'menu' => [
+        '/settings/'.$name => 'Settings'
+      ]
     ]);
   }
 
@@ -115,7 +118,10 @@ class Controller extends BaseController
     return view('settings', [
       'displayURL' => self::displayURL(),
       'database' => $db,
-      'users' => $users
+      'users' => $users,
+      'menu' => [
+        '/map/'.$name => 'Map'
+      ]
     ]);
   }
 

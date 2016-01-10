@@ -6,6 +6,7 @@
 
 <div class="dashboard">
 
+  <br>
   <h2>Database: {{ $database->name }}</h2>
 
   <form class="ui form">
@@ -57,7 +58,7 @@
 
   </div>
 
-  <br><br>
+  <br>
 
   <h2>Realtime Micropub Export</h2>
 
@@ -98,6 +99,7 @@ jQuery(function($){
   });
   $(".show-api-endpoint").click(function(){
     $(".api-endpoint").removeClass("hidden");
+    $(".show-api-endpoint").addClass("hidden");
   });
 });
 </script>

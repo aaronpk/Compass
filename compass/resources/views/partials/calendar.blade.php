@@ -1,11 +1,10 @@
-<!--
+<?php
 # Adapted from
 # PHP Calendar (version 2.3), written by Keith Devens
 # http://keithdevens.com/software/php_calendar
 #  see example at http://keithdevens.com/weblog
 # License: http://keithdevens.com/software/license
--->
-<?php
+
   $first_of_month = gmmktime(0,0,0,$month,1,$year);
   #remember that mktime will automatically correct if invalid dates are entered
   # for instance, mktime(0,0,0,12,32,1997) will be the date for Jan 1, 1998

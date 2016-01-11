@@ -189,6 +189,8 @@ class Api extends BaseController
       $geocode = json_decode(curl_exec($ch));
       if($geocode) {
         $response['geocode'] = $geocode;
+      } else {
+        $response['geocode'] = null;
       }
     }
 

@@ -124,7 +124,7 @@ class Api extends BaseController
     }
 
     if($input=$request->input('before')) {
-      if(preg_match('/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}/', $input)) {
+      if(preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $input)) {
         // If the input date is given in YYYY-mm-dd HH:mm:ss format, interpret it in the timezone given
         $date = DateTime::createFromFormat('Y-m-d H:i:s', $input, new DateTimeZone($tz));
       } else {
@@ -233,6 +233,7 @@ class Api extends BaseController
                   $job = (new TripComplete($db->id, $loc))->onQueue('compass');
                   $this->dispatch($job);
                   $trips++;
+                  Log::info('Got a trip record');
                 } catch(Exception $e) {
                   Log::warning('Received invalid trip');
                 }

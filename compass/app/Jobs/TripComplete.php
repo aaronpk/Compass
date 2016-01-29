@@ -29,6 +29,8 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
 
     Log::info("Starting job for ".$db->name);
 
+    Log::debug(json_encode($this->_data));
+
     if(!$db->micropub_endpoint) {
       Log::info('No micropub endpoint configured for database ' . $db->name);
       return;
@@ -59,35 +61,57 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     $file_path = tempnam(sys_get_temp_dir(), 'compass');
     file_put_contents($file_path, json_encode($geojson));
 
-    // Reverse geocode the start and end location to get an h-adr
-    $startAdr = [
-      'type' => 'h-adr',
-      'properties' => [
-        'latitude' => $this->_data['properties']['start-coordinates'][1],
-        'longitude' => $this->_data['properties']['start-coordinates'][0],
-      ]
-    ];
-    $endAdr = [
-      'type' => 'h-adr',
-      'properties' => [
-        'latitude' => $this->_data['properties']['end-coordinates'][1],
-        'longitude' => $this->_data['properties']['end-coordinates'][0],
-      ]
-    ];
-    Log::info('Looking up start and end locations');
-    $start = self::geocode($this->_data['properties']['start-coordinates'][1], $this->_data['properties']['start-coordinates'][0]);
-    if($start) {
-      $startAdr['properties']['locality'] = $start->locality;
-      $startAdr['properties']['region'] = $start->region;
-      $startAdr['properties']['country'] = $start->country;
-      Log::info('Found start: '.$start->full_name.' '.$start->timezone);
+    // If there are no start/end coordinates in the request, use the first and last coordinates
+    if(count($features)) {
+      if(!array_key_exists('start-coordinates', $this->_data['properties'])) {
+        $this->_data['properties']['start-coordinates'] = $features[0]->geometry->coordinates;
+      }
+      if(!array_key_exists('end-coordinates', $this->_data['properties'])) {
+        $this->_data['properties']['end-coordinates'] = $features[count($features)-1]->geometry->coordinates;
+      }
     }
-    $end = self::geocode($this->_data['properties']['end-coordinates'][1], $this->_data['properties']['end-coordinates'][0]);
-    if($end) {
-      $endAdr['properties']['locality'] = $end->locality;
-      $endAdr['properties']['region'] = $end->region;
-      $endAdr['properties']['country'] = $end->country;
-      Log::info('Found end: '.$end->full_name.' '.$end->timezone);
+
+    $startAdr = false;
+    if(array_key_exists('start-coordinates', $this->_data['properties'])) {
+      // Reverse geocode the start and end location to get an h-adr
+      $startAdr = [
+        'type' => 'h-adr',
+        'properties' => [
+          'latitude' => $this->_data['properties']['start-coordinates'][1],
+          'longitude' => $this->_data['properties']['start-coordinates'][0],
+        ]
+      ];
+      Log::info('Looking up start location');
+      $start = self::geocode($this->_data['properties']['start-coordinates'][1], $this->_data['properties']['start-coordinates'][0]);
+      if($start) {
+        $startAdr['properties']['locality'] = $start->locality;
+        $startAdr['properties']['region'] = $start->region;
+        $startAdr['properties']['country'] = $start->country;
+        Log::info('Found start: '.$start->full_name.' '.$start->timezone);
+      }
+    } else {
+      $start = false;
+    }
+
+    $endAdr = false;
+    if(array_key_exists('end-coordinates', $this->_data['properties'])) {
+      $endAdr = [
+        'type' => 'h-adr',
+        'properties' => [
+          'latitude' => $this->_data['properties']['end-coordinates'][1],
+          'longitude' => $this->_data['properties']['end-coordinates'][0],
+        ]
+      ];
+      Log::info('Looking up end location');
+      $end = self::geocode($this->_data['properties']['end-coordinates'][1], $this->_data['properties']['end-coordinates'][0]);
+      if($end) {
+        $endAdr['properties']['locality'] = $end->locality;
+        $endAdr['properties']['region'] = $end->region;
+        $endAdr['properties']['country'] = $end->country;
+        Log::info('Found end: '.$end->full_name.' '.$end->timezone);
+      }
+    } else {
+      $end = false;
     }
 
     // Set the timezone of the dates based on the location
@@ -95,6 +119,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     if($start && $start->timezone) {
       $startDate->setTimeZone(new DateTimeZone($start->timezone));
     }
+
     $endDate = new DateTime($this->_data['properties']['end']);
     if($end && $end->timezone) {
       $endDate->setTimeZone(new DateTimeZone($end->timezone));
@@ -109,28 +134,48 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
           'mode-of-transport' => $this->_data['properties']['mode'],
           'start' => $startDate->format('c'),
           'end' => $endDate->format('c'),
-          'start-location' => $startAdr,
-          'end-location' => $endAdr,
-          'distance' => [
-            'type' => 'h-measure',
-            'properties' => [
-              'num' => round($this->_data['properties']['distance']),
-              'unit' => 'meter'
-            ]
-          ],
-          'duration' => [
-            'type' => 'h-measure',
-            'properties' => [
-              'num' => round($this->_data['properties']['duration']),
-              'unit' => 'second'
-            ]
-          ],
           'route' => 'route.json'
-          // TODO: avgpace
-          // TODO: avgspeed
+          // TODO: avgpace for runs
+          // TODO: avgspeed for bike rides
+          // TODO: avg heart rate if available
         ]
       ]
     ];
+
+    if($startAdr) {
+      $params['trip']['properties']['start-location'] = $startAdr;
+    }
+    if($endAdr) {
+      $params['trip']['properties']['end-location'] = $endAdr;
+    }
+    if(array_key_exists('distance', $this->_data['properties'])) {
+      $params['trip']['properties']['distance'] = [
+        'type' => 'h-measure',
+        'properties' => [
+          'num' => round($this->_data['properties']['distance']),
+          'unit' => 'meter'
+        ]
+      ];
+    }
+    if(array_key_exists('duration', $this->_data['properties'])) {
+      $params['trip']['properties']['duration'] = [
+        'type' => 'h-measure',
+        'properties' => [
+          'num' => round($this->_data['properties']['duration']),
+          'unit' => 'second'
+        ]
+      ];
+    }
+    if(array_key_exists('cost', $this->_data['properties'])) {
+      $params['trip']['properties']['cost'] = [
+        'type' => 'h-measure',
+        'properties' => [
+          'num' => round($this->_data['properties']['cost'], 2),
+          'unit' => 'USD'
+        ]
+      ];
+    }
+
 
     // echo "Micropub Params\n";
     // print_r($params);

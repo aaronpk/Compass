@@ -93,7 +93,10 @@ class Controller extends BaseController
       'database' => $db,
       'menu' => [
         '/settings/'.$name => 'Settings'
-      ]
+      ],
+      'range_from' => $request->input('from') ?: '',
+      'range_to' => $request->input('to') ?: '',
+      'range_tz' => $request->input('tz') ?: 'America/Los_Angeles'
     ]);
   }
 

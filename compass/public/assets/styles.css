@@ -77,3 +77,17 @@
 .hidden {
   display: none;
 }
+
+#daterange {
+  z-index: 100;
+  width: 40vw;
+  position: absolute;
+  top: 60px;
+  left: 60px;
+  border: 3px #aaa solid;
+  border-radius: 4px;
+  background: white;
+}
+#daterange .in {
+  margin: 4px;
+}

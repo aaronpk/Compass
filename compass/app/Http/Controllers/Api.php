@@ -45,6 +45,9 @@ class Api extends BaseController
     if($date=$request->input('date')) {
       $start = DateTime::createFromFormat('Y-m-d H:i:s', $date.' 00:00:00', new DateTimeZone($tz));
       $end = DateTime::createFromFormat('Y-m-d H:i:s', $date.' 23:59:59', new DateTimeZone($tz));
+    } elseif(($start=$request->input('start')) && ($end=$request->input('end'))) {
+      $start = new DateTime($start, new DateTimeZone($tz));
+      $end = new DateTime($end, new DateTimeZone($tz));
     } else {
       return response(json_encode(['error' => 'no date provided']))->header('Content-Type', 'application/json');
     }

@@ -4,6 +4,15 @@
 
 @include('partials/logged-in')
 
+<div id="daterange"><div class="in">
+  <div class="ui form"><div class="fields">
+    <div class="five wide field"><input type="text" id="range-from" placeholder="from" value="<?= $range_from ?>"></div>
+    <div class="five wide field"><input type="text" id="range-to" placeholder="to" value="<?= $range_to ?>"></div>
+    <div class="five wide field"><input type="text" id="timezone" value="<?= $range_tz ?>"></div>
+    <button class="ui submit button" id="range-go">Go</button>
+  </div></div>
+</div></div>
+
 <div id="calendar">
   <div class="scroll">
   <?php

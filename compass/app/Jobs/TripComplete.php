@@ -182,6 +182,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
       $startTime = strtotime($features[0]->properties['timestamp']);
       $endTime = strtotime($features[count($features)-1]->properties['timestamp']);
       $duration = $endTime - $startTime;
+      $params['trip']['properties']['duration']['type'] = 'h-measure';
       $params['trip']['properties']['duration']['properties']['num'] = $duration;
       $params['trip']['properties']['duration']['properties']['unit'] = 'second';
       Log::debug("Overriding duration to $duration");
@@ -199,6 +200,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
         $last = $p;
       }
       if($distance) {
+        $params['trip']['properties']['distance']['type'] = 'h-measure';
         $params['trip']['properties']['distance']['properties']['num'] = $distance;
         $params['trip']['properties']['distance']['properties']['unit'] = 'meter';
         Log::debug("Overriding distance to $distance");

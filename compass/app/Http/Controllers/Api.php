@@ -255,4 +255,40 @@ class Api extends BaseController
     return response(json_encode(['result' => 'ok', 'saved' => $num, 'trips' => $trips]))->header('Content-Type', 'application/json');
   }
 
+  public function trip_complete(Request $request) {
+    $token = $request->input('token');
+    if(!$token)
+      return response(json_encode(['error' => 'no token provided']))->header('Content-Type', 'application/json');
+
+    $db = DB::table('databases')->where('write_token','=',$token)->first();
+    if(!$db)
+      return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
+
+    if($request->input('tz')) {
+      $tz = new DateTimeZone($request->input('tz'));
+    } else {
+      $tz = new DateTimeZone('UTC');
+    }
+    $start = new DateTime($request->input('start'), $tz);
+    $end = new DateTime($request->input('end'), $tz);
+
+    $loc = [
+      'properties' => [
+        'mode' => $request->input('mode'),
+        'start' => $start->format('c'),
+        'end' => $end->format('c'),
+      ]
+    ];
+
+    try {
+      $job = (new TripComplete($db->id, $loc))->onQueue('compass');
+      $this->dispatch($job);
+      Log::info('Got a manual trip record: '.$start->format('c').' '.$end->format('c'));
+    } catch(Exception $e) {
+      Log::warning('Received invalid trip');
+    }
+
+    return response(json_encode(['result' => 'ok']))->header('Content-Type', 'application/json');
+  }
+
 }

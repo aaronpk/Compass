@@ -44,9 +44,10 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     $results = $qz->queryRange($start, $end);
     $features = [];
     foreach($results as $id=>$record) {
+      // Don't include app action tracking data
       if(!property_exists($record->data->properties, 'action')) {
         $record->data->properties = array_filter((array)$record->data->properties, function($k){
-          // Remove some of the app-specific tracking keys
+          // Remove some of the app-specific tracking keys from each record
           return !in_array($k, ['locations_in_payload','desired_accuracy','significant_change','pauses','deferred']);
         }, ARRAY_FILTER_USE_KEY);
         $features[] = $record->data;
@@ -182,6 +183,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
       $endTime = strtotime($features[count($features)-1]->properties['timestamp']);
       $duration = $endTime - $startTime;
       $params['trip']['properties']['duration']['properties']['num'] = $duration;
+      $params['trip']['properties']['duration']['properties']['unit'] = 'second';
       Log::debug("Overriding duration to $duration");
 
       $points = array_map(function($f){
@@ -198,6 +200,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
       }
       if($distance) {
         $params['trip']['properties']['distance']['properties']['num'] = $distance;
+        $params['trip']['properties']['distance']['properties']['unit'] = 'meter';
         Log::debug("Overriding distance to $distance");
       }
     }

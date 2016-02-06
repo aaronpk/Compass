@@ -164,6 +164,19 @@ jQuery(function($){
     }
   });
 
+  $("#trip-create").click(function(){
+    $("#trip-create").addClass("loading");
+    $.post('/api/trip-complete', {
+      start: $("#range-from").val(),
+      end: $("#range-to").val(),
+      tz: $("#timezone").val(),
+      mode: $("#trip-mode").val(),
+      token: $("#database").data("write-token")
+    }, function(response) {
+      $("#trip-create").removeClass("loading");
+    });
+  });
+
   if($("#range-from").val() == "") {
     console.log("Autoselecting calendar day");
     $(".calendar a[data-date="+((new Date()).toISOString().slice(0,10))+"]").focus().click();

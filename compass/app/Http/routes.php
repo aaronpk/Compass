@@ -1,16 +1,5 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
-|
-*/
-
 $app->get('/', 'Controller@index');
 
 $app->post('/auth/start', 'IndieAuth@start');
@@ -27,7 +16,4 @@ $app->get('/api/query', 'Api@query');
 $app->get('/api/last', 'Api@last');
 $app->get('/api/input', 'Api@account');
 $app->post('/api/input', 'Api@input');
-
-// Event::listen('illuminate.query', function($query){
-//   Log::debug($query);
-// });
+$app->post('/api/trip-complete', 'Api@trip_complete');

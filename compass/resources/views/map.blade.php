@@ -14,7 +14,7 @@
     </div>
   </div>
   @if($database->micropub_endpoint)
-  <div class="ui form" style="margin-top: 4px;">
+  <div class="ui form hidden" style="margin-top: 4px;" id="trip-create-form">
     <div class="fields">
       <div style="display: flex; margin-right: 4px;">
         <select id="trip-mode">

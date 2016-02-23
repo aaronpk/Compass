@@ -128,7 +128,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
 
     $params = [
       'h' => 'entry',
-      'created' => $endDate->format('c'),
+      'published' => $endDate->format('c'),
       'trip' => [
         'type' => 'h-trip',
         'properties' => [

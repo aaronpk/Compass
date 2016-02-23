@@ -1964,16 +1964,16 @@
         },
         {
             "name": "p3k/quartz-db",
-            "version": "0.1.0",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aaronpk/QuartzDB.git",
-                "reference": "d060c23716fc5d0a4bdb77f32e8c813e29c923ed"
+                "reference": "d0273a08181cffd91343ba788ff234fbd9daffa6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aaronpk/QuartzDB/zipball/d060c23716fc5d0a4bdb77f32e8c813e29c923ed",
-                "reference": "d060c23716fc5d0a4bdb77f32e8c813e29c923ed",
+                "url": "https://api.github.com/repos/aaronpk/QuartzDB/zipball/d0273a08181cffd91343ba788ff234fbd9daffa6",
+                "reference": "d0273a08181cffd91343ba788ff234fbd9daffa6",
                 "shasum": ""
             },
             "type": "library",
@@ -1992,20 +1992,20 @@
                 }
             ],
             "description": "A flat-file database optimized to hold time-series data.",
-            "time": "2015-09-21 17:56:12"
+            "time": "2016-01-29 00:39:52"
         },
         {
             "name": "paragonie/random_compat",
-            "version": "1.1.5",
+            "version": "1.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/random_compat.git",
-                "reference": "dd8998b7c846f6909f4e7a5f67fabebfc412a4f7"
+                "reference": "e6f80ab77885151908d0ec743689ca700886e8b0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/random_compat/zipball/dd8998b7c846f6909f4e7a5f67fabebfc412a4f7",
-                "reference": "dd8998b7c846f6909f4e7a5f67fabebfc412a4f7",
+                "url": "https://api.github.com/repos/paragonie/random_compat/zipball/e6f80ab77885151908d0ec743689ca700886e8b0",
+                "reference": "e6f80ab77885151908d0ec743689ca700886e8b0",
                 "shasum": ""
             },
             "require": {
@@ -2040,7 +2040,7 @@
                 "pseudorandom",
                 "random"
             ],
-            "time": "2016-01-06 13:31:20"
+            "time": "2016-01-29 16:19:52"
         },
         {
             "name": "predis/predis",

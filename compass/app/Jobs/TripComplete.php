@@ -46,11 +46,14 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     foreach($results as $id=>$record) {
       // Don't include app action tracking data
       if(!property_exists($record->data->properties, 'action')) {
-        $record->data->properties = array_filter((array)$record->data->properties, function($k){
-          // Remove some of the app-specific tracking keys from each record
-          return !in_array($k, ['locations_in_payload','desired_accuracy','significant_change','pauses','deferred']);
-        }, ARRAY_FILTER_USE_KEY);
-        $features[] = $record->data;
+	    // Ignore locations with accuracy worse than 5000m
+	    if(property_exists($record->data->properties, 'horizontal_accuracy') && $record->data->properties->horizontal_accuracy <= 5000) {
+	      $record->data->properties = array_filter((array)$record->data->properties, function($k){
+	        // Remove some of the app-specific tracking keys from each record
+	        return !in_array($k, ['locations_in_payload','desired_accuracy','significant_change','pauses','deferred']);
+	      }, ARRAY_FILTER_USE_KEY);
+	      $features[] = $record->data;
+	    }
       }
     }
 

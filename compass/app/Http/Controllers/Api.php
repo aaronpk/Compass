@@ -69,13 +69,18 @@ class Api extends BaseController
           $events[] = $rec;
         } else {
           #$record->date->format('U.u');
-          $locations[] = $record->data;
-          $props = $record->data->properties;
-          $date = $record->date;
-          $date->setTimeZone(new DateTimeZone($tz));
-          $props->timestamp = $date->format('c');
-          $props->unixtime = (int)$date->format('U');
-          $properties[] = $props;
+          // Ignore super inaccurate locations
+          if(!property_exists($record->data->properties, 'horizontal_accuracy') 
+            || $record->data->properties->horizontal_accuracy <= 5000) {
+	            
+            $locations[] = $record->data;
+            $props = $record->data->properties;
+            $date = $record->date;
+            $date->setTimeZone(new DateTimeZone($tz));
+            $props->timestamp = $date->format('c');
+            $props->unixtime = (int)$date->format('U');
+            $properties[] = $props;
+          }
         }
       }
 

@@ -202,7 +202,7 @@ class Api extends BaseController
       }
     }
 
-    return response(json_encode($response));
+    return response(json_encode($response))->header('Content-Type', 'application/json');;
   }
 
   public function input(Request $request) {

@@ -189,7 +189,8 @@ class Api extends BaseController
       $coords = $record->data->geometry->coordinates;
       $params = [
         'latitude' => $coords[1],
-        'longitude' => $coords[0]
+        'longitude' => $coords[0],
+        'date' => $record->data->properties->timestamp
       ];
       $ch = curl_init(env('ATLAS_BASE').'api/geocode?'.http_build_query($params));
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

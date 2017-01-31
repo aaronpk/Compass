@@ -85,6 +85,7 @@ class LocalTime extends BaseController
           'offset' => $record['local']->offset,
           'seconds' => $record['local']->seconds,
           'localtime' => $record['local']->localtime,
+          'name' => $record['local']->name,
         ]
       ];
     } else {

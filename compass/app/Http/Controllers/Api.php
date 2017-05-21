@@ -275,6 +275,12 @@ class Api extends BaseController
         'country' => $geocode->country
       ];
       #$response['geocode'] = null;
+
+      // Notify subscribers that new data is available
+      if($db->ping_urls) {
+        $job = (new NotifyOfNewLocations($db->id))->onQueue('compass');
+        $this->dispatch($job);
+      }
     }
 
     return response(json_encode($response))->header('Content-Type', 'application/json');

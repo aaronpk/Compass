@@ -129,6 +129,11 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
       $endDate->setTimeZone(new DateTimeZone($end->timezone));
     }
 
+    if($endDate->format('U') - $startDate->format('U') < 15) {
+      Log::info("Skipping trip since it was too short");
+      return;
+    }
+
     $params = [
       'h' => 'entry',
       'published' => $endDate->format('c'),

@@ -80,6 +80,25 @@
     </form>
   </div>
 
+  <br>
+
+  <h2>Ping on New Location</h2>
+
+  <p>Enter one or more URLs to ping when new location data is available. This will send a POST request to the URLs with the URL to fetch the last location from the database, e.g. <code>url=https://compass.p3k.io/api/last?token=xxxx</code>. Enter one or more URLs separated by whitespace.</p>
+
+  <div class="panel">
+    <form action="/settings/{{ $database->name }}" method="post" class="ui form">
+      <div class="field">
+        <label for="ping_urls">Ping URLs</label>
+        <textarea name="ping_urls" class="pure-input-1">{{ $database->ping_urls }}</textarea>
+      </div>
+
+      <button type="submit" class="ui button primary">Save</button>
+    </form>
+  </div>
+
+  <br>
+
 </div>
 <script>
 jQuery(function($){

@@ -69,13 +69,18 @@ class Api extends BaseController
           $events[] = $rec;
         } else {
           #$record->date->format('U.u');
-          $locations[] = $record->data;
-          $props = $record->data->properties;
-          $date = $record->date;
-          $date->setTimeZone(new DateTimeZone($tz));
-          $props->timestamp = $date->format('c');
-          $props->unixtime = (int)$date->format('U');
-          $properties[] = $props;
+          // Ignore super inaccurate locations
+          if(!property_exists($record->data->properties, 'horizontal_accuracy') 
+            || $record->data->properties->horizontal_accuracy <= 5000) {
+	            
+            $locations[] = $record->data;
+            $props = $record->data->properties;
+            $date = $record->date;
+            $date->setTimeZone(new DateTimeZone($tz));
+            $props->timestamp = $date->format('c');
+            $props->unixtime = (int)$date->format('U');
+            $properties[] = $props;
+          }
         }
       }
 
@@ -184,7 +189,8 @@ class Api extends BaseController
       $coords = $record->data->geometry->coordinates;
       $params = [
         'latitude' => $coords[1],
-        'longitude' => $coords[0]
+        'longitude' => $coords[0],
+        'date' => $record->data->properties->timestamp
       ];
       $ch = curl_init(env('ATLAS_BASE').'api/geocode?'.http_build_query($params));
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -197,7 +203,7 @@ class Api extends BaseController
       }
     }
 
-    return response(json_encode($response));
+    return response(json_encode($response))->header('Content-Type', 'application/json');;
   }
 
   public function input(Request $request) {

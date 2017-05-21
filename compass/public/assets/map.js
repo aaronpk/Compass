@@ -137,6 +137,7 @@ jQuery(function($){
     var db_token = $("#database").data("token");
     $.get("/api/query?format=linestring&start="+$('#range-from').val()+"&end="+$('#range-to').val()+"&tz="+$("#timezone").val()+"&token="+db_token, function(data){
       $("#range-go").removeClass("loading");
+      $("#trip-create-form").removeClass("hidden");
       displayLineOnMap(data, {pins: true});
     });
     return false;

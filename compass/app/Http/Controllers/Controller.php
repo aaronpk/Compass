@@ -182,6 +182,13 @@ class Controller extends BaseController
         ]);
 
       return redirect('/settings/'.$db->name);
+    } else if($request->input('ping_urls')) {
+      DB::table('databases')->where('id', $db->id)
+        ->update([
+          'ping_urls' => $request->input('ping_urls'),
+        ]);
+
+      return redirect('/settings/'.$db->name);
     }
   }
 

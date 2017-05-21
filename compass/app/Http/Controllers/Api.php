@@ -258,6 +258,14 @@ class Api extends BaseController
       }
     }
 
+    if($num > 0) {
+      // Notify subscribers that new data is available
+      if($db->ping_urls) {
+        $job = (new NotifyOfNewLocations($db->id))->onQueue('compass');
+        $this->dispatch($job);
+      }
+    }
+
     return response(json_encode(['result' => 'ok', 'saved' => $num, 'trips' => $trips]))->header('Content-Type', 'application/json');
   }
 

@@ -62,24 +62,26 @@ class Api extends BaseController
 
       foreach($results as $id=>$record) {
         // When returning a linestring, separate out the "event" records from the "location" records
-        if(property_exists($record->data->properties, 'action')) {
-          $rec = $record->data;
-          # add a unixtime property
-          $rec->properties->unixtime = (int)$record->date->format('U');
-          $events[] = $rec;
-        } else {
-          #$record->date->format('U.u');
-          // Ignore super inaccurate locations
-          if(!property_exists($record->data->properties, 'horizontal_accuracy') 
-            || $record->data->properties->horizontal_accuracy <= 5000) {
-	            
-            $locations[] = $record->data;
-            $props = $record->data->properties;
-            $date = $record->date;
-            $date->setTimeZone(new DateTimeZone($tz));
-            $props->timestamp = $date->format('c');
-            $props->unixtime = (int)$date->format('U');
-            $properties[] = $props;
+        if($record->data) {
+          if(property_exists($record->data->properties, 'action')) {
+            $rec = $record->data;
+            # add a unixtime property
+            $rec->properties->unixtime = (int)$record->date->format('U');
+            $events[] = $rec;
+          } else {
+            #$record->date->format('U.u');
+            // Ignore super inaccurate locations
+            if(!property_exists($record->data->properties, 'horizontal_accuracy') 
+              || $record->data->properties->horizontal_accuracy <= 5000) {
+  	            
+              $locations[] = $record->data;
+              $props = $record->data->properties;
+              $date = $record->date;
+              $date->setTimeZone(new DateTimeZone($tz));
+              $props->timestamp = $date->format('c');
+              $props->unixtime = (int)$date->format('U');
+              $properties[] = $props;
+            }
           }
         }
       }
@@ -103,7 +105,9 @@ class Api extends BaseController
 
     } else {
       foreach($results as $id=>$record) {
-        $locations[] = $record->data;
+        if($record->data) {
+          $locations[] = $record->data;
+        }
       }
 
       $response = [
@@ -192,10 +196,7 @@ class Api extends BaseController
         'longitude' => $coords[0],
         'date' => $record->data->properties->timestamp
       ];
-      $ch = curl_init(env('ATLAS_BASE').'api/geocode?'.http_build_query($params));
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-      $geocode = json_decode(curl_exec($ch));
+      $geocode = self::geocode($params);
       if($geocode) {
         $response['geocode'] = $geocode;
       } else {
@@ -222,6 +223,7 @@ class Api extends BaseController
 
     $num = 0;
     $trips = 0;
+    $last_location = false;
     foreach($request->input('locations') as $loc) {
       if(array_key_exists('properties', $loc)) {
         if(array_key_exists('timestamp', $loc['properties'])) {
@@ -236,6 +238,7 @@ class Api extends BaseController
             if($date) {
               $num++;
               $qz->add($date, $loc);
+              $last_location = $loc;
 
               if(array_key_exists('type', $loc['properties']) && $loc['properties']['type'] == 'trip') {
                 try {
@@ -258,7 +261,23 @@ class Api extends BaseController
       }
     }
 
-    return response(json_encode(['result' => 'ok', 'saved' => $num, 'trips' => $trips]))->header('Content-Type', 'application/json');
+    $response = [
+      'result' => 'ok', 
+      'saved' => $num, 
+      'trips' => $trips
+    ];
+
+    if($last_location) {
+      $geocode = self::geocode(['latitude'=>$last_location['geometry']['coordinates'][1], 'longitude'=>$last_location['geometry']['coordinates'][0]]);
+      $response['geocode'] = [
+        'full_name' => $geocode->full_name,
+        'locality' => $geocode->locality,
+        'country' => $geocode->country
+      ];
+      #$response['geocode'] = null;
+    }
+
+    return response(json_encode($response))->header('Content-Type', 'application/json');
   }
 
   public function trip_complete(Request $request) {
@@ -295,6 +314,16 @@ class Api extends BaseController
     }
 
     return response(json_encode(['result' => 'ok']))->header('Content-Type', 'application/json');
+  }
+
+  public static function geocode($params) {
+    $ch = curl_init(env('ATLAS_BASE').'api/geocode?'.http_build_query($params));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+    $response = curl_exec($ch);
+    if($response) {
+      return json_decode($response);
+    }
   }
 
 }

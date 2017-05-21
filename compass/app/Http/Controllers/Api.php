@@ -9,6 +9,7 @@ use Quartz;
 use Log;
 use DateTime, DateTimeZone, DateInterval;
 use App\Jobs\TripComplete;
+use App\Jobs\NotifyOfNewLocations;
 
 class Api extends BaseController
 {

@@ -11,7 +11,7 @@ class NotifyOfNewLocations extends Job implements SelfHandling, ShouldQueue
 {
   private $_dbid;
 
-  public function __construct($dbid, $data) {
+  public function __construct($dbid) {
     $this->_dbid = $dbid;
   }
 

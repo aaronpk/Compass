@@ -1,6 +1,7 @@
 <?php
 namespace App\Jobs;
 
+use DB;
 use Log;
 use App\Jobs\Job;
 use Illuminate\Contracts\Bus\SelfHandling;
@@ -22,7 +23,7 @@ class NotifyOfNewLocations extends Job implements SelfHandling, ShouldQueue
       $ch = curl_init($url);
       curl_setopt($ch, CURLOPT_POST, true);
       curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-        'url' => env('BASE_URL').'api/last?token='.$db->token.'&geocode=1'
+        'url' => env('BASE_URL').'api/last?token='.$db->read_token.'&geocode=1'
       ]));
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
       curl_exec($ch);

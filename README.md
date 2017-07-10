@@ -25,7 +25,7 @@ The GeoJSON objects must have at least one property, "timestamp", which is can b
 The open source iOS [GPS Logger](https://github.com/aaronpk/GPS-Logger-iOS) will send data in this format by default.
 
 ```
-HTTP/1.1 POST /api/input?token=XXXXXXX
+POST /api/input?token=XXXXXXX HTTP/1.1
 Content-type: application/json
 
 {
@@ -41,7 +41,8 @@ Content-type: application/json
         "horizontal_accuracy": 65
       }
     }
-  ]
+  ],
+  "token": "XXXXXXX"
 }
 ```
 

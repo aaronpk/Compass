@@ -2,6 +2,16 @@ function speedSeries(response) {
 
   var data = response.linestring;
 
+  var system = {
+    label: 'mph',
+    multiplier: 2.23694
+  };
+  
+  if(document.getElementById('is-metric').value == true) {
+    system.label = 'km/h';
+    system.multiplier = 3.6;
+  }
+
   var series = {
     name: "Speed",
     yAxis: 1,
@@ -9,7 +19,7 @@ function speedSeries(response) {
       animation: true,
       pointFormatter: function(){
         moveMarkerToPosition(this);
-        return '<b>'+this.y+'mph</b>';
+        return '<b>'+this.y+system.label+'</b>';
       }
     },
     lineWidth: 1,
@@ -27,7 +37,7 @@ function speedSeries(response) {
   series.data = data.properties.map(function(d,i){
     return {
       x: new Date(d.unixtime*1000),
-      y: ('speed' in d && d.speed >= 0 ? Math.round(d.speed * 2.23694) : null), 
+      y: ('speed' in d && d.speed >= 0 ? Math.round(d.speed * system.multiplier) : null), 
       location: data.coordinates[i]
     }
   });

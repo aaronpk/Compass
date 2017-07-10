@@ -57,6 +57,7 @@
 
 <div id="map"></div>
 <div id="graphs">
+  <input id="is-metric" type="hidden" value="{{ $database->metric }}">
   <div id="battery-chart" width="800" height="160"></div>
 </div>
 

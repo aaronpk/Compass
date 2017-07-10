@@ -15,6 +15,8 @@ CREATE TABLE `databases` (
   `micropub_endpoint` varchar(255) NOT NULL,
   `micropub_token` varchar(1024) NOT NULL,
   `ping_urls` varchar(1024) NOT NULL,
+  `timezone` varchar(100) NOT NULL DEFAULT 'UTC',
+  `metric` boolean NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   KEY `read_token` (`read_token`),
   KEY `write_token` (`write_token`)

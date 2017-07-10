@@ -2,6 +2,8 @@
 
 Compass is a GPS tracking server that stores data in [flat files](https://github.com/aaronpk/QuartzDB).
 
+![mapview](screenshot-mapview.jpg)
+
 ## Setup
 
 In the `compass` directory, copy `.env.example` to `.env` and fill in the details. Install the dependencies with composer.
@@ -89,6 +91,7 @@ This will query the database and find the closest matching location for when you
 
 Compass icon by Ryan Spiering from the Noun Project.
 
+Screenshot of the map view by Sebastiaan Andeweg.
 
 ## License
 

@@ -35,7 +35,7 @@
   $days = array_fill(1,31,['#']);
   $start = new DateTime('2008-05-30T00:00:00-0800');
   $end = new DateTime();
-  $end->setTimeZone(new DateTimeZone('America/Los_Angeles'));
+  $end->setTimeZone(new DateTimeZone($database->timezone));
   $i = clone $start;
   while((int)$i->format('Y') <= (int)$end->format('Y') && (int)$i->format('M') <= (int)$end->format('M')) {
     ?>
@@ -57,6 +57,7 @@
 
 <div id="map"></div>
 <div id="graphs">
+  <input id="is-metric" type="hidden" value="{{ $database->metric }}">
   <div id="battery-chart" width="800" height="160"></div>
 </div>
 

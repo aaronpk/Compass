@@ -60,6 +60,30 @@
 
   <br>
 
+  <h2>Settings</h2>
+
+  <p>Here you can pick a default timezone and system of measurement to display this database in.</p>
+
+  <div class="panel">
+    <form action="/settings/{{ $database->name }}" method="post" class="ui form">
+      <div class="field">
+        <label for="timezone">Timezone</label>
+        <input name="timezone" type="text" class="pure-input-1" value="{{ $database->timezone }}">
+      </div>
+
+      <div class="field">
+	<label for="metric">System</label>
+	<select name="metric" class="pure-input-1">
+	  <option value="0" {{ $database->metric ? '' : 'selected' }}>Imperial (miles)</option>
+          <option value="1" {{ $database->metric ? 'selected' : '' }}>Metric (kilometer)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="ui button primary">Save</button>
+    </form>
+  </div>
+  <br>
+
   <h2>Realtime Micropub Export</h2>
 
   <p>Enter a Micropub endpoint and token below and any trips that are written to this database will be sent to the endpoint as well.</p>

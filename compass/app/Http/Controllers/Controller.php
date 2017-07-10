@@ -96,7 +96,7 @@ class Controller extends BaseController
       ],
       'range_from' => $request->input('from') ?: '',
       'range_to' => $request->input('to') ?: '',
-      'range_tz' => $request->input('tz') ?: 'America/Los_Angeles'
+      'range_tz' => $request->input('tz') ?: $db->timezone
     ]);
   }
 
@@ -186,6 +186,14 @@ class Controller extends BaseController
       DB::table('databases')->where('id', $db->id)
         ->update([
           'ping_urls' => $request->input('ping_urls'),
+        ]);
+
+      return redirect('/settings/'.$db->name);
+    } else if($request->input('timezone')) {
+      DB::table('databases')->where('id', $db->id)
+	->update([
+	  'timezone' => $request->input('timezone'),
+          'metric' => $request->input('metric'),
         ]);
 
       return redirect('/settings/'.$db->name);

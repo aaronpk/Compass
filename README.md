@@ -18,11 +18,33 @@ To write to a database, make a POST request in JSON format with the following ke
 `POST /api/input`
 
 * locations - a list of GeoJSON objects
-* token - the write token for the database
+* token - the write token for the database (as a query string parameter or in the post body)
 
 The GeoJSON objects must have at least one property, "timestamp", which is can be any value that can be interpreted as a date. The object can have any additional properties you wish.
 
-The open source iOS [GPS Logger](https://github.com/esripdx/GPS-Logger-iOS) will send data in this format by default.
+The open source iOS [GPS Logger](https://github.com/aaronpk/GPS-Logger-iOS) will send data in this format by default.
+
+```
+HTTP/1.1 POST /api/input?token=XXXXXXX
+Content-type: application/json
+
+{
+  "locations": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-122.621, 45.535]
+      },
+      "properties": {
+        "timestamp": "2017-01-01T10:00:00-0700",
+        "horizontal_accuracy": 65
+      }
+    }
+  ]
+}
+```
+
 
 ### Reading
 

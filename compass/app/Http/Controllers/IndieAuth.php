@@ -33,13 +33,11 @@ class IndieAuth extends BaseController
 
     } else {
       $authorizationEndpoint = \IndieAuth\Client::discoverAuthorizationEndpoint($me);
-      $tokenEndpoint = \IndieAuth\Client::discoverTokenEndpoint($me);
 
       session([
         'auth_state' => $state, 
         'attempted_me' => $me,
         'authorization_endpoint' => $authorizationEndpoint,
-        'token_endpoint' => $tokenEndpoint
       ]);
 
       // If the user specified only an authorization endpoint, use that
@@ -66,19 +64,12 @@ class IndieAuth extends BaseController
       return view('auth/error', ['error' => 'State did not match. Start over.']);
     }
 
-    $tokenEndpoint = false;
-    if(session('token_endpoint')) {
-      $tokenEndpoint = session('token_endpoint');
-    } else if(session('authorization_endpoint')) {
+    if(session('authorization_endpoint')) {
       $authorizationEndpoint = session('authorization_endpoint');
     } else {
       $authorizationEndpoint = env('DEFAULT_AUTH_ENDPOINT');
     }
-    if($tokenEndpoint) {
-      $token = \IndieAuth\Client::getAccessToken($tokenEndpoint, $request->input('code'), session('attempted_me'), $this->_redirectURI(), env('BASE_URL'), $request->input('state'));
-    } else {
-      $token = \IndieAuth\Client::verifyIndieAuthCode($authorizationEndpoint, $request->input('code'), session('attempted_me'), $this->_redirectURI(), env('BASE_URL'), $request->input('state'));
-    }
+    $token = \IndieAuth\Client::verifyIndieAuthCode($authorizationEndpoint, $request->input('code'), session('attempted_me'), $this->_redirectURI(), env('BASE_URL'));
 
     if($token && array_key_exists('me', $token)) {
       session()->flush();

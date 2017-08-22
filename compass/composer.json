@@ -9,7 +9,7 @@
         "laravel/lumen-framework": "5.1.*",
         "vlucas/phpdotenv": "~1.0",
         "p3k/quartz-db": "0.1.*",
-        "indieauth/client": "0.1.*",
+        "indieauth/client": "0.2.*",
         "guzzlehttp/guzzle":"~6.0",
         "illuminate/redis": "^5.1",
         "p3k/multipart": "*"

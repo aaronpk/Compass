@@ -12,7 +12,7 @@
     <li class="db"><a href="/map/{{ $database->name }}">{{ $database->name }}</a></li>
     @endforeach
     <li>
-      <a href="javascript:$('.databases .create').removeClass('hidden');$('.create-link').addClass('hidden');" class="pure-button create-link {{ session('create-error') ? 'hidden' : '' }}">create database</a>
+      <a href="#" class="pure-button create-link {{ session('create-error') ? 'hidden' : '' }}">create database</a>
       @if(session('create-error'))
         <div class="error">{{ session('create-error') }}</div>
       @endif
@@ -28,5 +28,13 @@
   </ul>
 
 </div>
-
+<script>
+$(function(){
+  $(".create-link").click(function(){
+    $('.databases .create').removeClass('hidden');
+    $('.create-link').addClass('hidden');
+    return false;
+  });
+});
+</script>
 @endsection

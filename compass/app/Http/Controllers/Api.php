@@ -269,13 +269,16 @@ class Api extends BaseController
     ];
 
     if($last_location) {
+      /*
+      // 2017-08-22 Don't geocode cause it takes too long. Maybe make a separate route for this later.
       $geocode = self::geocode(['latitude'=>$last_location['geometry']['coordinates'][1], 'longitude'=>$last_location['geometry']['coordinates'][0]]);
       $response['geocode'] = [
         'full_name' => $geocode->full_name,
         'locality' => $geocode->locality,
         'country' => $geocode->country
       ];
-      #$response['geocode'] = null;
+      */
+      $response['geocode'] = null;
 
       // Notify subscribers that new data is available
       if($db->ping_urls) {

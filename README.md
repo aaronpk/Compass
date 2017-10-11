@@ -12,6 +12,24 @@ In the `compass` directory, copy `.env.example` to `.env` and fill in the detail
 $ composer install
 ```
 
+### Web Server
+Your web server will need to support URL re-routing to the index.php file of compass. This will vary based on your web server.
+
+- If you're using Apache, this will involve URL re-writing likely using .htaccess
+- If you're using Nginx, this will involve incorporating the following code into your server block, you should also add any applicable fastcgi settings inside the location block below:
+
+```
+try_files $uri /index.php?$args;
+
+  location /index.php {
+    fastcgi_param   SCRIPT_FILENAME $document_root$fastcgi_script_name;
+  }
+```
+
+### Job Queue
+For the job queue you will either need to have one of the supported options by Luman. The two most likely options are an SQL database or Redis.
+You can find other supported options [here](https://lumen.laravel.com/docs/5.1/queues#introduction)
+
 If you're using the database queue driver (`QUEUE_DRIVER=database` defined in `.env`), you'll need to create the migration for that table:
 
 ```

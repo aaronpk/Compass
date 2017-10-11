@@ -8,6 +8,26 @@ Compass is a GPS tracking server that stores data in [flat files](https://github
 
 In the `compass` directory, copy `.env.example` to `.env` and fill in the details. Install the dependencies with composer.
 
+```
+$ composer install
+```
+
+If you're using the database queue driver (`QUEUE_DRIVER=database` defined in `.env`), you'll need to create the migration for that table and run it:
+
+* `php artisan queue:table`
+* `php artisan migrate`
+
+Otherwise if you're using Redis, make sure you've installed the Redis server and set `QUEUE_DRIVER=redis`.
+
+Make sure the storage folder you've defined in `STORAGE_DIR` is writable by the web server (or by the PHP process if you're using php-fpm).
+
+To process jobs on the queue, run
+
+```
+$ php artisan queue:listen
+```
+
+For more details on how to configure this to run in the background, see https://lumen.laravel.com/docs/5.1/queues#running-the-queue-listener
 
 ## API
 

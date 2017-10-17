@@ -200,4 +200,119 @@ class Controller extends BaseController
     }
   }
 
+    public function micropubStart(Request $request, $dbName) {
+
+        $me = \IndieAuth\Client::normalizeMeURL($request->input('me'));
+        if(!$me) {
+            return view('auth/error', ['error' => 'Invalid URL']);
+        }
+
+        $state = \IndieAuth\Client::generateStateParameter();
+
+        $authorizationEndpoint = \IndieAuth\Client::discoverAuthorizationEndpoint($me);
+
+        // Isolate session variables to this variable only
+        session([$dbName => [
+            'auth_state' => $state,
+            'attempted_me' => $me,
+            'authorization_endpoint' => $authorizationEndpoint
+        ]]);
+
+        // If the user specified only an authorization endpoint, use that
+        if(!$authorizationEndpoint) {
+            // Otherwise, fall back to indieauth.com
+            $authorizationEndpoint = env('DEFAULT_AUTH_ENDPOINT');
+        }
+        $authorizationURL = \IndieAuth\Client::buildAuthorizationURL($authorizationEndpoint, $me, $this->_databaseRedirectURI($dbName), env('BASE_URL'), $state, 'create');
+
+        return redirect($authorizationURL);
+    }
+
+    public function micropubCallback(Request $request, $dbName) {
+
+        $settingsSession = session($dbName);
+
+        // Start all error checking
+        if(!$settingsSession['auth_state'] || !$settingsSession['attempted_me']) {
+            return view('auth/error', ['error' => 'Missing state information. Start over.']);
+        }
+
+        if($request->input('error')) {
+            return view('auth/error', ['error' => $request->input('error')]);
+        }
+
+        if($settingsSession['auth_state'] != $request->input('state')) {
+            return view('auth/error', ['error' => 'State did not match. Start over.']);
+        }
+
+        // Verify that the database exists and doesn't have micropub already
+        $db = DB::table('databases')
+            ->where('name','=',$dbName)
+            ->first();
+
+        if (!$db) {
+            return view('auth/error', ['error' => 'Database requested does not exist']);
+        }
+
+        if (!empty($db->micropub_token)) {
+            return view('auth/error', ['error' => 'Database already is connected to a micropub endpoint. Please remove the existing endpoint first.']);
+        }
+
+        $tokenEndpoint = \IndieAuth\Client::discoverTokenEndpoint($settingsSession['attempted_me']);
+        if (empty($tokenEndpoint)) {
+            return view('auth/error', ['error' => 'Could not find user\'s token endpoint']);
+        }
+
+        $token = \IndieAuth\Client::getAccessToken($tokenEndpoint, $request->input('code'), $settingsSession['attempted_me'], $this->_databaseRedirectURI($dbName), env('BASE_URL'));
+
+        if($token && array_key_exists('me', $token)) {
+            // forget the current db settings session
+            session()->forget($dbName);
+
+            if (!array_key_exists('access_token', $token)) {
+                return view('auth/error', ['error' => 'Could not find access_token']);
+            }
+
+            if (!array_key_exists('scope', $token) || strpos($token['scope'], 'create') === false) {
+                return view('auth/error', ['error' => 'You were not granted a create scope']);
+            }
+
+            $micropubEndpoint = \IndieAuth\Client::discoverMicropubEndpoint($token['me']);
+            $micropubToken = $token['access_token'];
+
+            DB::table('databases')->where('id', $db->id)
+                ->update([
+                    'micropub_endpoint' => $micropubEndpoint,
+                    'micropub_token' => $micropubToken
+                ]);
+        } else {
+            return view('auth/error', ['error' => 'No url id found']);
+        }
+
+        return redirect('/settings/'.$db->name);
+    }
+
+    public function removeMicropub(Request $request, $dbName) {
+
+        $db = DB::table('databases')
+            ->where('name','=',$dbName)
+            ->first();
+
+        if (!$db) {
+            return view('auth/error', ['error' => 'Database requested does not exist']);
+        }
+
+        DB::table('databases')->where('id', $db->id)
+            ->update([
+                'micropub_endpoint' => '',
+                'micropub_token' => ''
+            ]);
+
+        return redirect('/settings/'.$db->name);
+    }
+
+    private function _databaseRedirectURI($dbName) {
+        return env('BASE_URL') . 'settings/' . $dbName . '/auth/callback';
+    }
+
 }

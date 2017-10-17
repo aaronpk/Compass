@@ -98,7 +98,7 @@
       <button type="submit" class="ui button primary">Connect</button>
     </form>
     @else
-      <form action="/settings/{{ $database->name }}/auth/remove" method="post" class="ui form">
+      <form action="/settings/{{ $database->name }}/auth/remove" method="get" class="ui form">
         <div class="field">
           <p>You are currently posting to <strong>{{$database->micropub_endpoint}}</strong>. Any trips that are written to this database will be sent to that endpoint as well.</p>
         </div>

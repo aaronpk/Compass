@@ -86,22 +86,26 @@
 
   <h2>Realtime Micropub Export</h2>
 
-  <p>Enter a Micropub endpoint and token below and any trips that are written to this database will be sent to the endpoint as well.</p>
-
   <div class="panel">
-    <form action="/settings/{{ $database->name }}" method="post" class="ui form">
+    @if (empty($database->micropub_token))
+    <p>Authorize Compass with a micropub endpoint and any trips that are written to this database will be sent to that endpoint as well.</p>
+    <form action="/settings/{{ $database->name }}/auth/start" method="post" class="ui form">
       <div class="field">
-        <label for="micropub_endpoint">Micropub Endpoint</label>
-        <input name="micropub_endpoint" type="url" placeholder="http://example.com/micropub" class="pure-input-1" value="{{ $database->micropub_endpoint }}">
+        <label for="micropub_endpoint">web sign-in</label>
+        <input name="me" type="url" placeholder="http://example.com/" class="pure-input-1" value="">
       </div>
 
-      <div class="field">
-        <label for="micropub_token">Access Token</label>
-        <input name="micropub_token" type="text" placeholder="" class="pure-input-1" value="{{ $database->micropub_token }}">
-      </div>
-
-      <button type="submit" class="ui button primary">Save</button>
+      <button type="submit" class="ui button primary">Connect</button>
     </form>
+    @else
+      <form action="/settings/{{ $database->name }}/auth/remove" method="post" class="ui form">
+        <div class="field">
+          <p>You are currently posting to <strong>{{$database->micropub_endpoint}}</strong>. Any trips that are written to this database will be sent to that endpoint as well.</p>
+        </div>
+
+        <button type="submit" class="ui button primary">Disconnect</button>
+      </form>
+    @endif
   </div>
 
   <br>

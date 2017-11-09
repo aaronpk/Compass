@@ -3,6 +3,12 @@ function collectEventSeries(data) {
   var events = data.events;
 
   var series = {
+    "application_launched_with_location": {
+      name: "Launched with Location",
+      color: '#42C093',
+      y: 90,
+      data: []
+    },
     "visit": {
       name: "Visit",
       type: 'scatter',
@@ -55,11 +61,13 @@ function collectEventSeries(data) {
   };
 
   for(var i=0; i<events.length; i++) {
-    series[events[i].properties.action].data.push({
-      x: new Date(events[i].properties.unixtime*1000), 
-      y: series[events[i].properties.action].y,
-      location: (events[i].geometry ? events[i].geometry.coordinates : null)
-    });
+    if(series[events[i].properties.action]) {
+      series[events[i].properties.action].data.push({
+        x: new Date(events[i].properties.unixtime*1000), 
+        y: series[events[i].properties.action].y,
+        location: (events[i].geometry ? events[i].geometry.coordinates : null)
+      });
+    }
   }
   
   var response = [];

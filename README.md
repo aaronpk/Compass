@@ -4,7 +4,29 @@ Compass is a GPS tracking server that stores data in [flat files](https://github
 
 ![mapview](screenshot-mapview.jpg)
 
+## Requirements
+
+* PHP 5.5 or above
+* MySQL (for storing user accounts and lists of databases, not for storing the actual location data)
+
+### PHP extensions
+
+You'll need to make sure the following PHP extensions are installed. Typically these are installed using the package manager of your operating system.
+
+* curl
+* mbstring
+* phpunit
+* zip
+* unzip
+
+### Optional
+
+* Redis (for the job queue, can use MySQL instead)
+
+
 ## Setup
+
+Compass is built using the [Lumen framework](https://lumen.laravel.com/). If you have any trouble getting started, you can refer to the [Lumen documentation](https://lumen.laravel.com/docs/5.1) for tips that may have been skipped or assumed in these instructions.
 
 In the `compass` directory, copy `.env.example` to `.env` and fill in the details. Install the dependencies with composer.
 
@@ -27,7 +49,7 @@ try_files $uri /index.php?$args;
 ```
 
 ### Job Queue
-For the job queue you will either need to have one of the supported options by Luman. The two most likely options are an SQL database or Redis.
+For the job queue you will either need to have one of the supported options by Lumen. The two most likely options are an SQL database or Redis.
 You can find other supported options [here](https://lumen.laravel.com/docs/5.1/queues#introduction)
 
 If you're using the database queue driver (`QUEUE_DRIVER=database` defined in `.env`), you'll need to create the migration for that table:

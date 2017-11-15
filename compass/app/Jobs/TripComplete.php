@@ -238,7 +238,9 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     $response = curl_exec($ch);
 
     Log::info("Done!");
-    Log::info($response);
+    if(preg_match('/Location: (.+)/', $response, $match)) {
+      Log::info($match[1]);
+    }
 
     // echo "========\n";
     // echo $response."\n========\n";

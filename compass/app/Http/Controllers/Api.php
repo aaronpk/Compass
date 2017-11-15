@@ -269,6 +269,10 @@ class Api extends BaseController
       }
     }
 
+    if($request->input('current')) {
+      $last_location = $request->input('current');
+    }
+
     $response = [
       'result' => 'ok', 
       'saved' => $num, 
@@ -289,7 +293,7 @@ class Api extends BaseController
 
       // Notify subscribers that new data is available
       if($db->ping_urls) {
-        $job = (new NotifyOfNewLocations($db->id))->onQueue('compass');
+        $job = (new NotifyOfNewLocations($db->id, $last_location))->onQueue('compass');
         $this->dispatch($job);
       }
     }

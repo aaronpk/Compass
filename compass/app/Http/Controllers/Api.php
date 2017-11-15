@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
-use DB;
+use DB, Log, Cache;
 use Quartz;
-use Log;
 use DateTime, DateTimeZone, DateInterval;
 use App\Jobs\TripComplete;
 use App\Jobs\NotifyOfNewLocations;
@@ -237,9 +236,17 @@ class Api extends BaseController
               $date = new DateTime($loc['properties']['timestamp']);
 
             if($date) {
-              $num++;
-              $qz->add($date, $loc);
-              $last_location = $loc;
+              $cacheKey = 'compass::'.$db->name.'::'.$date->format('U');
+
+              // Skip adding if the timestamp is already in the cache.
+              // Helps prevent writing duplicate data when the HTTP request is interrupted.
+              if(!env('CACHE_DRIVER') || !Cache::has($cacheKey)) {
+                $num++;
+                $qz->add($date, $loc);
+                if(env('CACHE_DRIVER'))
+                  Cache::put($cacheKey, 1, 360); // cache this for 6 hours
+                $last_location = $loc;
+              }
 
               if(array_key_exists('type', $loc['properties']) && $loc['properties']['type'] == 'trip') {
                 try {

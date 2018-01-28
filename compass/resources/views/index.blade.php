@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="splash h-x-app">
+<div class="splash h-x-app h-app">
 
   <a class="p-name u-url" href="" style="display: none;">Compass</a>
   <div class="logo"><img src="/assets/compass.svg" width="200" class="u-logo"></div>

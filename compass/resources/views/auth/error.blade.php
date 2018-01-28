@@ -2,8 +2,9 @@
 
 @section('content')
 
-<h1>Something went wrong</h1>
-
-{{ $error }}
+<div class="splash">
+  <h1>Something went wrong</h1>
+  <p>{{ $error }}</p>
+</div>
 
 @endsection

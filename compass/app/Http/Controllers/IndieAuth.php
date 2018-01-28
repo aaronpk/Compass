@@ -19,6 +19,13 @@ class IndieAuth extends BaseController
       return view('auth/error', ['error' => 'Invalid URL']);
     }
 
+    if(!env('ALLOW_NEW_USERS')) {
+      $user = DB::table('users')->where('url', $me)->first();
+      if(!$user) {
+        return view('auth/error', ['error' => 'User Not Registered']);
+      }
+    }
+
     $state = \IndieAuth\Client::generateStateParameter();
 
     if(preg_match('/https?:\/\/github\.com\/[^ \/]+/', $me)) {

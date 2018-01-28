@@ -92,7 +92,7 @@
     <form action="/settings/{{ $database->name }}/auth/start" method="post" class="ui form">
       <div class="field">
         <label for="micropub_endpoint">web sign-in</label>
-        <input name="me" type="url" placeholder="http://example.com/" class="pure-input-1" value="">
+        <input name="me" type="url" placeholder="https://example.com/" class="pure-input-1" value="">
       </div>
 
       <button type="submit" class="ui button primary">Connect</button>

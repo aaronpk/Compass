@@ -211,6 +211,10 @@ class Controller extends BaseController
 
         $authorizationEndpoint = \IndieAuth\Client::discoverAuthorizationEndpoint($me);
 
+        if(!$authorizationEndpoint) {
+          return view('auth/error', ['error' => 'No Authorization Endpoint Specified']);
+        }
+
         // Isolate session variables to this variable only
         session([$dbName => [
             'auth_state' => $state,
@@ -218,11 +222,6 @@ class Controller extends BaseController
             'authorization_endpoint' => $authorizationEndpoint
         ]]);
 
-        // If the user specified only an authorization endpoint, use that
-        if(!$authorizationEndpoint) {
-            // Otherwise, fall back to indieauth.com
-            $authorizationEndpoint = env('DEFAULT_AUTH_ENDPOINT');
-        }
         $authorizationURL = \IndieAuth\Client::buildAuthorizationURL($authorizationEndpoint, $me, $this->_databaseRedirectURI($dbName), env('BASE_URL'), $state, 'create');
 
         return redirect($authorizationURL);

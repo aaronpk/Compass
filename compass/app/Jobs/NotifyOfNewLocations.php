@@ -32,7 +32,11 @@ class NotifyOfNewLocations extends Job implements SelfHandling, ShouldQueue
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($this->_last_location));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_exec($ch);
-        Log::info("Notifying ".$url." with current location");
+        $timestamp = '';
+        if($this->_last_location) {
+          $timestamp = $this->_last_location['properties']['timestamp'];
+        }
+        Log::info("Notifying ".$url." with current location: ".$timestamp);
       }
     }
   }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "38dc6c50ab57209879f289b71dc895ee",
+    "content-hash": "1c1164fb91f4ee6de196c6516e6303fb",
     "packages": [
         {
             "name": "barnabywalters/mf-cleaner",
@@ -2042,16 +2042,16 @@
         },
         {
             "name": "p3k/utils",
-            "version": "1.1.0",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aaronpk/p3k-utils.git",
-                "reference": "1117e29c697b54eb05279b73b62515de1595dbb2"
+                "reference": "f8a1258ec548e8ef6747bf2d74568611863cb1ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aaronpk/p3k-utils/zipball/1117e29c697b54eb05279b73b62515de1595dbb2",
-                "reference": "1117e29c697b54eb05279b73b62515de1595dbb2",
+                "url": "https://api.github.com/repos/aaronpk/p3k-utils/zipball/f8a1258ec548e8ef6747bf2d74568611863cb1ee",
+                "reference": "f8a1258ec548e8ef6747bf2d74568611863cb1ee",
                 "shasum": ""
             },
             "require": {
@@ -2084,7 +2084,7 @@
             ],
             "description": "Some helpful functions used by https://p3k.io projects",
             "homepage": "https://github.com/aaronpk/p3k-utils",
-            "time": "2018-01-28T22:18:37+00:00"
+            "time": "2018-01-28T22:31:41+00:00"
         },
         {
             "name": "paragonie/random_compat",

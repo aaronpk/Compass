@@ -13,7 +13,7 @@
         "guzzlehttp/guzzle":"~6.0",
         "illuminate/redis": "^5.1",
         "p3k/multipart": "*",
-        "p3k/utils": ">=1.1.0",
+        "p3k/utils": ">=1.1.1",
         "p3k/timezone": "^0.1.0"
     },
     "require-dev": {

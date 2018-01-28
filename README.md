@@ -34,6 +34,13 @@ In the `compass` directory, copy `.env.example` to `.env` and fill in the detail
 $ composer install
 ```
 
+Once you've created the database and configured the settings in `.env`, run the migrations to set up all the tables.
+
+```
+$ php artisan migrate
+```
+
+
 ### Web Server
 Your web server will need to support URL re-routing to the index.php file of compass. This will vary based on your web server.
 
@@ -59,12 +66,6 @@ $ php artisan queue:table
 ```
 
 If you're using Redis, make sure you've installed the Redis server and set `QUEUE_DRIVER=redis`.
-
-You will need to run the database migrations to create the database schema:
-
-```
-$ php artisan migrate
-```
 
 Make sure the storage folder you've defined in `STORAGE_DIR` is writable by the web server (or by the PHP process if you're using php-fpm).
 

@@ -127,8 +127,6 @@ class Api extends BaseController
     if(!$db)
       return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
 
-    $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'r');
-
     if($request->input('tz')) {
       $tz = $request->input('tz');
     } else {
@@ -136,6 +134,10 @@ class Api extends BaseController
     }
 
     if($input=$request->input('before')) {
+      // If a specific time was requested, look up the data in the filesystem
+
+      $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'r');
+
       if(preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $input)) {
         // If the input date is given in YYYY-mm-dd HH:mm:ss format, interpret it in the timezone given
         $date = DateTime::createFromFormat('Y-m-d H:i:s', $input, new DateTimeZone($tz));
@@ -148,53 +150,56 @@ class Api extends BaseController
       if(!$date) {
         return response(json_encode(['error' => 'invalid date provided']))->header('Content-Type', 'application/json');
       }
-    } else {
-      $date = new DateTime();
-    }
 
-    /* ********************************************** */
-    // TODO: move this logic into QuartzDB
+      /* ********************************************** */
+      // TODO: move this logic into QuartzDB
 
-    // Load the shard for the given date
-    $shard = $qz->shardForDate($date);
-    // If the shard doesn't exist, check one day before
-    if(!$shard->exists()) {
-      $date = $date->sub(new DateInterval('PT86400S'));
+      // Load the shard for the given date
       $shard = $qz->shardForDate($date);
-    }
-    // Now if the shard doesn't exist, return an empty result
-    if(!$shard->exists()) {
-      return response(json_encode([
-        'data'=>null
-      ]));
+      // If the shard doesn't exist, check one day before
+      if(!$shard->exists()) {
+        $date = $date->sub(new DateInterval('PT86400S'));
+        $shard = $qz->shardForDate($date);
+      }
+      // Now if the shard doesn't exist, return an empty result
+      if(!$shard->exists()) {
+        return response(json_encode([
+          'data'=>null
+        ]));
+      }
+
+      // Start iterating through the shard and look for the last line that is before the given date
+      $shard->init();
+      $record = false;
+      foreach($shard as $r) {
+        if($r->date > $date)
+          break;
+        $record = $r;
+      }
+      /* ********************************************** */
+
+      if(!$record) {
+        return response(json_encode([
+          'data'=>null
+        ]));
+      }
+
+      $response = [
+        'data' => $record->data,
+      ];
+    } else {
+      // If no specific time was requested, use the cached location from the database
+      $response = [
+        'data' => json_decode($db->last_location),
+      ];
     }
 
-    // Start iterating through the shard and look for the last line that is before the given date
-    $shard->init();
-    $record = false;
-    foreach($shard as $r) {
-      if($r->date > $date)
-        break;
-      $record = $r;
-    }
-    /* ********************************************** */
-
-    if(!$record) {
-      return response(json_encode([
-        'data'=>null
-      ]));
-    }
-
-    $response = [
-      'data' => $record->data
-    ];
-
-    if($request->input('geocode') && property_exists($record->data, 'geometry') && property_exists($record->data->geometry, 'coordinates')) {
-      $coords = $record->data->geometry->coordinates;
+    if($request->input('geocode') && property_exists($response['data'], 'geometry') && property_exists($response['data']->geometry, 'coordinates')) {
+      $coords = $response['data']->geometry->coordinates;
       $params = [
         'latitude' => $coords[1],
         'longitude' => $coords[0],
-        'date' => $record->data->properties->timestamp
+        'date' => $response['data']->properties->timestamp
       ];
       $geocode = self::geocode($params);
       if($geocode) {
@@ -271,6 +276,7 @@ class Api extends BaseController
 
     if($request->input('current')) {
       $last_location = $request->input('current');
+      Log::info('Device sent current location');
     }
 
     $response = [
@@ -291,11 +297,40 @@ class Api extends BaseController
       */
       $response['geocode'] = null;
 
+      // Cache the last location in the database
+      if(isset($last_location['properties']['timestamp'])) {
+        if(preg_match('/^\d+\.\d+$/', $last_location['properties']['timestamp']))
+          $date = DateTime::createFromFormat('U.u', $last_location['properties']['timestamp']);
+        elseif(preg_match('/^\d+$/', $last_location['properties']['timestamp']))
+          $date = DateTime::createFromFormat('U', $last_location['properties']['timestamp']);
+        else
+          $date = new DateTime($last_location['properties']['timestamp']);
+        $date->setTimeZone(new DateTimeZone('UTC'));
+        $date = $date->format('Y-m-d H:i:s');
+      } else {
+        $date = null;
+      }
+
+      DB::table('databases')->where('id', $db->id)
+        ->update([
+          'last_location' => json_encode($last_location, JSON_UNESCAPED_SLASHES+JSON_PRETTY_PRINT),
+          'last_location_date' => $date,
+        ]);
+
       // Notify subscribers that new data is available
       if($db->ping_urls) {
         $job = (new NotifyOfNewLocations($db->id, $last_location))->onQueue('compass');
         $this->dispatch($job);
       }
+    }
+
+    if($request->input('trip')) {
+      DB::table('databases')->where('id', $db->id)
+        ->update([
+          'current_trip' => json_encode($request->input('trip'), JSON_UNESCAPED_SLASHES+JSON_PRETTY_PRINT)
+        ]);
+    } else {
+      DB::table('databases')->where('id', $db->id)->update(['current_trip' => null]);
     }
 
     return response(json_encode($response))->header('Content-Type', 'application/json');

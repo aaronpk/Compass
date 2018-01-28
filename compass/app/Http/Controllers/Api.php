@@ -209,7 +209,29 @@ class Api extends BaseController
       }
     }
 
-    return response(json_encode($response))->header('Content-Type', 'application/json');;
+    return response(json_encode($response))->header('Content-Type', 'application/json');
+  }
+
+  public function trip(Request $request) {
+    $token = $request->input('token');
+    if(!$token)
+      return response(json_encode(['error' => 'no token provided']))->header('Content-Type', 'application/json');
+
+    $db = DB::table('databases')->where('read_token','=',$token)->first();
+    if(!$db)
+      return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
+
+    if($db->current_trip) {
+      $response = [
+        'trip' => json_decode($db->current_trip)
+      ];
+    } else {
+      $response = [
+        'trip' => null
+      ];
+    }
+
+    return response(json_encode($response))->header('Content-Type', 'application/json');
   }
 
   public function input(Request $request) {

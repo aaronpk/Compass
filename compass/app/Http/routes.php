@@ -17,6 +17,7 @@ $app->post('/database/create', 'Controller@createDatabase');
 
 $app->get('/api/query', 'Api@query');
 $app->get('/api/last', 'Api@last');
+$app->get('/api/trip', 'Api@trip');
 $app->get('/api/find-from-localtime', 'LocalTime@find');
 $app->get('/api/input', 'Api@account');
 $app->post('/api/input', 'Api@input');

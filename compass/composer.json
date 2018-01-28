@@ -1,7 +1,7 @@
 {
-    "name": "laravel/lumen",
-    "description": "The Laravel Lumen Framework.",
-    "keywords": ["framework", "laravel", "lumen"],
+    "name": "p3k/Compass",
+    "description": "Compass is a GPS tracking server that stores data in flat files.",
+    "keywords": ["p3k", "gps"],
     "license": "MIT",
     "type": "project",
     "require": {
@@ -12,7 +12,9 @@
         "indieauth/client": "0.2.*",
         "guzzlehttp/guzzle":"~6.0",
         "illuminate/redis": "^5.1",
-        "p3k/multipart": "*"
+        "p3k/multipart": "*",
+        "p3k/utils": ">=1.1.0",
+        "p3k/timezone": "^0.1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.0",

@@ -41,6 +41,12 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     // Load the data from the start and end times
     $start = new DateTime($this->_data['properties']['start']);
     $end = new DateTime($this->_data['properties']['end']);
+
+    if($end->format('U') - $start->format('U') < 15) {
+      Log::info("Skipping trip since it was too short");
+      return;
+    }
+
     $results = $qz->queryRange($start, $end);
     $features = [];
     foreach($results as $id=>$record) {
@@ -67,26 +73,26 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
 
     // If there are no start/end coordinates in the request, use the first and last coordinates
     if(count($features)) {
-      if(!array_key_exists('start-coordinates', $this->_data['properties'])) {
-        $this->_data['properties']['start-coordinates'] = $features[0]->geometry->coordinates;
+      if(!array_key_exists('start_location', $this->_data['properties'])) {
+        $this->_data['properties']['start_location'] = $features[0];
       }
-      if(!array_key_exists('end-coordinates', $this->_data['properties'])) {
-        $this->_data['properties']['end-coordinates'] = $features[count($features)-1]->geometry->coordinates;
+      if(!array_key_exists('end_location', $this->_data['properties'])) {
+        $this->_data['properties']['end_location'] = $features[count($features)-1];
       }
     }
 
     $startAdr = false;
-    if(array_key_exists('start-coordinates', $this->_data['properties'])) {
+    if(array_key_exists('start_location', $this->_data['properties'])) {
       // Reverse geocode the start and end location to get an h-adr
       $startAdr = [
         'type' => 'h-adr',
         'properties' => [
-          'latitude' => $this->_data['properties']['start-coordinates'][1],
-          'longitude' => $this->_data['properties']['start-coordinates'][0],
+          'latitude' => $this->_data['properties']['start_location']['geometry']['coordinates'][1],
+          'longitude' => $this->_data['properties']['start_location']['geometry']['coordinates'][0],
         ]
       ];
       Log::info('Looking up start location');
-      $start = self::geocode($this->_data['properties']['start-coordinates'][1], $this->_data['properties']['start-coordinates'][0]);
+      $start = self::geocode($startAdr['properties']['latitude'], $startAdr['properties']['longitude']);
       if($start) {
         $startAdr['properties']['locality'] = $start->locality;
         $startAdr['properties']['region'] = $start->region;
@@ -98,16 +104,16 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     }
 
     $endAdr = false;
-    if(array_key_exists('end-coordinates', $this->_data['properties'])) {
+    if(array_key_exists('end_location', $this->_data['properties'])) {
       $endAdr = [
         'type' => 'h-adr',
         'properties' => [
-          'latitude' => $this->_data['properties']['end-coordinates'][1],
-          'longitude' => $this->_data['properties']['end-coordinates'][0],
+          'latitude' => $this->_data['properties']['end_location']['geometry']['coordinates'][1],
+          'longitude' => $this->_data['properties']['end_location']['geometry']['coordinates'][0],
         ]
       ];
       Log::info('Looking up end location');
-      $end = self::geocode($this->_data['properties']['end-coordinates'][1], $this->_data['properties']['end-coordinates'][0]);
+      $end = self::geocode($endAdr['properties']['latitude'], $endAdr['properties']['longitude']);
       if($end) {
         $endAdr['properties']['locality'] = $end->locality;
         $endAdr['properties']['region'] = $end->region;
@@ -129,11 +135,6 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
       $endDate->setTimeZone(new DateTimeZone($end->timezone));
     }
 
-    if($endDate->format('U') - $startDate->format('U') < 15) {
-      Log::info("Skipping trip since it was too short");
-      return;
-    }
-
     $params = [
       'h' => 'entry',
       'published' => $endDate->format('c'),
@@ -144,9 +145,6 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
           'start' => $startDate->format('c'),
           'end' => $endDate->format('c'),
           'route' => 'route.json'
-          // TODO: avgpace for runs
-          // TODO: avgspeed for bike rides
-          // TODO: avg heart rate if available
         ]
       ]
     ];
@@ -214,6 +212,11 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
         Log::debug("Overriding distance to $distance");
       }
     }
+
+    // TODO: avgpace for runs
+    // TODO: avgspeed for bike rides
+    // TODO: avg heart rate if available
+
 
     // echo "Micropub Params\n";
     // print_r($params);

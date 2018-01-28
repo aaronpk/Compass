@@ -2,9 +2,10 @@
 
 @section('content')
 
-<div class="splash">
+<div class="splash h-x-app">
 
-  <div class="logo"><img src="/assets/compass.svg" width="200"></div>
+  <a class="p-name u-url" href="" style="display: none;">Compass</a>
+  <div class="logo"><img src="/assets/compass.svg" width="200" class="u-logo"></div>
 
   <form action="/auth/start" method="post" class="ui form login" style="margin-top: 40px;">
     <div class="ui action input">

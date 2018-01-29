@@ -84,11 +84,11 @@
   </div>
   <br>
 
-  <h2>Realtime Micropub Export</h2>
+  <h2>Micropub Trip Export</h2>
 
   <div class="panel">
     @if (empty($database->micropub_token))
-    <p>Authorize Compass with a micropub endpoint and any trips that are written to this database will be sent to that endpoint as well.</p>
+    <p>Authorize Compass with a Micropub endpoint and any trips that are written to this database will be sent to that endpoint as well.</p>
     <form action="/settings/{{ $database->name }}/auth/start" method="post" class="ui form">
       <div class="field">
         <label for="micropub_endpoint">web sign-in</label>
@@ -110,9 +110,13 @@
 
   <br>
 
-  <h2>Ping on New Location</h2>
+  <h2>Web Hooks</h2>
 
-  <p>Enter one or more URLs to ping when new location data is available. This will send a POST request to the URLs with the URL to fetch the last location from the database, e.g. <code>url=https://compass.p3k.io/api/last?token=xxxx</code>. Enter one or more URLs separated by whitespace.</p>
+  <p>Enter one or more URLs to ping when events occur. This will send a POST request to each URL configured when new a location is received, or a trip is started or ended.</p>
+
+  <p>The POST body will be JSON encoded and will contain either a top-level property <code>location</code> or <code>trip</code>. If the trip has started, then the trip object will contain a <code>current_location</code> property. If the trip has ended, the trip object will contain a <code>end_location</code> property.</p>
+
+  <p>Enter one or more URLs separated by whitespace.</p>
 
   <div class="panel">
     <form action="/settings/{{ $database->name }}" method="post" class="ui form">

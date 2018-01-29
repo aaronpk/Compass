@@ -8,6 +8,7 @@ use DB, Log, Cache;
 use Quartz;
 use DateTime, DateTimeZone, DateInterval;
 use App\Jobs\TripComplete;
+use App\Jobs\TripStarted;
 use App\Jobs\NotifyOfNewLocations;
 
 class Api extends BaseController
@@ -347,10 +348,17 @@ class Api extends BaseController
     }
 
     if($request->input('trip')) {
+      $existing_trip = $db->current_trip;
+
       DB::table('databases')->where('id', $db->id)
         ->update([
           'current_trip' => json_encode($request->input('trip'), JSON_UNESCAPED_SLASHES+JSON_PRETTY_PRINT)
         ]);
+
+      if(!$existing_trip && $db->ping_urls) {
+        $job = (new TripStarted($db->id))->onQueue('compass');
+        $this->dispatch($job);
+      }
     } else {
       DB::table('databases')->where('id', $db->id)->update(['current_trip' => null]);
     }

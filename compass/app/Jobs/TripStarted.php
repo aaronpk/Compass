@@ -1,13 +1,16 @@
 <?php
 namespace App\Jobs;
 
-use DB, Log;
+use DB;
+use Log;
+use Quartz;
+use p3k\Multipart;
 use App\Jobs\Job;
 use Illuminate\Contracts\Bus\SelfHandling;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use DateTime, DateTimeZone;
 
-class NotifyOfNewLocations extends Job implements SelfHandling, ShouldQueue
+class TripStarted extends Job implements SelfHandling, ShouldQueue
 {
   private $_dbid;
 
@@ -17,16 +20,13 @@ class NotifyOfNewLocations extends Job implements SelfHandling, ShouldQueue
 
   public function handle() {
     $db = DB::table('databases')->where('id','=',$this->_dbid)->first();
+
     $urls = preg_split('/\s+/', $db->ping_urls);
 
-    $location = [
-      'location' => json_decode($db->last_location, true)
+    $trip = [
+      'trip' => json_decode($db->current_trip, true)
     ];
-
-    if($db->current_trip) 
-      $location['trip'] = json_decode($db->current_trip, true);
-
-    $location = json_encode($location, JSON_UNESCAPED_SLASHES);
+    $trip = json_encode($trip, JSON_UNESCAPED_SLASHES);
 
     foreach($urls as $url) {
       if(trim($url)) {
@@ -35,16 +35,12 @@ class NotifyOfNewLocations extends Job implements SelfHandling, ShouldQueue
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
           'Content-Type: application/json',
           'Authorization: Bearer '.$db->read_token,
-          'Compass-Url: '.env('BASE_URL').'api/last?token='.$db->read_token.'&geocode=1'
+          'Compass-Url: '.env('BASE_URL').'api/trip?token='.$db->read_token
         ]);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $location);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $trip);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_exec($ch);
-        $timestamp = '';
-        if($db->last_location) {
-          $timestamp = json_decode($db->last_location)->properties->timestamp;
-        }
-        Log::info("Notifying ".$url." with current location: ".$timestamp);
+        Log::info("Notifying ".$url." of a new trip");
       }
     }
   }

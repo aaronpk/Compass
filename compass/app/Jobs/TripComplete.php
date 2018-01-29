@@ -34,34 +34,37 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     //////////////////////////////////
     // Web Hooks
 
-    $urls = preg_split('/\s+/', $db->ping_urls);
+    // Don't run the web hooks for manually created trips
+    if(isset($this->_data['properties']['end_location'])) {
+      $urls = preg_split('/\s+/', $db->ping_urls);
+      
+      // Build a trip object that looks like the active trip format from Overland
+      $trip = [
+        'trip' => [
+          'mode' => $this->_data['properties']['mode'],
+          'start_location' => $this->_data['properties']['start_location'],
+          'end_location' => $this->_data['properties']['end_location'],
+          'distance' => $this->_data['properties']['distance'],
+          'start' => $this->_data['properties']['start'],
+          'end' => $this->_data['properties']['end']
+        ]
+      ];
+      $trip = json_encode($trip, JSON_UNESCAPED_SLASHES);
 
-    // Build a trip object that looks like the active trip format from Overland
-    $trip = [
-      'trip' => [
-        'mode' => $this->_data['properties']['mode'],
-        'start_location' => $this->_data['properties']['start_location'],
-        'end_location' => $this->_data['properties']['end_location'],
-        'distance' => $this->_data['properties']['distance'],
-        'start' => $this->_data['properties']['start'],
-        'end' => $this->_data['properties']['end']
-      ]
-    ];
-    $trip = json_encode($trip, JSON_UNESCAPED_SLASHES);
-
-    foreach($urls as $url) {
-      if(trim($url)) {
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-          'Content-Type: application/json',
-          'Authorization: Bearer '.$db->read_token,
-          'Compass-Url: '.env('BASE_URL').'api/trip?token='.$db->read_token
-        ]);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $trip);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_exec($ch);
-        Log::info("Notifying ".$url." of a completed trip");
+      foreach($urls as $url) {
+        if(trim($url)) {
+          $ch = curl_init($url);
+          curl_setopt($ch, CURLOPT_POST, true);
+          curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer '.$db->read_token,
+            'Compass-Url: '.env('BASE_URL').'api/trip?token='.$db->read_token
+          ]);
+          curl_setopt($ch, CURLOPT_POSTFIELDS, $trip);
+          curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+          curl_exec($ch);
+          Log::info("Notifying ".$url." of a completed trip");
+        }
       }
     }
 

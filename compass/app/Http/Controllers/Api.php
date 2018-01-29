@@ -341,7 +341,7 @@ class Api extends BaseController
 
       // Notify subscribers that new data is available
       if($db->ping_urls) {
-        $job = (new NotifyOfNewLocations($db->id, $last_location))->onQueue('compass');
+        $job = (new NotifyOfNewLocations($db->id))->onQueue('compass');
         $this->dispatch($job);
       }
     }

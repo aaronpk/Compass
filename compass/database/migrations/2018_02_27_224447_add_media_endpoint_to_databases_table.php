@@ -13,7 +13,7 @@ class AddMediaEndpointToDatabasesTable extends Migration
     public function up()
     {
         Schema::table('databases', function (Blueprint $table) {
-            //
+            $table->string('micropub_media_endpoint', 255);
         });
     }
 
@@ -25,7 +25,7 @@ class AddMediaEndpointToDatabasesTable extends Migration
     public function down()
     {
         Schema::table('databases', function (Blueprint $table) {
-            //
+            $table->dropColumn('micropub_media_endpoint');
         });
     }
 }

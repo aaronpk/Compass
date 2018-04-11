@@ -15,7 +15,6 @@ You'll need to make sure the following PHP extensions are installed. Typically t
 
 * curl
 * mbstring
-* phpunit
 * zip
 * unzip
 

@@ -114,10 +114,10 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     // If there are no start/end coordinates in the request, use the first and last coordinates
     if(count($features)) {
       if(!array_key_exists('start_location', $this->_data['properties'])) {
-        $this->_data['properties']['start_location'] = $features[0];
+        $this->_data['properties']['start_location'] = json_decode(json_encode($features[0]), true);
       }
       if(!array_key_exists('end_location', $this->_data['properties'])) {
-        $this->_data['properties']['end_location'] = $features[count($features)-1];
+        $this->_data['properties']['end_location'] = json_decode(json_encode($features[count($features)-1]), true);
       }
     }
 

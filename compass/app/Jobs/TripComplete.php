@@ -37,7 +37,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     // Don't run the web hooks for manually created trips
     if(isset($this->_data['properties']['end_location'])) {
       $urls = preg_split('/\s+/', $db->ping_urls);
-      
+
       // Build a trip object that looks like the active trip format from Overland
       $trip = [
         'trip' => [
@@ -133,7 +133,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
       ];
       Log::info('Looking up start location');
       $start = self::geocode($startAdr['properties']['latitude'], $startAdr['properties']['longitude']);
-      if($start) {
+      if($start && property_exists($start, 'locality')) {
         $startAdr['properties']['locality'] = $start->locality;
         $startAdr['properties']['region'] = $start->region;
         $startAdr['properties']['country'] = $start->country;
@@ -154,7 +154,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
       ];
       Log::info('Looking up end location');
       $end = self::geocode($endAdr['properties']['latitude'], $endAdr['properties']['longitude']);
-      if($end) {
+      if($end && property_exists($end, 'locality')) {
         $endAdr['properties']['locality'] = $end->locality;
         $endAdr['properties']['region'] = $end->region;
         $endAdr['properties']['country'] = $end->country;

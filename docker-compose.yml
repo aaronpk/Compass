@@ -8,6 +8,7 @@ services:
     - db
     volumes:
     - .:/var/www/html:cached
+    - ./data:/var/compass:cached
     ports:
     - ${portWebserver}:80
   db:

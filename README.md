@@ -62,6 +62,7 @@ If you're using the database queue driver (`QUEUE_DRIVER=database` defined in `.
 
 ```
 $ php artisan queue:table
+$ php artisan migrate
 ```
 
 If you're using Redis, make sure you've installed the Redis server and set `QUEUE_DRIVER=redis`.

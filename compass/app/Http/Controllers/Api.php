@@ -412,4 +412,31 @@ class Api extends BaseController
     }
   }
 
+  public function share(Request $request) {
+    $token = $request->input('token');
+    if(!$token)
+      return response(json_encode(['error' => 'no token provided']))->header('Content-Type', 'application/json');
+
+    $db = DB::table('databases')->where('write_token','=',$token)->first();
+    if(!$db)
+      return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
+
+    $expires_at = time() + $request->input('duration');
+    $share_token = str_random(15);
+
+    $share_id = DB::table('shares')->insertGetId([
+      'database_id' => $db->id,
+      'created_at' => date('Y-m-d H:i:s'),
+      'expires_at' => date('Y-m-d H:i:s', $expires_at),
+      'token' => $share_token,
+    ]);
+
+    $share_url = env('BASE_URL').'s/'.$share_token;
+
+    return response(json_encode([
+      'url' => $share_url
+    ]), 201)->header('Content-Type', 'application/json')
+       ->header('Location', $share_url);
+  }
+
 }

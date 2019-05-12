@@ -2,6 +2,9 @@
 
 $app->get('/', 'Controller@index');
 
+$app->get('/s/{token:[A-Za-z0-9]+}', 'Share@view');
+$app->get('/share/current.json', 'Share@current_location');
+
 $app->post('/auth/start', 'IndieAuth@start');
 $app->get('/auth/callback', 'IndieAuth@callback');
 $app->get('/auth/github', 'IndieAuth@github');
@@ -22,3 +25,4 @@ $app->get('/api/find-from-localtime', 'LocalTime@find');
 $app->get('/api/input', 'Api@account');
 $app->post('/api/input', 'Api@input');
 $app->post('/api/trip-complete', 'Api@trip_complete');
+$app->post('/api/share', 'Api@share');

@@ -32,10 +32,6 @@ var startMarker;
 var endMarker;
 var timers = [];
 
-function pointFromGeoJSON(geo) {
-  return L.latLng(geo[1], geo[0])
-}
-
 function resetAnimation() {
   if(animatedMarker) {
     map.removeLayer(animatedMarker);

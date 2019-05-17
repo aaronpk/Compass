@@ -12,7 +12,7 @@ class Share extends BaseController
   private function _databaseFromToken($token) {
     $share = DB::table('shares')
       ->where('token', $token)
-      ->where('expires_at', '>', time())
+      ->where('expires_at', '>', date('Y-m-d H:i:s'))
       ->first();
 
     if(!$share) return false;

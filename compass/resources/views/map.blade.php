@@ -18,7 +18,7 @@
     <div class="fields">
       <div style="display: flex; margin-right: 4px;">
         <select id="trip-mode">
-          @foreach(['walk', 'run', 'bicycle', 'car2go', 'car', 'taxi', 'bus', 'train', 'plane'] as $mode)
+          @foreach(['walk', 'run', 'bicycle', 'scooter', 'car', 'taxi', 'bus', 'train', 'boat', 'plane'] as $mode)
             <option value="{{ $mode }}">{{ $mode }}</option>
           @endforeach
         </select>

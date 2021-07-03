@@ -1,5 +1,5 @@
 {
-    "name": "p3k/Compass",
+    "name": "p3k/compass",
     "description": "Compass is a GPS tracking server that stores data in flat files.",
     "keywords": ["p3k", "gps"],
     "license": "MIT",

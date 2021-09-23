@@ -95,7 +95,7 @@ function showBatteryGraph(response) {
       data: data.properties.map(function(d,i){
         return {
           x: new Date(d.unixtime*1000), // i,
-          y: ('battery_level' in d ? Math.round(d.battery_level * 100) : null), 
+          y: ('battery_level' in d ? Math.round(d.battery_level * 100) : 0), 
           state: d.battery_state,
           location: data.coordinates[i]
         }

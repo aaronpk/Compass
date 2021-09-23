@@ -1,13 +1,23 @@
 var map = L.map('map', { zoomControl: false }).setView([45.516, -122.660], 14, null, null, 24);
 
-L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoiYWFyb25wayIsImEiOiI1T0tpNjdzIn0.OQjXyI3xSt8Dj8na3l90Sg'
-}).addTo(map);
+var opts = {
+  attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+  maxZoom: 18,
+  zoomOffset: -1,
+  tileSize: 512,
+  id: 'mapbox/light-v10',
+  accessToken: 'pk.eyJ1IjoiYWFyb25wayIsImEiOiJja3A0eXV2ZXIwMGt3MnVuc2Uzcm1yYzFuIn0.-_qwPOLRiQk8t56xs6vkfg'
+};
 
-new L.Control.Zoom({ position: 'topleft' }).addTo(map);
+if(getQueryVariable('attribution') == 0) {
+  opts.attribution = 'Mapbox';
+}
+
+L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', opts).addTo(map);
+
+if(getQueryVariable('controls') != 0) {
+  new L.Control.Zoom({ position: 'topleft' }).addTo(map);
+}
 
 var geojsonLineOptions = {
   color: "#0033ff",
@@ -24,14 +34,21 @@ var startIcon = L.icon({
 // Load the current location and show on the map
 
 var currentLocationMarker;
+var currentTrack;
 
 function getCurrentLocation() {
+  var interval = 5000;
+  
+  if(getQueryVariable('interval')) {
+    interval = getQueryVariable('interval');
+  }
+  
   $.getJSON("/share/current.json?token="+$("#share_token").val(), function(data){
     if(data.data) {
       moveMarkerToPosition(data.data);
       map.setView(currentLocationMarker.getLatLng());
     }
-    setTimeout(getCurrentLocation, 5000);
+    setTimeout(getCurrentLocation, interval);
   });
 }
 
@@ -46,6 +63,12 @@ function moveMarkerToPosition(feature) {
   if(feature && feature.geometry) {
     var coord = pointFromGeoJSON(feature.geometry.coordinates);
     if(coord) {
+      if(!currentTrack) {
+        currentTrack = L.polyline([coord, coord]).addTo(map);
+      } else {
+        currentTrack.addLatLng(coord);
+      }
+      
       if(!currentLocationMarker) {
         currentLocationMarker = L.marker(coord).addTo(map);
       } else {
@@ -57,4 +80,15 @@ function moveMarkerToPosition(feature) {
 
 function pointFromGeoJSON(geo) {
   return L.latLng(geo[1], geo[0])
+}
+
+function getQueryVariable(variable) {
+  var query = window.location.search.substring(1);
+  var vars = query.split('&');
+  for (var i = 0; i < vars.length; i++) {
+      var pair = vars[i].split('=');
+      if (decodeURIComponent(pair[0]) == variable) {
+          return decodeURIComponent(pair[1]);
+      }
+  }
 }

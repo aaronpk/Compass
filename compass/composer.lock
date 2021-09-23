@@ -1,10 +1,10 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1c1164fb91f4ee6de196c6516e6303fb",
+    "content-hash": "353a9e719bc9b9b1987fefcc6b735dad",
     "packages": [
         {
             "name": "barnabywalters/mf-cleaner",
@@ -1968,16 +1968,16 @@
         },
         {
             "name": "p3k/quartz-db",
-            "version": "0.1.1",
+            "version": "0.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aaronpk/QuartzDB.git",
-                "reference": "d0273a08181cffd91343ba788ff234fbd9daffa6"
+                "reference": "39b95f1c04d76bab5f7643c51172038d62bea342"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aaronpk/QuartzDB/zipball/d0273a08181cffd91343ba788ff234fbd9daffa6",
-                "reference": "d0273a08181cffd91343ba788ff234fbd9daffa6",
+                "url": "https://api.github.com/repos/aaronpk/QuartzDB/zipball/39b95f1c04d76bab5f7643c51172038d62bea342",
+                "reference": "39b95f1c04d76bab5f7643c51172038d62bea342",
                 "shasum": ""
             },
             "type": "library",
@@ -1988,15 +1988,20 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "Apache 2.0"
+                "Apache-2.0"
             ],
             "authors": [
                 {
-                    "name": "Aaron Parecki"
+                    "name": "Aaron Parecki",
+                    "homepage": "http://aaronparecki.com/"
                 }
             ],
             "description": "A flat-file database optimized to hold time-series data.",
-            "time": "2016-01-29T00:39:52+00:00"
+            "support": {
+                "issues": "https://github.com/aaronpk/QuartzDB/issues",
+                "source": "https://github.com/aaronpk/QuartzDB/tree/0.1.5"
+            },
+            "time": "2021-09-23T14:36:27+00:00"
         },
         {
             "name": "p3k/timezone",
@@ -3984,5 +3989,6 @@
     "platform": {
         "php": ">=5.5.9"
     },
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.0.0"
 }

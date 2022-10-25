@@ -4,6 +4,7 @@ $app->get('/', 'Controller@index');
 
 $app->get('/s/{token:[A-Za-z0-9]+}', 'Share@view');
 $app->get('/share/current.json', 'Share@current_location');
+$app->get('/share/history.json', 'Share@history');
 
 $app->post('/auth/start', 'IndieAuth@start');
 $app->get('/auth/callback', 'IndieAuth@callback');

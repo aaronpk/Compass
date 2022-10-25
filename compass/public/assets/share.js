@@ -35,6 +35,7 @@ var startIcon = L.icon({
 
 var currentLocationMarker;
 var currentTrack;
+var lastSeenTimestamp;
 
 function getCurrentLocation() {
   var interval = 5000;
@@ -46,14 +47,27 @@ function getCurrentLocation() {
   $.getJSON("/share/current.json?token="+$("#share_token").val(), function(data){
     if(data.data) {
       moveMarkerToPosition(data.data);
-      map.setView(currentLocationMarker.getLatLng());
+      if(lastSeenTimestamp != data.data.properties.timestamp) {
+        map.setView(currentLocationMarker.getLatLng());
+      }
+      lastSeenTimestamp = data.data.properties.timestamp;
     }
     setTimeout(getCurrentLocation, interval);
   });
 }
 
-getCurrentLocation();
+function getRecentHistory() {
+  $.getJSON("/share/history.json?token="+$("#share_token").val(), function(data){
+    if(data.linestring) {
+      L.geoJson(data.linestring, {
+        style: geojsonLineOptions
+      }).addTo(map);
+    }
+  });
+}
 
+getCurrentLocation();
+getRecentHistory();
 
 
 

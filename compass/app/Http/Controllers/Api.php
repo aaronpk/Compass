@@ -63,7 +63,7 @@ class Api extends BaseController
 
       foreach($results as $id=>$record) {
         // When returning a linestring, separate out the "event" records from the "location" records
-        if($record->data) {
+        if(is_object($record) && $record->data) {
           if(property_exists($record->data->properties, 'action')) {
             $rec = $record->data;
             # add a unixtime property

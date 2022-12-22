@@ -44,11 +44,14 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
           'mode' => $this->_data['properties']['mode'],
           'start_location' => $this->_data['properties']['start_location'],
           'end_location' => $this->_data['properties']['end_location'],
-          'distance' => $this->_data['properties']['distance'],
           'start' => $this->_data['properties']['start'],
           'end' => $this->_data['properties']['end']
         ]
       ];
+
+      if(isset($this->_data['properties']['distance']))
+        $trip['trip']['distance'] = $this->_data['properties']['distance'];
+
       $trip = json_encode($trip, JSON_UNESCAPED_SLASHES);
 
       foreach($urls as $url) {

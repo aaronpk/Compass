@@ -63,7 +63,7 @@ class Api extends BaseController
 
       foreach($results as $id=>$record) {
         // When returning a linestring, separate out the "event" records from the "location" records
-        if($record->data) {
+        if(is_object($record) && $record->data) {
           if(property_exists($record->data->properties, 'action')) {
             $rec = $record->data;
             # add a unixtime property
@@ -72,9 +72,9 @@ class Api extends BaseController
           } else {
             #$record->date->format('U.u');
             // Ignore super inaccurate locations
-            if(!property_exists($record->data->properties, 'horizontal_accuracy') 
+            if(!property_exists($record->data->properties, 'horizontal_accuracy')
               || $record->data->properties->horizontal_accuracy <= 5000) {
-  	            
+
               $locations[] = $record->data;
               $props = $record->data->properties;
               $date = $record->date;
@@ -264,11 +264,23 @@ class Api extends BaseController
               $date = new DateTime($loc['properties']['timestamp']);
 
             if($date) {
-              $cacheKey = 'compass::'.$db->name.'::'.$date->format('U');
+
+              $shouldAdd = true;
 
               // Skip adding if the timestamp is already in the cache.
               // Helps prevent writing duplicate data when the HTTP request is interrupted.
-              if(!env('CACHE_DRIVER') || !Cache::has($cacheKey)) {
+              $cacheKey = 'compass::'.$db->name.'::'.$date->format('U');
+              if(env('CACHE_DRIVER') && Cache::has($cacheKey))
+                $shouldAdd = false;
+
+              // Ignore points at 0,0
+              // Around November 2019, Overland on iOS started reporting 0,0 points pretty frequently, several
+              // times per day, and sometimes for a whole hour in a row. Not sure whether the
+              // real data from iOS was null,null or actually 0,0 but we'll ignore it here anyway
+              if($loc['geometry']['coordinates'][0] == 0 && $loc['geometry']['coordinates'][1] == 0)
+                $shouldAdd = false;
+
+              if($shouldAdd) {
                 $num++;
                 $qz->add($date, $loc);
                 if(env('CACHE_DRIVER'))
@@ -303,8 +315,8 @@ class Api extends BaseController
     }
 
     $response = [
-      'result' => 'ok', 
-      'saved' => $num, 
+      'result' => 'ok',
+      'saved' => $num,
       'trips' => $trips
     ];
 
@@ -410,6 +422,33 @@ class Api extends BaseController
     if($response) {
       return json_decode($response);
     }
+  }
+
+  public function share(Request $request) {
+    $token = $request->input('token');
+    if(!$token)
+      return response(json_encode(['error' => 'no token provided']))->header('Content-Type', 'application/json');
+
+    $db = DB::table('databases')->where('write_token','=',$token)->first();
+    if(!$db)
+      return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
+
+    $expires_at = time() + $request->input('duration');
+    $share_token = str_random(15);
+
+    $share_id = DB::table('shares')->insertGetId([
+      'database_id' => $db->id,
+      'created_at' => date('Y-m-d H:i:s'),
+      'expires_at' => date('Y-m-d H:i:s', $expires_at),
+      'token' => $share_token,
+    ]);
+
+    $share_url = env('BASE_URL').'s/'.$share_token;
+
+    return response(json_encode([
+      'url' => $share_url
+    ]), 201)->header('Content-Type', 'application/json')
+       ->header('Location', $share_url);
   }
 
 }

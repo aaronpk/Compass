@@ -1,0 +1,12 @@
+html, body {
+  height: 100%;
+}
+#map {
+  height: 100%;
+}
+
+/* Move the map zoom controls away from the Compass logo */
+.leaflet-top .leaflet-control-zoom {
+  margin-top: 60px;
+  margin-left: 26px;
+}

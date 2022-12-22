@@ -118,7 +118,7 @@ class LocalTime extends BaseController
     $shard->init();
     $record = false;
     foreach($shard as $r) {
-      if($r->date > $date)
+      if($r && $r->date > $date)
         break;
       $record = $r;
     }

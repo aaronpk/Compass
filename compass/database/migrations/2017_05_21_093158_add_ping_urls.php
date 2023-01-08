@@ -13,7 +13,7 @@ class AddPingUrls extends Migration
     public function up()
     {
       Schema::table('databases', function ($table) {
-        $table->string('ping_urls', 1024);
+        $table->string('ping_urls', 1024)->nullable();
       });
     }
 

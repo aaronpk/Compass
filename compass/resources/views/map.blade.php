@@ -33,9 +33,18 @@
   <div class="scroll">
   <?php
   $days = array_fill(1,31,['#']);
-  $start = new DateTime('2008-05-30T00:00:00-0800');
+
+  try {
+    $tz = new DateTimeZone($database->timezone);
+  } catch(Exception $e) {
+    $tz = new DateTimeZone('UTC');
+  }
+
+  $start = new DateTime($database->created_at);
   $end = new DateTime();
-  $end->setTimeZone(new DateTimeZone($database->timezone));
+  $start->setTimeZone($tz);
+  $end->setTimeZone($tz);
+
   $i = clone $start;
   while((int)$i->format('Y') <= (int)$end->format('Y') && (int)$i->format('M') <= (int)$end->format('M')) {
     ?>

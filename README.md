@@ -153,6 +153,45 @@ Timestamps in Exif data do not include the timezone offset, and there is no stan
 
 This will query the database and find the closest matching location for when your clock read that time.
 
+## Docker for local development (experimental)
+
+This repository comes with a bunch of shell scripts to get a local version of Compass running for development purposes.
+
+`./docker/start.sh` starts an apache webserver, a mysql database and a redis image
+`./docker/build.sh` builds the containers without starting them
+`./docker/down.sh` shuts down the containers
+
+You will still have to manually install Compass within these containers. When creating the `.env` file, the values are as follows:
+
+```
+BASE_URL=http://localhost/
+
+DB_CONNECTION=mysql
+DB_HOST=compass_db_1
+DB_PORT=3306
+DB_DATABASE=compass
+DB_USERNAME=user
+DB_PASSWORD=user
+
+QUEUE_DRIVER=redis
+CACHE_DRIVER=redis
+
+REDIS_HOST=compass_redis_1
+```
+
+The command line commands are a bit tricky, too:
+
+`docker exec -ti "compass_webserver_1" sh -c "cd compass && composer install"`
+
+runs the composer install, the `artisan` commands need to be run this way as well. For example the `key:generate` command:
+
+`docker exec -ti "compass_webserver_1" sh -c "cd compass && php artisan key:generate"`
+
+and the `migrate` command:
+
+`docker exec -ti "compass_webserver_1" sh -c "cd compass && php artisan migrate"`
+
+
 
 ## Credits
 

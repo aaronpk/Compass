@@ -10,8 +10,8 @@ var opts = {
   maxZoom: 24,
   zoomOffset: -1,
   tileSize: 512,
-  id: 'mapbox/light-v10',
-  accessToken: 'pk.eyJ1IjoiYWFyb25wayIsImEiOiJja3A0eXV2ZXIwMGt3MnVuc2Uzcm1yYzFuIn0.-_qwPOLRiQk8t56xs6vkfg'
+  id: 'mapbox/light-v11',
+  accessToken: 'pk.eyJ1IjoiZGF2aWRlZG1vbmRzb24iLCJhIjoiY2xjbmNmbXg5MTd6bzN2cDgycDNvYzEzdCJ9.cQLK-qlwLNH2qFmglWhwyQ'
 };
 
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', opts).addTo(map);

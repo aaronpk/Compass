@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  webserver:
+    build: ./docker/apache
+    restart: unless-stopped
+    depends_on:
+    - db
+    volumes:
+    - .:/var/www/html:cached
+    - ./data:/var/compass:cached
+    ports:
+    - ${portWebserver}:80
+  db:
+    image: mysql:5.7
+    restart: unless-stopped
+    volumes:
+    - db_data:/var/lib/mysql
+    - ./docker/tmp:/tmp
+    - ./docker/database:/docker-entrypoint-initdb.d/
+    ports:
+    - ${portDatabase}:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${dbName}
+      MYSQL_USER: ${dbUser}
+      MYSQL_PASSWORD: ${dbPassword}
+  redis:
+    image: redis:5
+    restart: unless-stopped
+    volumes:
+    - redis_data:/data
+
+volumes:
+  db_data:
+  redis_data:

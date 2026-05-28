@@ -1,14 +1,14 @@
 <?php
 
-class TestCase extends Laravel\Lumen\Testing\TestCase
+use Illuminate\Http\Request;
+use PHPUnit\Framework\TestCase as BaseTestCase;
+
+abstract class TestCase extends BaseTestCase
 {
-    /**
-     * Creates the application.
-     *
-     * @return \Laravel\Lumen\Application
-     */
-    public function createApplication()
+    protected function request($method, $uri)
     {
-        return require __DIR__.'/../bootstrap/app.php';
+        $app = require __DIR__.'/../bootstrap/app.php';
+
+        return $app->handle(Request::create($uri, $method));
     }
 }

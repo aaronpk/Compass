@@ -9,6 +9,9 @@ Compass is a GPS tracking server that stores data in [flat files](https://github
 * PHP 5.5 or above
 * MySQL (for storing user accounts and lists of databases, not for storing the actual location data)
 
+This branch has been verified for PHP 8 compatibility, including PHP 8.0 and
+PHP 8.4.
+
 ### PHP extensions
 
 You'll need to make sure the following PHP extensions are installed. Typically these are installed using the package manager of your operating system.

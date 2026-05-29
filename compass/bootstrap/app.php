@@ -1,8 +1,14 @@
 <?php
 
+$legacyErrorReporting = E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED;
+
+error_reporting($legacyErrorReporting);
+
 require_once __DIR__.'/../vendor/autoload.php';
 
-Dotenv::load(__DIR__.'/../');
+if (file_exists(__DIR__.'/../.env')) {
+    Dotenv::load(__DIR__.'/../');
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +25,37 @@ $app = new Laravel\Lumen\Application(
     realpath(__DIR__.'/../')
 );
 
-$app->withFacades();
+error_reporting($legacyErrorReporting);
+
+Illuminate\Support\Facades\Facade::setFacadeApplication($app);
+
+// Lumen 5.1 aliases Event globally, which can collide with PHP's event extension.
+foreach ([
+    'App' => Illuminate\Support\Facades\App::class,
+    'Auth' => Illuminate\Support\Facades\Auth::class,
+    'Bus' => Illuminate\Support\Facades\Bus::class,
+    'DB' => Illuminate\Support\Facades\DB::class,
+    'Cache' => Illuminate\Support\Facades\Cache::class,
+    'Cookie' => Illuminate\Support\Facades\Cookie::class,
+    'Crypt' => Illuminate\Support\Facades\Crypt::class,
+    'Hash' => Illuminate\Support\Facades\Hash::class,
+    'Log' => Illuminate\Support\Facades\Log::class,
+    'Mail' => Illuminate\Support\Facades\Mail::class,
+    'Queue' => Illuminate\Support\Facades\Queue::class,
+    'Request' => Illuminate\Support\Facades\Request::class,
+    'Schema' => Illuminate\Support\Facades\Schema::class,
+    'Session' => Illuminate\Support\Facades\Session::class,
+    'Storage' => Illuminate\Support\Facades\Storage::class,
+    'Validator' => Illuminate\Support\Facades\Validator::class,
+] as $alias => $class) {
+    if (!class_exists($alias, false)) {
+        class_alias($class, $alias);
+    }
+}
+
+$aliasesRegistered = new ReflectionProperty(Laravel\Lumen\Application::class, 'aliasesRegistered');
+$aliasesRegistered->setAccessible(true);
+$aliasesRegistered->setValue(true);
 
 // $app->withEloquent();
 

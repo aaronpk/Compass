@@ -23,7 +23,7 @@
 
     <div class="api-endpoint field hidden">
       <label>API Endpoint</label>
-      <input type="text" readonly value="{{ env('BASE_URL') }}api/input?token={{ $database->write_token }}">
+      <input type="text" readonly value="{{ config('compass.base_url') }}api/input?token={{ $database->write_token }}">
     </div>
     @endif
   </form>

@@ -1,14 +1,13 @@
 <?php
 namespace App\Http\Controllers;
 
-use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use DB, Log;
 use Quartz;
 use DateTime, DateTimeZone, DateInterval;
 use App\Jobs\TripComplete;
 
-class LocalTime extends BaseController
+class LocalTime
 {
 
   public function find(Request $request) {
@@ -20,7 +19,7 @@ class LocalTime extends BaseController
     if(!$db)
       return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
 
-    $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'r');
+    $qz = new Quartz\DB(config('compass.storage_dir').$db->name, 'r');
 
     $timezones = [
       '-23:00','-22:00','-21:00','-20:00',
@@ -138,7 +137,8 @@ class TimezoneResult {
       $this->_now = new DateTime($date);
     else
       $this->_now = new DateTime();
-    $this->_now->setTimeZone(new DateTimeZone($timezone));
+    // p3k\Timezone returns null for some locations; this still throws as it did on PHP 7
+    $this->_now->setTimeZone(new DateTimeZone((string)$timezone));
     $this->_name = $timezone;
   }
 

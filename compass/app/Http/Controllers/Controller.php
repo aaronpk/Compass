@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use DB;
 
-class Controller extends BaseController
+class Controller
 {
+  use IndieAuthSession;
+
   private static function displayURL() {
     return preg_replace('/(^https?:\/\/|\/$)/', '', session('me'));
   }
@@ -53,8 +54,8 @@ class Controller extends BaseController
       // Create the database records
       $id = DB::table('databases')->insertGetId([
         'name' => $request->input('name'),
-        'read_token' => str_random(40),
-        'write_token' => str_random(40),
+        'read_token' => \Illuminate\Support\Str::random(40),
+        'write_token' => \Illuminate\Support\Str::random(40),
         'created_by' => session('user_id'),
         'created_at' => date('Y-m-d H:i:s')
       ]);
@@ -207,32 +208,29 @@ class Controller extends BaseController
             return view('auth/error', ['error' => 'Invalid URL']);
         }
 
-        $state = \IndieAuth\Client::generateStateParameter();
+        $this->configureIndieAuthClient($this->_databaseRedirectURI($dbName));
 
-        $authorizationEndpoint = \IndieAuth\Client::discoverAuthorizationEndpoint($me);
+        // Keep each database's authorization in its own session key
+        list($authorizationURL, $error) = $this->withIndieAuthSession(self::_micropubSessionKey($dbName), function() use($me) {
+            return \IndieAuth\Client::begin($me, 'create');
+        });
 
-        if(!$authorizationEndpoint) {
-          return view('auth/error', ['error' => 'No Authorization Endpoint Specified']);
+        if($error) {
+          if($error['error'] == 'missing_authorization_endpoint')
+            return view('auth/error', ['error' => 'No Authorization Endpoint Specified']);
+          return view('auth/error', ['error' => $error['error_description'] ?: $error['error']]);
         }
-
-        // Isolate session variables to this variable only
-        session([$dbName => [
-            'auth_state' => $state,
-            'attempted_me' => $me,
-            'authorization_endpoint' => $authorizationEndpoint
-        ]]);
-
-        $authorizationURL = \IndieAuth\Client::buildAuthorizationURL($authorizationEndpoint, $me, $this->_databaseRedirectURI($dbName), env('BASE_URL'), $state, 'create');
 
         return redirect($authorizationURL);
     }
 
     public function micropubCallback(Request $request, $dbName) {
 
-        $settingsSession = session($dbName);
+        $sessionKey = self::_micropubSessionKey($dbName);
+        $settingsSession = session($sessionKey, []);
 
         // Start all error checking
-        if(!$settingsSession['auth_state'] || !$settingsSession['attempted_me']) {
+        if(empty($settingsSession['indieauth_state']) || empty($settingsSession['indieauth_entered_url'])) {
             return view('auth/error', ['error' => 'Missing state information. Start over.']);
         }
 
@@ -240,7 +238,7 @@ class Controller extends BaseController
             return view('auth/error', ['error' => $request->input('error')]);
         }
 
-        if($settingsSession['auth_state'] != $request->input('state')) {
+        if($settingsSession['indieauth_state'] != $request->input('state')) {
             return view('auth/error', ['error' => 'State did not match. Start over.']);
         }
 
@@ -257,16 +255,19 @@ class Controller extends BaseController
             return view('auth/error', ['error' => 'Database already is connected to a micropub endpoint. Please remove the existing endpoint first.']);
         }
 
-        $tokenEndpoint = \IndieAuth\Client::discoverTokenEndpoint($settingsSession['attempted_me']);
-        if (empty($tokenEndpoint)) {
+        if (empty($settingsSession['indieauth_token_endpoint'])) {
             return view('auth/error', ['error' => 'Could not find user\'s token endpoint']);
         }
 
-        $token = \IndieAuth\Client::getAccessToken($tokenEndpoint, $request->input('code'), $settingsSession['attempted_me'], $this->_databaseRedirectURI($dbName), env('BASE_URL'));
+        $this->configureIndieAuthClient($this->_databaseRedirectURI($dbName));
+        list($response, $error) = $this->withIndieAuthSession($sessionKey, function() use($request) {
+            return \IndieAuth\Client::complete($request->query());
+        });
+        $token = $error ? false : ($response['response'] ?? []) + ['me' => $response['me'] ?? null];
 
-        if($token && array_key_exists('me', $token)) {
+        if($token && !empty($token['me'])) {
             // forget the current db settings session
-            session()->forget($dbName);
+            session()->forget($sessionKey);
 
             if (!array_key_exists('access_token', $token)) {
                 return view('auth/error', ['error' => 'Could not find access_token']);
@@ -310,8 +311,12 @@ class Controller extends BaseController
         return redirect('/settings/'.$db->name);
     }
 
+    private static function _micropubSessionKey($dbName) {
+        return 'micropub_auth_'.$dbName;
+    }
+
     private function _databaseRedirectURI($dbName) {
-        return env('BASE_URL') . 'settings/' . $dbName . '/auth/callback';
+        return config('compass.base_url') . 'settings/' . $dbName . '/auth/callback';
     }
 
 }

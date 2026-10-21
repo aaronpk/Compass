@@ -1,7 +1,6 @@
 <?php
 namespace App\Console\Commands;
 use Illuminate\Console\Command;
-use Laravel\Lumen\Routing\DispatchesJobs;
 use Log;
 use DateTime, DateTimeZone;
 

@@ -3,11 +3,10 @@ namespace App\Jobs;
 
 use DB, Log;
 use App\Jobs\Job;
-use Illuminate\Contracts\Bus\SelfHandling;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use DateTime, DateTimeZone;
 
-class NotifyOfNewLocations extends Job implements SelfHandling, ShouldQueue
+class NotifyOfNewLocations extends Job implements ShouldQueue
 {
   private $_dbid;
 
@@ -35,7 +34,7 @@ class NotifyOfNewLocations extends Job implements SelfHandling, ShouldQueue
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
           'Content-Type: application/json',
           'Authorization: Bearer '.$db->read_token,
-          'Compass-Url: '.env('BASE_URL').'api/last?token='.$db->read_token.'&geocode=1'
+          'Compass-Url: '.config('compass.base_url').'api/last?token='.$db->read_token.'&geocode=1'
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $location);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

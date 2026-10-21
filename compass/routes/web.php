@@ -1,29 +1,36 @@
 <?php
 
-$app->get('/', 'Controller@index');
+use App\Http\Controllers\Api;
+use App\Http\Controllers\Controller;
+use App\Http\Controllers\IndieAuth;
+use App\Http\Controllers\LocalTime;
+use App\Http\Controllers\Share;
+use Illuminate\Support\Facades\Route;
 
-$app->get('/s/{token:[A-Za-z0-9]+}', 'Share@view');
-$app->get('/share/current.json', 'Share@current_location');
-$app->get('/share/history.json', 'Share@history');
+Route::get('/', [Controller::class, 'index']);
 
-$app->post('/auth/start', 'IndieAuth@start');
-$app->get('/auth/callback', 'IndieAuth@callback');
-$app->get('/auth/github', 'IndieAuth@github');
-$app->get('/auth/logout', 'IndieAuth@logout');
+Route::get('/s/{token}', [Share::class, 'view'])->where('token', '[A-Za-z0-9]+');
+Route::get('/share/current.json', [Share::class, 'current_location']);
+Route::get('/share/history.json', [Share::class, 'history']);
 
-$app->get('/map/{name:[A-Za-z0-9]+}', 'Controller@map');
-$app->get('/settings/{name:[A-Za-z0-9]+}', 'Controller@settings');
-$app->post('/settings/{name:[A-Za-z0-9]+}', 'Controller@updateSettings');
-$app->post('/settings/{name:[A-Za-z0-9]+}/auth/start', 'Controller@micropubStart');
-$app->get('/settings/{name:[A-Za-z0-9]+}/auth/callback', 'Controller@micropubCallback');
-$app->get('/settings/{name:[A-Za-z0-9]+}/auth/remove', 'Controller@removeMicropub');
-$app->post('/database/create', 'Controller@createDatabase');
+Route::post('/auth/start', [IndieAuth::class, 'start']);
+Route::get('/auth/callback', [IndieAuth::class, 'callback']);
+Route::get('/auth/github', [IndieAuth::class, 'github']);
+Route::get('/auth/logout', [IndieAuth::class, 'logout']);
 
-$app->get('/api/query', 'Api@query');
-$app->get('/api/last', 'Api@last');
-$app->get('/api/trip', 'Api@trip');
-$app->get('/api/find-from-localtime', 'LocalTime@find');
-$app->get('/api/input', 'Api@account');
-$app->post('/api/input', 'Api@input');
-$app->post('/api/trip-complete', 'Api@trip_complete');
-$app->post('/api/share', 'Api@share');
+Route::get('/map/{name}', [Controller::class, 'map'])->where('name', '[A-Za-z0-9]+');
+Route::get('/settings/{name}', [Controller::class, 'settings'])->where('name', '[A-Za-z0-9]+');
+Route::post('/settings/{name}', [Controller::class, 'updateSettings'])->where('name', '[A-Za-z0-9]+');
+Route::post('/settings/{name}/auth/start', [Controller::class, 'micropubStart'])->where('name', '[A-Za-z0-9]+');
+Route::get('/settings/{name}/auth/callback', [Controller::class, 'micropubCallback'])->where('name', '[A-Za-z0-9]+');
+Route::get('/settings/{name}/auth/remove', [Controller::class, 'removeMicropub'])->where('name', '[A-Za-z0-9]+');
+Route::post('/database/create', [Controller::class, 'createDatabase']);
+
+Route::get('/api/query', [Api::class, 'query']);
+Route::get('/api/last', [Api::class, 'last']);
+Route::get('/api/trip', [Api::class, 'trip']);
+Route::get('/api/find-from-localtime', [LocalTime::class, 'find']);
+Route::get('/api/input', [Api::class, 'account']);
+Route::post('/api/input', [Api::class, 'input']);
+Route::post('/api/trip-complete', [Api::class, 'trip_complete']);
+Route::post('/api/share', [Api::class, 'share']);

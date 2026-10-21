@@ -12,14 +12,18 @@
 
   $day_names = array(); #generate all the day names according to the current locale
   for($n=0,$t=(3+$first_day)*86400; $n<7; $n++,$t+=86400) #January 4, 1970 was a Sunday
-    $day_names[$n] = ucfirst(gmstrftime('%A',$t)); #%A means full textual day name
+    $day_names[$n] = ucfirst(gmdate('l',$t)); #full textual day name (gmstrftime('%A') in the C locale)
 
-  list($month, $year, $month_name, $weekday) = explode(',',gmstrftime('%m,%Y,%B,%w',$first_of_month));
+  list($month, $year, $month_name, $weekday) = explode(',',gmdate('m,Y,F,w',$first_of_month)); # gmstrftime('%m,%Y,%B,%w') in the C locale
   $weekday = ($weekday + 7 - $first_day) % 7; #adjust for $first_day
   $title   = htmlentities(ucfirst($month_name)).'&nbsp;'.$year;  #note that some locales don't capitalize month and day names
 
   #Begin calendar. Uses a real <caption>. See http://diveintomark.org/archives/2002/07/03
-  @list($p, $pl) = each($pn); @list($n, $nl) = each($pn); #previous and next links, if applicable
+  #previous and next links, if applicable (the first two key/value pairs of $pn, as each() returned them)
+  $pn_pairs = [];
+  foreach($pn as $pn_key => $pn_value) $pn_pairs[] = [$pn_key, $pn_value];
+  list($p, $pl) = $pn_pairs[0] ?? [null, null];
+  list($n, $nl) = $pn_pairs[1] ?? [null, null];
   if($p) $p = '<span class="calendar-prev">'.($pl ? '<a href="'.htmlspecialchars($pl).'">'.$p.'</a>' : $p).'</span>&nbsp;';
   if($n) $n = '&nbsp;<span class="calendar-next">'.($nl ? '<a href="'.htmlspecialchars($nl).'">'.$n.'</a>' : $n).'</span>';
   $calendar = '<table class="calendar">'."\n".
@@ -39,7 +43,7 @@
       $calendar .= "</tr>\n<tr>";
     }
     if(isset($days[$day]) and is_array($days[$day])){
-      @list($link, $classes, $content) = $days[$day];
+      list($link, $classes, $content) = $days[$day] + [null, null, null];
       if(is_null($content))  $content  = $day;
       $calendar .= '<td'.($classes ? ' class="'.htmlspecialchars($classes).'">' : '>').
         ($link ? '<a href="'.htmlspecialchars($link).'" data-date="'.sprintf('%4d-%02d-%02d',$year,$month,$day).'">'.$content.'</a>' : $content).'</td>';

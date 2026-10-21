@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use GuzzleHttp;
 use DB;
 
-class IndieAuth extends BaseController
+class IndieAuth
 {
+  use IndieAuthSession;
+
   private function _redirectURI() {
-    return env('BASE_URL') . 'auth/callback';
+    return config('compass.base_url') . 'auth/callback';
   }
 
   public function start(Request $request) {
@@ -19,7 +20,7 @@ class IndieAuth extends BaseController
       return view('auth/error', ['error' => 'Invalid URL']);
     }
 
-    if(!env('ALLOW_NEW_USERS')) {
+    if(!config('compass.allow_new_users')) {
       $user = DB::table('users')->where('url', $me)->first();
       if(!$user) {
         return view('auth/error', ['error' => 'User Not Registered']);
@@ -30,7 +31,7 @@ class IndieAuth extends BaseController
 
     if(preg_match('/https?:\/\/github\.com\/[^ \/]+/', $me)) {
       $authorizationURL = 'https://github.com/login/oauth/authorize'
-        . '?client_id=' . env('GITHUB_ID')
+        . '?client_id=' . config('compass.github_id')
         . '&state=' . $state;
 
       session([
@@ -39,27 +40,28 @@ class IndieAuth extends BaseController
       ]);
 
     } else {
-      $authorizationEndpoint = \IndieAuth\Client::discoverAuthorizationEndpoint($me);
+      $this->configureIndieAuthClient($this->_redirectURI());
 
-      session([
-        'auth_state' => $state, 
-        'attempted_me' => $me,
-        'authorization_endpoint' => $authorizationEndpoint,
-      ]);
+      list($authorizationURL, $error) = $this->withIndieAuthSession('indieauth', function() use($me) {
+        list($url, $error) = \IndieAuth\Client::begin($me);
+        // Sites that don't advertise an authorization endpoint sign in through the default one
+        if($error && $error['error'] == 'missing_authorization_endpoint' && config('compass.default_auth_endpoint')) {
+          list($url, $error) = \IndieAuth\Client::begin($me, false, config('compass.default_auth_endpoint'));
+        }
+        return [$url, $error];
+      });
 
-      // If the user specified only an authorization endpoint, use that
-      if(!$authorizationEndpoint) {
-        // Otherwise, fall back to indieauth.com
-        $authorizationEndpoint = env('DEFAULT_AUTH_ENDPOINT');
+      if($error) {
+        return view('auth/error', ['error' => $error['error_description'] ?: $error['error']]);
       }
-      $authorizationURL = \IndieAuth\Client::buildAuthorizationURL($authorizationEndpoint, $me, $this->_redirectURI(), env('BASE_URL'), $state);
     }
 
     return redirect($authorizationURL);
   }
 
   public function callback(Request $request) {
-    if(!session('auth_state') || !session('attempted_me')) {
+    $state = session('indieauth.indieauth_state');
+    if(!$state || !session('indieauth.indieauth_entered_url')) {
       return view('auth/error', ['error' => 'Missing state information. Start over.']);
     }
 
@@ -67,21 +69,20 @@ class IndieAuth extends BaseController
       return view('auth/error', ['error' => $request->input('error')]);
     }
 
-    if(session('auth_state') != $request->input('state')) {
+    if($state != $request->input('state')) {
       return view('auth/error', ['error' => 'State did not match. Start over.']);
     }
 
-    if(session('authorization_endpoint')) {
-      $authorizationEndpoint = session('authorization_endpoint');
-    } else {
-      $authorizationEndpoint = env('DEFAULT_AUTH_ENDPOINT');
-    }
-    $token = \IndieAuth\Client::verifyIndieAuthCode($authorizationEndpoint, $request->input('code'), session('attempted_me'), $this->_redirectURI(), env('BASE_URL'));
+    $this->configureIndieAuthClient($this->_redirectURI());
+    list($response, $error) = $this->withIndieAuthSession('indieauth', function() use($request) {
+      return \IndieAuth\Client::complete($request->query());
+    });
 
-    if($token && array_key_exists('me', $token)) {
+    // As before, a code that can't be verified just returns to the home page
+    if(!$error && isset($response['me'])) {
       session()->flush();
-      session(['me' => $token['me']]);
-      $this->_userLoggedIn($token['me']);
+      session(['me' => $response['me']]);
+      $this->_userLoggedIn($response['me']);
     }
 
     return redirect('/');
@@ -109,9 +110,9 @@ class IndieAuth extends BaseController
     ]);
     $res = $client->post('https://github.com/login/oauth/access_token', [
       'form_params' => [
-        'client_id' => env('GITHUB_ID'),
-        'client_secret' => env('GITHUB_SECRET'),
-        // 'redirect_uri' => env('BASE_URL') . 'auth/github',
+        'client_id' => config('compass.github_id'),
+        'client_secret' => config('compass.github_secret'),
+        // 'redirect_uri' => config('compass.base_url') . 'auth/github',
         'code' => $request->input('code'),
         'state' => session('auth_state')
       ],

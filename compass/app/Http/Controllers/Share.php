@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use DB;
 use Quartz;
 
-class Share extends BaseController
+class Share
 {
 
   private function _databaseFromToken($token) {
@@ -44,7 +43,7 @@ class Share extends BaseController
     } 
 
     $response = [
-      'data' => json_decode($database->last_location),
+      'data' => $database->last_location === null ? null : json_decode($database->last_location),
     ];
 
     return response(json_encode($response))->header('Content-Type', 'application/json');
@@ -64,7 +63,7 @@ class Share extends BaseController
   
     $locations = [];
     
-    $db = new Quartz\DB(env('STORAGE_DIR').$database->name, 'r');
+    $db = new Quartz\DB(config('compass.storage_dir').$database->name, 'r');
     $results = $db->queryLast(100);
     foreach($results as $id=>$record) {
       if(!is_object($record) || !$record->data)

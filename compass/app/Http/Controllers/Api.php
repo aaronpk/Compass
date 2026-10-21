@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use DB, Log, Cache;
 use Quartz;
@@ -11,7 +10,7 @@ use App\Jobs\TripComplete;
 use App\Jobs\TripStarted;
 use App\Jobs\NotifyOfNewLocations;
 
-class Api extends BaseController
+class Api
 {
 
   public function account(Request $request) {
@@ -35,7 +34,7 @@ class Api extends BaseController
     if(!$db)
       return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
 
-    $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'r');
+    $qz = new Quartz\DB(config('compass.storage_dir').$db->name, 'r');
 
     if($request->input('tz')) {
       $tz = $request->input('tz');
@@ -137,7 +136,7 @@ class Api extends BaseController
     if($input=$request->input('before')) {
       // If a specific time was requested, look up the data in the filesystem
 
-      $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'r');
+      $qz = new Quartz\DB(config('compass.storage_dir').$db->name, 'r');
 
       if(preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $input)) {
         // If the input date is given in YYYY-mm-dd HH:mm:ss format, interpret it in the timezone given
@@ -191,7 +190,7 @@ class Api extends BaseController
     } else {
       // If no specific time was requested, use the cached location from the database
       $response = [
-        'data' => json_decode($db->last_location),
+        'data' => $db->last_location === null ? null : json_decode($db->last_location),
       ];
     }
 
@@ -247,7 +246,7 @@ class Api extends BaseController
     if(!is_array($request->input('locations')))
       return response(json_encode(['error' => 'invalid input', 'error_description' => 'parameter "locations" must be an array of GeoJSON data with a "timestamp" property']))->header('Content-Type', 'application/json');
 
-    $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'w');
+    $qz = new Quartz\DB(config('compass.storage_dir').$db->name, 'w');
 
     $num = 0;
     $trips = 0;
@@ -270,7 +269,7 @@ class Api extends BaseController
               // Skip adding if the timestamp is already in the cache.
               // Helps prevent writing duplicate data when the HTTP request is interrupted.
               $cacheKey = 'compass::'.$db->name.'::'.$date->format('U');
-              if(env('CACHE_DRIVER') && Cache::has($cacheKey))
+              if(config('compass.dedupe_cache') && Cache::has($cacheKey))
                 $shouldAdd = false;
 
               // Ignore points at 0,0
@@ -283,15 +282,15 @@ class Api extends BaseController
               if($shouldAdd) {
                 $num++;
                 $qz->add($date, $loc);
-                if(env('CACHE_DRIVER'))
-                  Cache::put($cacheKey, 1, 360); // cache this for 6 hours
+                if(config('compass.dedupe_cache'))
+                  Cache::put($cacheKey, 1, 360*60); // cache this for 6 hours (Lumen took minutes, Laravel takes seconds)
                 $last_location = $loc;
               }
 
               if(array_key_exists('type', $loc['properties']) && $loc['properties']['type'] == 'trip') {
                 try {
                   $job = (new TripComplete($db->id, $loc))->onQueue('compass');
-                  $this->dispatch($job);
+                  dispatch($job);
                   $trips++;
                   Log::info('Got a trip record');
                 } catch(Exception $e) {
@@ -355,7 +354,7 @@ class Api extends BaseController
       // Notify subscribers that new data is available
       if($db->ping_urls) {
         $job = (new NotifyOfNewLocations($db->id))->onQueue('compass');
-        $this->dispatch($job);
+        dispatch($job);
       }
     }
 
@@ -369,7 +368,7 @@ class Api extends BaseController
 
       if(!$existing_trip && $db->ping_urls) {
         $job = (new TripStarted($db->id))->onQueue('compass');
-        $this->dispatch($job);
+        dispatch($job);
       }
     } else {
       DB::table('databases')->where('id', $db->id)->update(['current_trip' => null]);
@@ -405,7 +404,7 @@ class Api extends BaseController
 
     try {
       $job = (new TripComplete($db->id, $loc))->onQueue('compass');
-      $this->dispatch($job);
+      dispatch($job);
       Log::info('Got a manual trip record: '.$start->format('c').' '.$end->format('c'));
     } catch(Exception $e) {
       Log::warning('Received invalid trip');
@@ -415,7 +414,7 @@ class Api extends BaseController
   }
 
   public static function geocode($params) {
-    $ch = curl_init(env('ATLAS_BASE').'api/geocode?'.http_build_query($params));
+    $ch = curl_init(config('compass.atlas_base').'api/geocode?'.http_build_query($params));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 8);
     $response = curl_exec($ch);
@@ -434,7 +433,7 @@ class Api extends BaseController
       return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
 
     $expires_at = time() + $request->input('duration');
-    $share_token = str_random(15);
+    $share_token = \Illuminate\Support\Str::random(15);
 
     $share_id = DB::table('shares')->insertGetId([
       'database_id' => $db->id,
@@ -443,7 +442,7 @@ class Api extends BaseController
       'token' => $share_token,
     ]);
 
-    $share_url = env('BASE_URL').'s/'.$share_token;
+    $share_url = config('compass.base_url').'s/'.$share_token;
 
     return response(json_encode([
       'url' => $share_url

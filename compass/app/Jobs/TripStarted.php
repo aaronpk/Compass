@@ -6,11 +6,10 @@ use Log;
 use Quartz;
 use p3k\Multipart;
 use App\Jobs\Job;
-use Illuminate\Contracts\Bus\SelfHandling;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use DateTime, DateTimeZone;
 
-class TripStarted extends Job implements SelfHandling, ShouldQueue
+class TripStarted extends Job implements ShouldQueue
 {
   private $_dbid;
 
@@ -35,7 +34,7 @@ class TripStarted extends Job implements SelfHandling, ShouldQueue
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
           'Content-Type: application/json',
           'Authorization: Bearer '.$db->read_token,
-          'Compass-Url: '.env('BASE_URL').'api/trip?token='.$db->read_token
+          'Compass-Url: '.config('compass.base_url').'api/trip?token='.$db->read_token
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $trip);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

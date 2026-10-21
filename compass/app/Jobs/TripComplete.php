@@ -6,11 +6,10 @@ use Log;
 use Quartz;
 use p3k\Multipart;
 use App\Jobs\Job;
-use Illuminate\Contracts\Bus\SelfHandling;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use DateTime, DateTimeZone;
 
-class TripComplete extends Job implements SelfHandling, ShouldQueue
+class TripComplete extends Job implements ShouldQueue
 {
   private $_dbid;
   private $_data;
@@ -61,7 +60,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
           curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'Authorization: Bearer '.$db->read_token,
-            'Compass-Url: '.env('BASE_URL').'api/trip?token='.$db->read_token
+            'Compass-Url: '.config('compass.base_url').'api/trip?token='.$db->read_token
           ]);
           curl_setopt($ch, CURLOPT_POSTFIELDS, $trip);
           curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -79,7 +78,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
       return;
     }
 
-    $qz = new Quartz\DB(env('STORAGE_DIR').$db->name, 'r');
+    $qz = new Quartz\DB(config('compass.storage_dir').$db->name, 'r');
 
     // Load the data from the start and end times
     $start = new DateTime($this->_data['properties']['start']);
@@ -295,7 +294,7 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
   }
 
   public static function geocode($lat, $lng) {
-    $ch = curl_init(env('ATLAS_BASE').'api/geocode?latitude='.$lat.'&longitude='.$lng);
+    $ch = curl_init(config('compass.atlas_base').'api/geocode?latitude='.$lat.'&longitude='.$lng);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 8);
     $response = curl_exec($ch);

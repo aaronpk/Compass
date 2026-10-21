@@ -25,7 +25,7 @@ class Cleanfile extends Command {
           $last = new DateTime(substr($line, 0, 26), new DateTimeZone('UTC'));
           fwrite($outf, $line);
         } else {
-          if((double)$cur->format('U.u') > (double)$last->format('U.u')) {
+          if((float)$cur->format('U.u') > (float)$last->format('U.u')) {
             fwrite($outf, $line);
             $last = new DateTime(substr($line, 0, 26), new DateTimeZone('UTC'));
           } else {

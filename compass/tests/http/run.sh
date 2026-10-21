@@ -215,6 +215,10 @@ record share-new-history "$BASE/share/history.json?token=$share_token"
 record logout "${J[@]}" $BASE/auth/logout
 record after-logout "${J[@]}" $BASE/
 
+# --- Console commands -------------------------------------------------------------------
+# Loads every command class, so compile-time deprecations in app/Console show up in the logs
+(cd "$OUT/app" && $PHP "${PHPFLAGS[@]}" artisan list > "$OUT/artisan-list.txt" 2>&1); check "artisan list" $?
+
 # --- Summaries --------------------------------------------------------------------------
 cat "$OUT"/app/storage/logs/*.log > "$OUT/app-log.txt" 2>/dev/null
 sed -E 's/^\[[^]]*\] //; s#'"$OUT"'/##g; s#'"$APP"'/##g' "$OUT/php-errors.log" 2>/dev/null | sort | uniq -c | sort -rn > "$OUT/php-errors-summary.txt"

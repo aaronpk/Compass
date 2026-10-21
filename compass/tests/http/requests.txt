@@ -1,0 +1,72 @@
+# Logged-out GET requests recorded by tests/http/run.sh
+
+# Pages
+/
+/map/fixture
+/settings/fixture
+/no-such-page
+/database/create
+/auth/callback
+/auth/callback?code=x&state=y
+
+# Shares
+/s/shareactive
+/s/shareexpired
+/s/nope
+/share/current.json?token=shareactive
+/share/current.json?token=sharenodata
+/share/current.json?token=shareexpired
+/share/history.json?token=shareactive
+/share/history.json?token=nope
+
+# /api/query
+/api/query
+/api/query?token=nope&date=2026-01-15
+/api/query?token=r-fixture
+/api/query?token=r-fixture&date=2026-01-15
+/api/query?token=r-fixture&date=2026-01-15&tz=America/Los_Angeles
+/api/query?token=r-fixture&date=2026-01-15&format=linestring
+/api/query?token=r-fixture&date=2026-01-15&tz=Asia/Tokyo&format=linestring
+/api/query?token=r-fixture&date=2026-01-16&format=linestring
+/api/query?token=r-fixture&start=2026-01-15T16:04:00Z&end=2026-01-16T08:00:15Z
+/api/query?token=r-fixture&start=2026-01-15%2023:00:00&end=2026-01-16%2009:00:00&tz=America/Los_Angeles&format=linestring
+/api/query?token=r-fixture&date=2026-02-01
+/api/query?token=r-emptyline&date=2026-01-15
+/api/query?token=r-nodata&date=2026-01-15
+/api/query?token=w-fixture&date=2026-01-15
+
+# /api/last
+/api/last?token=r-fixture
+/api/last?token=r-fixture&tz=America/Los_Angeles
+/api/last?token=r-fixture&geocode=1
+/api/last?token=r-fixture&before=2026-01-16%2008:00:25
+/api/last?token=r-fixture&before=2026-01-16%2000:30:00&tz=America/Los_Angeles
+/api/last?token=r-fixture&before=2026-01-16T08:00:25%2B00:00
+/api/last?token=r-fixture&before=2026-01-17%2001:00:00
+/api/last?token=r-fixture&before=2026-03-01%2000:00:00
+/api/last?token=r-fixture&before=2026-01-16%2008:00:25&geocode=1
+/api/last?token=r-nodata
+/api/last?token=r-nodata&geocode=1
+/api/last?token=nope
+
+# /api/trip
+/api/trip?token=r-fixture
+/api/trip?token=r-nodata
+/api/trip?token=nope
+
+# /api/find-from-localtime
+/api/find-from-localtime?token=r-fixture&input=2026-01-15%2008:05:00
+/api/find-from-localtime?token=r-fixture&input=2026-01-16%2000:00:00
+/api/find-from-localtime?token=r-fixture&input=not-a-date
+/api/find-from-localtime?token=r-fixture
+/api/find-from-localtime?token=r-nodata&input=2026-01-15%2008:05:00
+
+# /api/input (GET returns the database name for a write token)
+/api/input?token=w-fixture
+/api/input?token=r-fixture
+/api/input
+
+# GET on POST-only routes
+/api/share?token=w-fixture
+/api/trip-complete?token=w-fixture
+HEAD /api/last?token=r-fixture

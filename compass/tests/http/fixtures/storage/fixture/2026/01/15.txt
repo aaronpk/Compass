@@ -1,0 +1,7 @@
+2026-01-15 16:00:00.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.6765,45.5231]},"properties":{"timestamp":"2026-01-15T16:00:00Z","horizontal_accuracy":10,"speed":1,"battery_level":0.5,"altitude":30}}
+2026-01-15 16:05:00.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.677,45.524]},"properties":{"timestamp":"2026-01-15T16:05:00Z","horizontal_accuracy":10,"speed":1,"battery_level":0.5,"altitude":30,"motion":["walking"]}}
+2026-01-15 16:10:00.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.678,45.525]},"properties":{"timestamp":"2026-01-15T16:10:00Z","horizontal_accuracy":6000,"speed":1,"battery_level":0.5,"altitude":30}}
+2026-01-15 16:15:00.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.679,45.526]},"properties":{"timestamp":"2026-01-15T16:15:00Z","action":"pause"}}
+2026-01-15 16:20:00.000000 {"type":"Feature","properties":{"timestamp":"2026-01-15T16:20:00Z","horizontal_accuracy":20}}
+2026-01-15 16:25:00.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.68,45.527]},"properties":{"timestamp":"2026-01-15T16:25:00Z","horizontal_accuracy":10,"speed":1,"battery_level":0.5,"altitude":30}}
+2026-01-15 23:59:30.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.681,45.528]},"properties":{"timestamp":"2026-01-15T23:59:30Z","horizontal_accuracy":10,"speed":1,"battery_level":0.5,"altitude":30}}

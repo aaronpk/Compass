@@ -1,0 +1,5 @@
+2026-01-16 08:00:00.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.682,45.529]},"properties":{"timestamp":"2026-01-16T08:00:00Z","horizontal_accuracy":10,"speed":1,"battery_level":0.5,"altitude":30}}
+2026-01-16 08:00:10.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.683,45.53]},"properties":{"timestamp":"2026-01-16T08:00:10Z","horizontal_accuracy":4999,"speed":1,"battery_level":0.5,"altitude":30}}
+2026-01-16 08:00:20.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.684,45.531]},"properties":{"timestamp":"2026-01-16T08:00:20Z","horizontal_accuracy":5000,"speed":1,"battery_level":0.5,"altitude":30}}
+2026-01-16 08:00:30.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.685,45.532]},"properties":{"timestamp":"2026-01-16T08:00:30Z","horizontal_accuracy":5001,"speed":1,"battery_level":0.5,"altitude":30}}
+2026-01-16 09:00:00.000000 {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.686,45.533]},"properties":{"timestamp":"2026-01-16T09:00:00Z","horizontal_accuracy":10,"speed":1,"battery_level":0.5,"altitude":30}}

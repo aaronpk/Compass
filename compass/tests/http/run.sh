@@ -13,7 +13,8 @@
 set -u
 PHP=$1; OUT=$2; shift 2
 HERE=$(cd "$(dirname "$0")" && pwd)
-APP=$(cd "$HERE/../.." && pwd)
+# COMPASS_APP points the harness at another checkout, e.g. a worktree of the old code
+APP=$(cd "${COMPASS_APP:-$HERE/../..}" && pwd)
 FIXTURE_PHP=${FIXTURE_PHP:-php8.4}
 FIX=http://127.0.0.1:18280
 BASE=http://127.0.0.1:18281
@@ -33,7 +34,8 @@ mkdir -p "$OUT/app/storage/logs" "$OUT/app/storage/framework/views" "$OUT/app/st
 cp -r "$HERE/fixtures/storage" "$OUT/storage"
 DBENV=$(grep -E '^DB_(HOST|PORT|USERNAME|PASSWORD)=' "$APP/.env")
 cat > "$OUT/app/.env" <<EOF
-APP_ENV=testing
+# Not "testing": Laravel ignores PHP deprecations entirely under unit tests
+APP_ENV=harness
 APP_DEBUG=false
 APP_KEY=0123456789abcdef0123456789abcdef
 BASE_URL=$BASE/
@@ -49,6 +51,7 @@ SESSION_LIFETIME=500000
 QUEUE_DRIVER=sync
 CACHE_DRIVER=redis
 REDIS_DATABASE=9
+LOG_DEPRECATIONS_CHANNEL=single
 EOF
 
 # --- Fresh database and cache -----------------------------------------------------
@@ -138,6 +141,7 @@ record settings-add-user "${J[@]}" -d "add_user=https://new-friend.example/" $BA
 record settings-add-existing-user "${J[@]}" -d "add_user=https://friend.example/" $BASE/settings/fixture
 record settings-remove-user "${J[@]}" -d "remove_user=https://friend.example/" $BASE/settings/fixture
 record settings-timezone "${J[@]}" -d "timezone=Europe/Berlin" -d "metric=0" $BASE/settings/fixture
+record settings-add-user-padded "${J[@]}" --data-urlencode "add_user= https://padded.example/ " $BASE/settings/fixture
 record settings-ping-urls "${J[@]}" --data-urlencode "ping_urls=$FIX/ping
 $FIX/ping2" $BASE/settings/fixture
 record settings-nothing "${J[@]}" -d "unknown=1" $BASE/settings/fixture
@@ -163,7 +167,7 @@ P() { record "$1" -H 'Content-Type: application/json' --data "$3" "$BASE/api/inp
 P input-no-locations w-fixture '{"foo":1}'
 P input-bad-token r-fixture '{"locations":[]}'
 P input-points w-fixture '{"locations":[
-  {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.69,45.54]},"properties":{"timestamp":"2026-01-17T10:00:00Z","horizontal_accuracy":5}},
+  {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.69,45.54]},"properties":{"timestamp":"2026-01-17T10:00:00Z","horizontal_accuracy":5,"wifi":"","device_id":" padded id ","motion":[]}},
   {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.70,45.55]},"properties":{"timestamp":"1768644060","horizontal_accuracy":5}},
   {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.71,45.56]},"properties":{"timestamp":"1768644120.250000","horizontal_accuracy":5}},
   {"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]},"properties":{"timestamp":"2026-01-17T10:03:00Z"}},
@@ -192,6 +196,8 @@ record trip-complete-bad-token -d "start=x" "$BASE/api/trip-complete?token=nope"
 record share -d "duration=3600" "$BASE/api/share?token=w-fixture"
 record share-bad-token -d "duration=3600" "$BASE/api/share?token=r-fixture"
 snapshot_db db-after-input
+# Cache keys written by the dedupe check, and how long they live (in whole hours)
+for k in $(redis-cli -n 9 --scan | sort); do echo "$k ttl_hours=$(( $(redis-cli -n 9 ttl "$k") / 3600 ))"; done > "$OUT/responses/redis-keys.txt"
 for f in $(cd "$OUT/storage" && find . -type f | sort); do echo "== $f"; cat "$OUT/storage/$f"; echo; done > "$OUT/responses/storage-after.txt"
 grep -q '"saved":3' "$OUT/responses/input-points.txt"; check "input saved 3 points (0,0 and bad dates skipped)" $?
 grep -q '"saved":1' "$OUT/responses/input-duplicates.txt"; check "input dedupes a repeated timestamp" $?
@@ -212,7 +218,7 @@ record after-logout "${J[@]}" $BASE/
 # --- Summaries --------------------------------------------------------------------------
 cat "$OUT"/app/storage/logs/*.log > "$OUT/app-log.txt" 2>/dev/null
 sed -E 's/^\[[^]]*\] //; s#'"$OUT"'/##g; s#'"$APP"'/##g' "$OUT/php-errors.log" 2>/dev/null | sort | uniq -c | sort -rn > "$OUT/php-errors-summary.txt"
-grep -hoE '(local|testing|production)\.(ERROR|CRITICAL|WARNING)[^{]*' "$OUT/app-log.txt" 2>/dev/null | sed -E 's#'"$OUT"'/##g' | sort | uniq -c | sort -rn > "$OUT/app-log-summary.txt"
+grep -hoE '[a-z]+\.(ERROR|CRITICAL|WARNING)[^{]*' "$OUT/app-log.txt" 2>/dev/null | sed -E 's#'"$OUT"'/##g' | sort | uniq -c | sort -rn > "$OUT/app-log-summary.txt"
 fatals=$(grep -ciE 'fatal|uncaught' "$OUT/php-errors-summary.txt")
 echo "$(basename "$OUT"): $pass checks passed, $fail failed; php error log: $(wc -l < "$OUT/php-errors-summary.txt") distinct, $fatals fatal; app log: $(wc -l < "$OUT/app-log-summary.txt") distinct warnings/errors"
 [ "$fail" = "0" ]

@@ -276,6 +276,10 @@ class Api extends BaseController
               // Skip adding if the timestamp is already in the cache.
               // Helps prevent writing duplicate data when the HTTP request is interrupted.
               $cacheKey = 'compass::'.$db->name.'::'.$date->format('U');
+              // Trip records get their own key, since they usually have the same timestamp as the trip's
+              // last location and would otherwise be skipped as a duplicate of it
+              if(array_key_exists('type', $loc['properties']) && $loc['properties']['type'] == 'trip')
+                $cacheKey .= '::trip';
               if(env('CACHE_DRIVER') && Cache::has($cacheKey))
                 $shouldAdd = false;
 

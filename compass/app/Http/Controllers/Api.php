@@ -68,7 +68,8 @@ class Api extends BaseController
             $rec = $record->data;
             # add a unixtime property
             $rec->properties->unixtime = (int)$record->date->format('U');
-            $events[] = $rec;
+            if(!in_array('events', explode(',', $request->input('exclude'))))
+              $events[] = $rec;
           } else {
             #$record->date->format('U.u');
             // Ignore super inaccurate locations
@@ -81,7 +82,9 @@ class Api extends BaseController
               $date->setTimeZone(new DateTimeZone($tz));
               $props->timestamp = $date->format('c');
               $props->unixtime = (int)$date->format('U');
-              $properties[] = $props;
+
+              if(!in_array('properties', explode(',', $request->input('exclude'))))
+                $properties[] = $props;
             }
           }
         }
@@ -90,7 +93,6 @@ class Api extends BaseController
       $linestring = array(
         'type' => 'LineString',
         'coordinates' => [],
-        'properties' => $properties
       );
       foreach($locations as $loc) {
         if(property_exists($loc, 'geometry'))
@@ -99,10 +101,14 @@ class Api extends BaseController
           $linestring['coordinates'][] = null;
       }
 
+      if(count($properties))
+        $linestring['properties'] = $properties;
+
       $response = array(
         'linestring' => $linestring,
-        'events' => $events
       );
+      if(count($events))
+        $response['events'] = $events;
 
     } else {
       foreach($results as $id=>$record) {
@@ -354,6 +360,7 @@ class Api extends BaseController
 
       // Notify subscribers that new data is available
       if($db->ping_urls) {
+        #Log::info('Pinging external URLs');
         $job = (new NotifyOfNewLocations($db->id))->onQueue('compass');
         $this->dispatch($job);
       }

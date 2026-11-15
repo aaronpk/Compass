@@ -114,6 +114,15 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     $file_path = tempnam(sys_get_temp_dir(), 'compass');
     file_put_contents($file_path, json_encode($geojson));
 
+    // Overland includes the trip mode's icon in the trip record as an SVG data URI
+    $icon_path = false;
+    if(isset($this->_data['properties']['icon']) && is_string($this->_data['properties']['icon'])
+      && preg_match('/^data:image\/svg\+xml;base64,(.+)$/', $this->_data['properties']['icon'], $match)
+      && ($svg = base64_decode($match[1], true))) {
+      $icon_path = tempnam(sys_get_temp_dir(), 'compass');
+      file_put_contents($icon_path, $svg);
+    }
+
     // If there are no start/end coordinates in the request, use the first and last coordinates
     if(count($features)) {
       if(!array_key_exists('start_location', $this->_data['properties'])) {
@@ -192,6 +201,10 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
       ]
     ];
 
+    if($icon_path) {
+      $params['trip']['properties']['icon'] = 'icon.svg';
+    }
+
     if($startAdr) {
       $params['trip']['properties']['start-location'] = $startAdr;
     }
@@ -267,6 +280,9 @@ class TripComplete extends Job implements SelfHandling, ShouldQueue
     $multipart = new Multipart();
     $multipart->addArray($params);
     $multipart->addFile('route.json', $file_path, 'application/json');
+    if($icon_path) {
+      $multipart->addFile('icon.svg', $icon_path, 'image/svg+xml');
+    }
 
     $httpheaders = [
       'Authorization: Bearer ' . $db->micropub_token,

@@ -117,21 +117,35 @@ DEFAULT_IGNORE = [
 ]
 
 
-def masked(data, patterns):
+def masked(data, patterns, drop=()):
+    for p in drop:
+        data = p.sub(b'', data)
     for p in patterns:
         data = p.sub(lambda m: (m.group(1) if m.groups() else b'') + b'<masked>', data)
-    return data
+    # Cookies with random names are recorded in name order, so put each run of
+    # Set-Cookie lines back in a stable order once the names are masked
+    lines = data.split(b'\n')
+    i = 0
+    while i < len(lines):
+        j = i
+        while j < len(lines) and lines[j].lower().startswith(b'set-cookie:'):
+            j += 1
+        if j - i > 1:
+            lines[i:j] = sorted(lines[i:j])
+        i = max(j, i + 1)
+    return b'\n'.join(lines)
 
 
 def compare(args):
     patterns = [re.compile(p) for p in DEFAULT_IGNORE] + [re.compile(p.encode()) for p in args.ignore or []]
+    drop = [re.compile(p.encode()) for p in args.drop or []]
     a_files = {f for f in os.listdir(args.a) if f.endswith('.txt')}
     b_files = {f for f in os.listdir(args.b) if f.endswith('.txt')}
     only_a, only_b = sorted(a_files - b_files), sorted(b_files - a_files)
     differ = []
     for f in sorted(a_files & b_files):
         with open(os.path.join(args.a, f), 'rb') as fa, open(os.path.join(args.b, f), 'rb') as fb:
-            if masked(fa.read(), patterns) != masked(fb.read(), patterns):
+            if masked(fa.read(), patterns, drop) != masked(fb.read(), patterns, drop):
                 differ.append(f)
     total = len(a_files & b_files)
     print(f'compared {total} responses: {total - len(differ)} identical, {len(differ)} different')
@@ -167,6 +181,7 @@ def main():
     c.add_argument('b')
     c.add_argument('--show', type=int, default=20)
     c.add_argument('--ignore', action='append', help='regex for volatile values; a capture group 1 is kept as a prefix')
+    c.add_argument('--drop', action='append', help='regex for text to remove before comparing, e.g. a header only one side sends')
     args = ap.parse_args()
     record(args) if args.cmd == 'record' else compare(args)
 

@@ -24,8 +24,8 @@ tables that can be emptied and rebuilt.
 - **New pages:** yearly stats and a world map for each database, a page to
   manage share links, and a one-month calendar on the map page.
 - **A second queue worker** keeps the stats up to date.
-- **Map tiles need your own Mapbox token** in `.env`. The token used to be
-  built into the scripts.
+- **Mapbox tiles need your own token** in `.env`. The token used to be built
+  into the scripts. Without one the maps use OpenStreetMap's own tiles.
 
 ## Before you start
 
@@ -67,7 +67,7 @@ has to be renamed. Make these changes:
 
 | Setting | What to do |
 |---|---|
-| `MAPBOX_TOKEN` | Add it, with a public access token (it starts with `pk.`) from your Mapbox account. Without one the maps draw tracks on a plain background. |
+| `MAPBOX_TOKEN` | Add it, with a public access token (it starts with `pk.`) from your Mapbox account. Without one the maps use OpenStreetMap's own tiles, which need no account but are only meant for light use. |
 | `STATS_ENABLED` | Add `STATS_ENABLED=false` for now. You will remove it in step 9. |
 | `DEFAULT_AUTH_ENDPOINT` | Delete it. It is no longer read. Signing in with an address that advertises no authorization endpoint now shows an error. |
 

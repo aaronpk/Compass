@@ -5,6 +5,8 @@ var Compass = (function(){
 
   var attribution = 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>';
 
+  var osmAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
   // Creates the Leaflet map in the element with the given id. The Mapbox token
   // and style come from the element's data-mapbox-token and data-mapbox-style
   // attributes (set from config/compass.php).
@@ -16,8 +18,6 @@ var Compass = (function(){
     var el = document.getElementById(id);
     var map = L.map(el, { zoomControl: false }).setView([45.516, -122.660], 14);
 
-    // Without a token (MAPBOX_TOKEN isn't set) there are no tiles to ask for:
-    // the tracks are drawn on a plain background
     if(el.dataset.mapboxToken) {
       L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
         attribution: options.attribution || attribution,
@@ -26,6 +26,15 @@ var Compass = (function(){
         tileSize: 512,
         id: el.dataset.mapboxStyle,
         accessToken: el.dataset.mapboxToken
+      }).addTo(map);
+    } else {
+      // Without a token (MAPBOX_TOKEN isn't set) the map falls back to
+      // OpenStreetMap's own tiles, which need no account. They stop at zoom 19
+      // and are stretched beyond that.
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: osmAttribution,
+        maxZoom: options.maxZoom || 19,
+        maxNativeZoom: 19
       }).addTo(map);
     }
 

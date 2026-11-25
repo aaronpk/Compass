@@ -41,7 +41,7 @@ You'll need to make sure the following PHP extensions are installed. Typically t
 ### Optional
 
 * Redis (for the job queue, which can use MySQL instead, and for filtering out duplicate points)
-* A [Mapbox](https://www.mapbox.com/) account, for the map tiles
+* A [Mapbox](https://www.mapbox.com/) account, for the map tiles (OpenStreetMap's tiles are used without one)
 * nginx with the [nchan](https://nchan.io) module, to push locations to shared maps as they arrive
 
 
@@ -66,7 +66,7 @@ Things to set in `.env`:
 
 * `BASE_URL` - the address Compass is served from, ending with a slash.
 * `STORAGE_DIR` - where the location data is written, ending with a slash. The web server (or the PHP process if you're using php-fpm) must be able to write there.
-* `MAPBOX_TOKEN` - a public access token from your Mapbox account. Without one the maps draw your tracks on a plain background.
+* `MAPBOX_TOKEN` - a public access token from your Mapbox account. Without one the maps use [OpenStreetMap's own tiles](https://operations.osmfoundation.org/policies/tiles/), which need no account but are only meant for light use.
 * `ALLOW_NEW_USERS` - whether anyone can create an account by signing in. When it is `false`, add your own website address as a row in the `users` table to be able to sign in the first time.
 
 You sign in with your website address ([IndieAuth](https://indieauth.net/)). Your site needs to advertise an authorization endpoint; there is no fallback.

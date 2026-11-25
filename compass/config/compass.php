@@ -33,7 +33,7 @@ return [
 
     // Mapbox public access token and style (as "user/style-id") for the map
     // tiles. The token comes from the environment only; without one the maps
-    // show the tracks on a plain background.
+    // use OpenStreetMap's own tiles.
     'mapbox_token' => env('MAPBOX_TOKEN'),
     'mapbox_style' => env('MAPBOX_STYLE', 'mapbox/light-v10'),
 

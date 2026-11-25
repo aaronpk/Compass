@@ -1,8 +1,8 @@
 <?php
 // Router script for `php -S 127.0.0.1:18280 tests/http/fixtures/server.php`.
 // Stands in for everything Compass talks to over HTTP: Atlas geocoding, ping
-// URLs, a Micropub endpoint, and an IndieAuth profile with authorization and
-// token endpoints. Every request is appended to $FIXTURE_LOG as JSON so the
+// URLs, a Micropub endpoint, nchan's publisher, and an IndieAuth profile with
+// authorization and token endpoints. Every request is appended to $FIXTURE_LOG as JSON so the
 // harness can check what Compass sent.
 
 $base = 'http://127.0.0.1:18280';
@@ -37,6 +37,10 @@ function respond($code, $body, $type='application/json', $headers=[]) {
   echo is_string($body) ? $body : json_encode($body, JSON_UNESCAPED_SLASHES);
   exit;
 }
+
+// nchan's publisher location: Compass posts new locations for share viewers here
+if(strpos($path, '/pub/') === 0)
+  respond(201, ['messages' => 1]);
 
 switch($path) {
 

@@ -38,6 +38,10 @@ IGNORE=(
   --ignore '(embed/world/)[A-Za-z0-9]{24}'
   --ignore '(embed\\/world\\/)[A-Za-z0-9]{24}'
   --ignore '([?]v=)[0-9]+'
+  --ignore '(/pub/)[A-Za-z0-9]{15}\b'
+  --ignore '(/share/live/)[A-Za-z0-9]{15}'
+  --ignore '("start": ?")[0-9T:+-]+'
+  --ignore '((created|until|stopped|expired|last viewed) )[A-Z][a-z]{2} [0-9]{1,2}, [0-9]{1,2}:[0-9]{2} [ap]m'
   --ignore '(code_challenge=)[A-Za-z0-9_-]+'
   --ignore '(code_verifier=)[A-Za-z0-9_-]+'
   # The built-in server stopped echoing the request's Host header in PHP 8.6

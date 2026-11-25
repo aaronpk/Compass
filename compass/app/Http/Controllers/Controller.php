@@ -95,6 +95,7 @@ class Controller
       'menu' => [
         '/stats/'.$name => 'Stats',
         '/stats/'.$name.'/world' => 'World',
+        '/shares/'.$name => 'Share',
         '/settings/'.$name => 'Settings'
       ],
       'range_from' => $request->input('from') ?: '',

@@ -259,6 +259,8 @@ class Api
     $last_location = false;
     // UTC dates of the day files this request adds to, for the stats pipeline
     $statsDates = [];
+    // The new points in the form share viewers are given
+    $shared = [];
     foreach($request->input('locations') as $loc) {
       if(array_key_exists('properties', $loc)) {
         if(array_key_exists('timestamp', $loc['properties'])) {
@@ -295,6 +297,8 @@ class Api
                 $num++;
                 $qz->add($date, $loc);
                 $statsDates = array_merge($statsDates, self::statsDates($date->getTimestamp(), $loc['properties']));
+                if(!isset($loc['properties']['type']) && !isset($loc['properties']['action']) && ($point = \App\Sharing\Shares::reduce($loc)))
+                  $shared[] = $point;
                 if(config('compass.dedupe_cache'))
                   Cache::put($cacheKey, 1, 360*60); // cache this for 6 hours (Lumen took minutes, Laravel takes seconds)
                 $last_location = $loc;
@@ -324,6 +328,12 @@ class Api
     if($request->input('current')) {
       $last_location = $request->input('current');
       Log::info('Device sent current location');
+    }
+
+    if($shared && config('compass.nchan_publish_url') && count(\App\Sharing\Shares::activeFor($db->id))) {
+      // Send at most the newest hundred; a device catching up after hours
+      // offline would otherwise flood the viewers
+      dispatch((new \App\Jobs\PublishShareLocation($db->id, array_slice($shared, -100)))->onQueue('compass'));
     }
 
     if($statsDates && config('compass.stats_enabled')) {
@@ -474,15 +484,11 @@ class Api
     if(!$db)
       return response(json_encode(['error' => 'invalid token']))->header('Content-Type', 'application/json');
 
-    $expires_at = time() + $request->input('duration');
-    $share_token = \Illuminate\Support\Str::random(15);
-
-    $share_id = DB::table('shares')->insertGetId([
-      'database_id' => $db->id,
-      'created_at' => date('Y-m-d H:i:s'),
-      'expires_at' => date('Y-m-d H:i:s', $expires_at),
-      'token' => $share_token,
-    ]);
+    // "duration" is in seconds. 0 shares until stopped. Left out or not a
+    // number, the share lasts an hour (it used to expire immediately).
+    $duration = $request->input('duration');
+    $duration = is_numeric($duration) && $duration >= 0 ? (int)$duration : 3600;
+    $share_token = \App\Http\Controllers\Share::store($db->id, $duration, $request->input('label'));
 
     $share_url = config('compass.base_url').'s/'.$share_token;
 

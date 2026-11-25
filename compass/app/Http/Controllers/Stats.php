@@ -35,7 +35,7 @@ class Stats extends BaseController
   }
 
   private static function menu(string $name): array {
-    return ['/map/'.$name => 'Map', '/stats/'.$name => 'Stats', '/stats/'.$name.'/world' => 'World'];
+    return ['/map/'.$name => 'Map', '/stats/'.$name => 'Stats', '/stats/'.$name.'/world' => 'World', '/shares/'.$name => 'Share'];
   }
 
   private static function displayURL() {

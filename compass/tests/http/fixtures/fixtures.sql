@@ -25,3 +25,8 @@ INSERT INTO shares (id, database_id, expires_at, token, created_at) VALUES
   (1, 1, '2099-01-01 00:00:00', 'shareactive', '2026-01-15 16:07:00'),
   (2, 1, '2020-01-01 00:00:00', 'shareexpired', '2019-12-31 00:00:00'),
   (3, 3, '2099-01-01 00:00:00', 'sharenodata', '2026-01-01 00:00:00');
+
+-- A share that was stopped early, and one with no end date
+INSERT INTO shares (id, database_id, expires_at, token, created_at, revoked_at, label) VALUES
+  (4, 1, '2099-01-01 00:00:00', 'sharerevoked', '2026-01-15 16:07:00', '2026-01-15 17:00:00', 'stopped early'),
+  (5, 1, NULL, 'shareopen', '2026-01-16 00:00:00', NULL, 'open-ended');

@@ -18,6 +18,19 @@
 /share/current.json?token=shareexpired
 /share/history.json?token=shareactive
 /share/history.json?token=nope
+/s/sharerevoked
+/s/shareopen
+/share/current.json?token=sharerevoked
+/share/current.json?token=shareopen
+/share/history.json?token=shareopen
+/share/authorize
+/share/authorize?token=shareactive
+/share/authorize?token=shareopen
+/share/authorize?token=sharerevoked
+/share/authorize?token=shareexpired
+/share/viewer-connected?token=shareactive
+/share/viewer-connected?token=sharerevoked
+/shares/fixture
 
 # /api/query
 /api/query

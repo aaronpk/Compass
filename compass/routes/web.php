@@ -13,6 +13,11 @@ Route::get('/', [Controller::class, 'index']);
 Route::get('/s/{token}', [Share::class, 'view'])->where('token', '[A-Za-z0-9]+');
 Route::get('/share/current.json', [Share::class, 'current_location']);
 Route::get('/share/history.json', [Share::class, 'history']);
+Route::get('/share/authorize', [Share::class, 'authorize']);
+Route::get('/share/viewer-connected', [Share::class, 'viewerConnected']);
+Route::get('/shares/{name}', [Share::class, 'index'])->where('name', '[A-Za-z0-9]+');
+Route::post('/shares/{name}', [Share::class, 'create'])->where('name', '[A-Za-z0-9]+');
+Route::post('/shares/{name}/{id}/stop', [Share::class, 'revoke'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');
 
 Route::post('/auth/start', [IndieAuth::class, 'start']);
 Route::get('/auth/callback', [IndieAuth::class, 'callback']);

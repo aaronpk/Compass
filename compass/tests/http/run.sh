@@ -49,6 +49,7 @@ SESSION_DRIVER=cookie
 SESSION_LIFETIME=500000
 QUEUE_DRIVER=sync
 CACHE_DRIVER=redis
+NCHAN_PUBLISH_URL=$FIX/pub
 REDIS_DATABASE=9
 LOG_DEPRECATIONS_CHANNEL=single
 EOF
@@ -241,6 +242,46 @@ share_token=${share_url##*/}
 record share-new-page "$share_url"
 record share-new-current "$BASE/share/current.json?token=$share_token"
 record share-new-history "$BASE/share/history.json?token=$share_token"
+record share-default-duration "$BASE/api/share?token=w-fixture" -X POST
+record share-open-ended -d "duration=0" -d "label=from the device" "$BASE/api/share?token=w-fixture"
+
+# --- Managing shares in the web app ---------------------------------------------------------
+record shares-page "${J[@]}" $BASE/shares/fixture
+record shares-create "${J[@]}" -d "duration=14400" --data-urlencode "label=ride to the <coast>" $BASE/shares/fixture
+record shares-create-open "${J[@]}" -d "duration=0" $BASE/shares/fixture
+record shares-not-member "${J[@]}" -d "duration=3600" $BASE/shares/other
+stop_id=$(mysql_test -N -e "SELECT id FROM shares WHERE label='ride to the <coast>'")
+stop_token=$(mysql_test -N -e "SELECT token FROM shares WHERE id=$stop_id")
+record shares-stop "${J[@]}" -X POST $BASE/shares/fixture/$stop_id/stop
+record shares-stop-other-database "${J[@]}" -X POST $BASE/shares/fixture/3/stop
+record shares-page-after "${J[@]}" $BASE/shares/fixture
+record share-stopped-page "$BASE/s/$stop_token"
+mysql_test -e "SELECT id, database_id, label, (expires_at IS NULL) AS open_ended, (revoked_at IS NOT NULL) AS stopped,
+    (expires_at > NOW() + INTERVAL 230 MINUTE AND expires_at < NOW() + INTERVAL 250 MINUTE) AS about_four_hours,
+    (expires_at > NOW() + INTERVAL 50 MINUTE AND expires_at < NOW() + INTERVAL 70 MINUTE) AS about_an_hour FROM shares ORDER BY id" > "$OUT/responses/db-after-shares.txt"
+grep -q 'ride to the &lt;coast&gt;' "$OUT/responses/shares-page-after.txt"; check "sharing page lists the new link, escaped" $?
+grep -q ' 200' "$OUT/responses/share-stopped-page.txt" && grep -q 'expired' "$OUT/responses/share-stopped-page.txt"; check "a stopped share shows the expired page" $?
+
+# --- A live point ---------------------------------------------------------------------------
+# Posted with the current time, so it falls inside the shares created above.
+# Kept to the end: it creates a day file named after today, and everything
+# recorded for comparison above must not depend on the date. The time is
+# masked in what is saved here.
+now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+mask_now() { sed -i -E "s/$now/NOW/g; s/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}\+00:00/TIME/g" "$@"; }
+P input-live w-fixture '{"locations":[
+  {"type":"Feature","geometry":{"type":"Point","coordinates":[-122.61,45.51]},"properties":{"timestamp":"'$now'","horizontal_accuracy":8,"speed":3.5,"battery_level":0.42,"wifi":"home network","device_id":"phone"}}
+]}'
+record share-live-current "$BASE/share/current.json?token=$share_token"
+record share-live-history "$BASE/share/history.json?token=$share_token"
+record share-old-history "$BASE/share/history.json?token=shareactive"
+mask_now "$OUT/responses/input-live.forwarded.txt" "$OUT/responses/share-live-current.txt" "$OUT/responses/share-live-history.txt" "$OUT/responses/share-old-history.txt"
+grep -q '\[\[-122.61,45.51\]\]' "$OUT/responses/share-live-history.txt"; check "share history has the point posted after the share was created" $?
+# (The database's own ping URLs do get the whole record; that is not a share.)
+! { cat "$OUT/responses/share-live-current.txt"; grep '"uri":"/pub/' "$OUT/responses/input-live.forwarded.txt"; } | grep -q 'battery\|wifi\|device_id'; check "share viewers are not given battery, wifi or device id" $?
+grep -q '"speed":3.5' "$OUT/responses/share-live-current.txt"; check "share viewers get speed and accuracy" $?
+[ "$(grep -c '"uri":"/pub/' "$OUT/responses/input-live.forwarded.txt")" = "6" ]; check "the new point is published to each of the six active shares" $?
+! grep -q "/pub/sharerevoked\|/pub/shareexpired\|/pub/$stop_token" "$OUT/responses/input-live.forwarded.txt"; check "nothing is published to ended shares" $?
 
 # --- Logout -------------------------------------------------------------------------------
 record logout "${J[@]}" $BASE/auth/logout

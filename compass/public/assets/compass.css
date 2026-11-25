@@ -1099,3 +1099,61 @@ html.full, .share-page {
   font-family: var(--font-mono);
   font-size: 0.8rem;
 }
+
+/* Sharing */
+
+.share-status {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  transform: translateX(-50%);
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: calc(100% - 2 * var(--space-4));
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.share-status #share-speed:empty {
+  display: none;
+}
+.share-status #share-speed {
+  color: var(--muted);
+}
+.share-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.share-links li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+.share-links li:last-child {
+  border-bottom: 0;
+}
+.share-links li.ended {
+  opacity: 0.6;
+}
+.share-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.share-info input {
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}

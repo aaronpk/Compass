@@ -22,6 +22,12 @@ return [
     // compass-stats queue (deploy/compass-stats@.service).
     'stats_enabled' => env('STATS_ENABLED', true),
 
+    // Live sharing pushes new locations to viewers through nginx's nchan
+    // module (see deploy/nginx-nchan.conf). This is the address of nchan's
+    // publisher location, for example http://127.0.0.1:8090/pub. Left empty,
+    // share pages ask for the current location every few seconds instead.
+    'nchan_publish_url' => env('NCHAN_PUBLISH_URL'),
+
     // Duplicate location points are only filtered out when a cache is configured
     'dedupe_cache' => env('CACHE_STORE', env('CACHE_DRIVER')),
 

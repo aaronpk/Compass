@@ -1215,6 +1215,45 @@ html.full, .share-page {
   max-height: 320px;
   overflow-y: auto;
 }
+.card-title.with-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.tabs {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.tabs [role="tab"] {
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.tabs [role="tab"][aria-selected="true"] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(16, 24, 32, 0.15);
+}
+.tabs [role="tab"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.tabs .count {
+  margin-left: 2px;
+  font-weight: 400;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 .attribution {
   margin-top: var(--space-4);
 }

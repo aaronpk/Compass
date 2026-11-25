@@ -235,18 +235,33 @@ $change = function($now, $before, $format) {
     </div>
 
     <div class="card half">
-      <div class="card-title">First visits <span class="muted">{{ count($stats['first_visits']['countries']) }} countries, {{ count($stats['first_visits']['cities']) }} cities</span></div>
-      <ol class="plain-list first-visits">
-        @foreach($stats['first_visits']['countries'] as $country)
-          <li><span>{{ $country['name'] ?? $country['code'] }} <span class="tag">country</span></span><span class="muted">{{ $shortDay($country['first']) }}</span></li>
-        @endforeach
-        @foreach($stats['first_visits']['cities'] as $city)
-          <li><span>{{ $city['name'] }}<span class="muted">, {{ $city['country'] }}</span></span><span class="muted">{{ $shortDay($city['first']) }}</span></li>
-        @endforeach
-      </ol>
-      @if(!$stats['first_visits']['countries'] && !$stats['first_visits']['cities'])
-        <p class="muted">Nowhere new this year.</p>
-      @endif
+      <div class="card-title with-tabs">
+        <span>First visits</span>
+        <div class="tabs" role="tablist" aria-label="First visits">
+          <button type="button" role="tab" id="first-tab-cities" aria-controls="first-cities" aria-selected="true">Cities <span class="count">{{ count($stats['first_visits']['cities']) }}</span></button>
+          <button type="button" role="tab" id="first-tab-countries" aria-controls="first-countries" aria-selected="false" tabindex="-1">Countries <span class="count">{{ count($stats['first_visits']['countries']) }}</span></button>
+        </div>
+      </div>
+      <div class="first-visits" role="tabpanel" id="first-cities" aria-labelledby="first-tab-cities">
+        <ol class="plain-list">
+          @foreach($stats['first_visits']['cities'] as $city)
+            <li><span>{{ $city['name'] }}<span class="muted">, {{ $city['country'] }}</span></span><span class="muted">{{ $shortDay($city['first']) }}</span></li>
+          @endforeach
+        </ol>
+        @if(!$stats['first_visits']['cities'])
+          <p class="muted">No new cities this year.</p>
+        @endif
+      </div>
+      <div class="first-visits" role="tabpanel" id="first-countries" aria-labelledby="first-tab-countries" hidden>
+        <ol class="plain-list">
+          @foreach($stats['first_visits']['countries'] as $country)
+            <li><span>{{ $country['name'] ?? $country['code'] }}</span><span class="muted">{{ $shortDay($country['first']) }}</span></li>
+          @endforeach
+        </ol>
+        @if(!$stats['first_visits']['countries'])
+          <p class="muted">No new countries this year.</p>
+        @endif
+      </div>
     </div>
   </div>
 

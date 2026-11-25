@@ -87,3 +87,27 @@
   }
   show(start);
 })();
+
+// Tabs: any role="tablist" whose tabs name their panel in aria-controls
+document.querySelectorAll('[role="tablist"]').forEach(function(list) {
+  var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+  function select(tab) {
+    tabs.forEach(function(other) {
+      var on = other == tab;
+      other.setAttribute('aria-selected', on ? 'true' : 'false');
+      other.tabIndex = on ? 0 : -1;
+      document.getElementById(other.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  tabs.forEach(function(tab, index) {
+    tab.addEventListener('click', function() { select(tab); });
+    tab.addEventListener('keydown', function(evt) {
+      var step = evt.key == 'ArrowRight' ? 1 : evt.key == 'ArrowLeft' ? -1 : 0;
+      if(step) {
+        var next = tabs[(index + step + tabs.length) % tabs.length];
+        select(next);
+        next.focus();
+      }
+    });
+  });
+});

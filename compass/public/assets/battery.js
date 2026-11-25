@@ -7,6 +7,8 @@ function pointFromGeoJSON(geo) {
 function showBatteryGraph(response) {
 
   var data = response.linestring;
+  // The API leaves out "properties" when there are none
+  data.properties = data.properties || [];
 
   var batteryStateBands = [];
   var buckets = data.properties.map(function(d){return d.battery_state}).findRanges();

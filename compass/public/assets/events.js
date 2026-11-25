@@ -1,6 +1,7 @@
 function collectEventSeries(data) {
 
-  var events = data.events;
+  // The API leaves out "events" when there are none
+  var events = data.events || [];
 
   var series = {
     "application_launched_with_location": {

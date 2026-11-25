@@ -116,5 +116,15 @@ CREATE TABLE `stats_day_places` (
   KEY `stats_day_places_database_id_country_local_date_index` (`database_id`,`country`,`local_date`),
   KEY `stats_day_places_database_id_city_id_local_date_index` (`database_id`,`city_id`,`local_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+CREATE TABLE `stats_day_cells` (
+  `database_id` int(10) unsigned NOT NULL,
+  `utc_date` date NOT NULL,
+  `local_date` date NOT NULL,
+  `lat_i` smallint(6) NOT NULL,
+  `lng_i` smallint(6) NOT NULL,
+  `stopped_s` int(10) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`database_id`,`utc_date`,`local_date`,`lat_i`,`lng_i`),
+  KEY `stats_day_cells_database_id_local_date_index` (`database_id`,`local_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 ALTER TABLE `databases` ADD `embed_token` varchar(40) DEFAULT NULL, ADD UNIQUE KEY `databases_embed_token_unique` (`embed_token`);
 ALTER TABLE `shares` ADD `label` varchar(100) DEFAULT NULL, ADD `revoked_at` datetime DEFAULT NULL, ADD `last_viewed_at` datetime DEFAULT NULL, ADD KEY `shares_token_index` (`token`);

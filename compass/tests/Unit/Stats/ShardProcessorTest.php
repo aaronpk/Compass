@@ -230,4 +230,65 @@ class ShardProcessorTest extends TestCase {
     $this->assertNull($result['segments'][0]['country']);
   }
 
+  // Cells (tenths of a degree) per local date: [date => [cell => stopped seconds]]
+  private function cells(array $dates): array {
+    $processor = $this->processor();
+    $cells = [];
+    foreach($dates as $date) {
+      foreach($processor->compute($date)['cells'] as $row) {
+        $key = $row['lat_i'].'|'.$row['lng_i'];
+        $cells[$row['local_date']][$key] = ($cells[$row['local_date']][$key] ?? 0) + $row['stopped_s'];
+      }
+    }
+    return $cells;
+  }
+
+  public function testAStopGivesOneCellWithItsTime() {
+    $track = (new TrackBuilder('2026-01-10 18:00:00', ...self::PORTLAND))->stay(3600);
+    $this->write($track->points);
+    $cells = $this->cells(['2026-01-10']);
+    $this->assertSame(['2026-01-10'], array_keys($cells));
+    // 45.5152, -122.6784 is in the cell from 45.5 and -122.7
+    $this->assertSame(['455|-1227'], array_keys($cells['2026-01-10']));
+    $this->assertEqualsWithDelta(3600, $cells['2026-01-10']['455|-1227'], 30);
+  }
+
+  public function testADriveLeavesALineOfCellsThatWereOnlyPassedThrough() {
+    // 60 km due east at 45.5 N is about 0.77 degrees of longitude: 8 or 9 cells
+    $track = (new TrackBuilder('2026-01-10 18:00:00', ...self::PORTLAND))
+      ->stay(3600)->go(60000, 90, 3600)->stay(3600);
+    $this->write($track->points);
+    $cells = $this->cells(['2026-01-10'])['2026-01-10'];
+    $this->assertGreaterThanOrEqual(8, count($cells));
+    $this->assertLessThanOrEqual(10, count($cells));
+    // Stopped at both ends and nowhere in between
+    $this->assertCount(2, array_filter($cells));
+    $this->assertGreaterThan(0, $cells['455|-1227']);
+    $longitudes = array_map(fn($cell) => (int)explode('|', $cell)[1], array_keys($cells));
+    sort($longitudes);
+    $this->assertSame(range($longitudes[0], end($longitudes)), $longitudes, 'No cell along the road is skipped');
+  }
+
+  public function testAFlightWithTheGpsOnLeavesNoCellsUnderIt() {
+    // Portland to Honolulu in five and a half hours, recording all the way
+    $track = (new TrackBuilder('2026-01-10 18:00:00', ...self::PORTLAND))
+      ->stay(3600)
+      ->travel(self::HONOLULU[0], self::HONOLULU[1], (int)(5.5 * 3600), 30, null, 10, 10000)
+      ->stay(3600);
+    $this->write($track->points);
+    $dates = ['2026-01-10', '2026-01-11'];
+    $modes = [];
+    foreach($dates as $date)
+      $modes = array_merge($modes, array_column($this->processor()->compute($date)['segments'], 'mode'));
+    $this->assertContains('plane', $modes);
+
+    $cells = [];
+    foreach($this->cells($dates) as $byCell)
+      $cells += $byCell;
+    // Only the two airports, give or take a neighbouring cell
+    $this->assertLessThanOrEqual(4, count($cells));
+    $this->assertArrayHasKey('455|-1227', $cells);
+    $this->assertArrayHasKey('213|-1579', $cells);
+  }
+
 }

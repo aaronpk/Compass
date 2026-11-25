@@ -102,6 +102,10 @@ $ php artisan stats:backfill
 
 This queues the work; `php artisan stats:backfill --sync` does it in the foreground with a progress bar instead. A day of data takes around a tenth of a second. From then on, new data is picked up automatically within about five minutes, by a job on the `compass-stats` queue. Run a worker for it with `deploy/compass-stats@.service`.
 
+After an update that changes how the stats are worked out, run `php artisan stats:backfill` again: it reprocesses the days that were done with the older version.
+
+The world map covers the land with hexagons and fills the ones you have been in, either anywhere on the ground or only where you stopped. The hexagons are four degrees of longitude wide when the map is zoomed out and get smaller as you zoom in, down to half a degree. The public, embeddable version of the map (turned on from the World page) shows the list of countries and the hexagons visited in one colour, without the number of days in each; add `?view=stops` to its address to leave out places you only passed through. The hexagons on land come from `public/assets/world-hex.json` and `world-hex-fine.json`, built by `php artisan geo:build-hex-grid`.
+
 Other commands: `stats:status` shows progress, and `stats:explain {database} {date}` shows the stops and moves found for one day. All of the stats tables can be emptied and rebuilt; the location files are never changed.
 
 ### Live sharing

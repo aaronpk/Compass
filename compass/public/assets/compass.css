@@ -1037,6 +1037,11 @@ html.full, .share-page {
   --heat-2: #74cdc6;
   --heat-3: #2fb1a9;
   --heat-4: #0e8f8a;
+  /* Hexagons on the world map: a stronger ramp, they are small and sit on grey */
+  --hex-1: #6fcbc4;
+  --hex-2: #2aa9a1;
+  --hex-3: #0e807b;
+  --hex-4: #07504d;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -1045,6 +1050,10 @@ html.full, .share-page {
     --heat-2: #1c6f69;
     --heat-3: #25a096;
     --heat-4: #3fd6c9;
+    --hex-1: #1f837c;
+    --hex-2: #2bb3a8;
+    --hex-3: #5fe0d4;
+    --hex-4: #c4f7f1;
   }
 }
 .heatmap-scroll {
@@ -1229,7 +1238,7 @@ html.full, .share-page {
   letter-spacing: 0;
   text-transform: none;
 }
-.tabs [role="tab"] {
+.tabs button {
   padding: 3px 10px;
   border: 0;
   border-radius: 4px;
@@ -1239,12 +1248,13 @@ html.full, .share-page {
   font-weight: 500;
   cursor: pointer;
 }
-.tabs [role="tab"][aria-selected="true"] {
+.tabs button[aria-selected="true"],
+.tabs button[aria-pressed="true"] {
   background: var(--surface);
   color: var(--text);
   box-shadow: 0 1px 2px rgba(16, 24, 32, 0.15);
 }
-.tabs [role="tab"]:focus-visible {
+.tabs button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -1260,6 +1270,31 @@ html.full, .share-page {
 
 /* World map */
 
+.world-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.world-bar .tabs {
+  font-size: 0.85rem;
+}
+.world-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+}
+.world-legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+.world-legend .hex-1 { background: var(--hex-1); }
+.world-legend .hex-2 { background: var(--hex-2); }
+.world-legend .hex-3 { background: var(--hex-3); }
+.world-legend .hex-4 { background: var(--hex-4); }
 .world-map {
   height: min(62vh, 560px);
   border-radius: var(--radius);

@@ -3,6 +3,7 @@ namespace App\Stats;
 
 use Illuminate\Support\Facades\DB;
 use App\Stats\Geo\Geo;
+use App\Stats\Geo\HexGrid;
 
 // Reads the stats tables for the stats pages. Everything is per database and
 // grouped by local date: the date where the person was.
@@ -225,6 +226,38 @@ class Queries {
       ->selectRaw('p.country AS code, c.name, MIN(p.local_date) AS first')
       ->get()->map(fn($row) => (array)$row)->all();
     return ['cities' => $cities, 'countries' => $countries];
+  }
+
+  // Hexagons of the world map with time on the ground, for each of the map's
+  // grids: [columns => [[column, row, days there at all, days stopped there], ...]]
+  public function hexes(string $from, string $to): array {
+    $rows = DB::table('stats_day_cells')
+      ->where('database_id', $this->databaseId)->whereBetween('local_date', [$from, $to])
+      ->groupBy('lat_i', 'lng_i', 'local_date')
+      ->selectRaw('lat_i, lng_i, local_date, SUM(stopped_s) AS stopped_s')
+      ->cursor();
+    $hexesOfCell = [];
+    $any = $stopped = array_fill_keys(HexGrid::LEVELS, []);
+    foreach($rows as $row) {
+      $cell = $row->lat_i.'|'.$row->lng_i;
+      // The middle of the cell decides which hexagon it counts toward
+      $hexes = $hexesOfCell[$cell] ??= array_map(
+        fn($columns) => implode(',', HexGrid::cell(($row->lat_i + 0.5) / 10, ($row->lng_i + 0.5) / 10, $columns)), HexGrid::LEVELS);
+      foreach(HexGrid::LEVELS as $i => $columns) {
+        $any[$columns][$hexes[$i]][$row->local_date] = true;
+        if($row->stopped_s > 0)
+          $stopped[$columns][$hexes[$i]][$row->local_date] = true;
+      }
+    }
+    $levels = [];
+    foreach(HexGrid::LEVELS as $columns) {
+      $levels[$columns] = [];
+      foreach($any[$columns] as $hex => $dates) {
+        [$column, $row] = explode(',', $hex);
+        $levels[$columns][] = [(int)$column, (int)$row, count($dates), count($stopped[$columns][$hex] ?? [])];
+      }
+    }
+    return $levels;
   }
 
   // Years that have any stats, newest first

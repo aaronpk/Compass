@@ -87,13 +87,34 @@ class Stats extends BaseController
   private static function countries(object $db, $year): array {
     $queries = new Queries($db->id);
     $year = $year !== null && preg_match('/^(19|20)\d\d$/', (string)$year) ? (int)$year : null;
-    $countries = $queries->countries($year ? "$year-01-01" : '0000-01-01', $year ? "$year-12-31" : '9999-12-31');
+    $from = $year ? "$year-01-01" : '0000-01-01';
+    $to = $year ? "$year-12-31" : '9999-12-31';
+    $countries = $queries->countries($from, $to);
     return [
       'year' => $year,
       'years' => $queries->years(),
       'countries' => $countries,
       'continents' => count(array_unique(array_filter(array_column($countries, 'continent')))),
+      // Hexagons of the map with time on the ground, for each of the map's grids
+      // (by number of columns): [column, row, days there, days stopped there]
+      'hexes' => $queries->hexes($from, $to),
     ];
+  }
+
+  // The same for the public embed, which shows where but not how often: the
+  // hexagons become [column, row]. ?view=stops leaves out places only passed through.
+  private static function embedData(object $db, Request $request): array {
+    $world = self::countries($db, $request->input('year'));
+    $stops = $request->input('view') == 'stops';
+    foreach($world['hexes'] as $columns => $level) {
+      $hexes = [];
+      foreach($level as [$column, $row, $days, $stopped]) {
+        if(!$stops || $stopped > 0)
+          $hexes[] = [$column, $row];
+      }
+      $world['hexes'][$columns] = $hexes;
+    }
+    return $world;
   }
 
   public function world(Request $request, $name) {
@@ -129,12 +150,13 @@ class Stats extends BaseController
   }
 
   // The world map on its own page, for an iframe on another website.
-  // The embed token only ever gives access to this list of countries.
+  // The embed token only ever gives access to the list of countries and the
+  // hexagons visited (down to about 50 km across), without day counts for the hexagons.
   public function embed(Request $request, $token) {
     $db = DB::table('databases')->where('embed_token', '=', $token)->first();
     if(!$db)
       return response('Not found', 404);
-    return response(view('world-embed', ['world' => self::countries($db, $request->input('year'))]))
+    return response(view('world-embed', ['world' => self::embedData($db, $request)]))
       ->header('Content-Security-Policy', 'frame-ancestors *');
   }
 
@@ -142,7 +164,7 @@ class Stats extends BaseController
     $db = DB::table('databases')->where('embed_token', '=', $token)->first();
     if(!$db)
       return self::json(['error' => 'not found'], 404);
-    return self::json(self::countries($db, $request->input('year')))->header('Access-Control-Allow-Origin', '*');
+    return self::json(self::embedData($db, $request))->header('Access-Control-Allow-Origin', '*');
   }
 
 }

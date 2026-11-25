@@ -65,15 +65,15 @@ class ShardProcessor {
 
     DB::transaction(function() use($databaseId, $date, $result, $started) {
       DB::table('stats_segments')->where('database_id', $databaseId)->where('shard_date', $date)->delete();
-      foreach(['stats_days', 'stats_day_modes', 'stats_day_places'] as $table)
+      foreach(['stats_days', 'stats_day_modes', 'stats_day_places', 'stats_day_cells'] as $table)
         DB::table($table)->where('database_id', $databaseId)->where('utc_date', $date)->delete();
 
       $key = ['database_id' => $databaseId];
       foreach(array_chunk($result['segments'], 500) as $chunk)
         DB::table('stats_segments')->insert(array_map(fn($row) => $key + ['shard_date' => $date] + $row, $chunk));
-      foreach(['stats_days' => 'days', 'stats_day_modes' => 'modes', 'stats_day_places' => 'places'] as $table => $name) {
-        if($result[$name])
-          DB::table($table)->insert(array_map(fn($row) => $key + ['utc_date' => $date] + $row, $result[$name]));
+      foreach(['stats_days' => 'days', 'stats_day_modes' => 'modes', 'stats_day_places' => 'places', 'stats_day_cells' => 'cells'] as $table => $name) {
+        foreach(array_chunk($result[$name], 1000) as $chunk)
+          DB::table($table)->insert(array_map(fn($row) => $key + ['utc_date' => $date] + $row, $chunk));
       }
 
       DB::table('stats_shards')->upsert([$key + ['shard_date' => $date] + $result['ledger'] + [
@@ -93,7 +93,7 @@ class ShardProcessor {
     $dayEnd = $dayStart + 86400;
     $day = $this->reader->day($date);
     $result = [
-      'segments' => [], 'days' => [], 'modes' => [], 'places' => [],
+      'segments' => [], 'days' => [], 'modes' => [], 'places' => [], 'cells' => [],
       'ledger' => [
         'file_size' => $day['size'] ?? null, 'file_mtime' => $day['mtime'] ?? null,
         'points_total' => $day['lines'] ?? 0, 'points_used' => count($day['points'] ?? []),
@@ -105,7 +105,7 @@ class ShardProcessor {
     [$points, $trips] = $this->window($date, $day, $dayStart, $dayEnd);
     $segments = $this->segmenter->segment($points, $trips);
 
-    $days = $modes = $places = [];
+    $days = $modes = $places = $cells = [];
     $timezone = $this->timezoneResolver->resolve($points[0][PointReader::LAT], $points[0][PointReader::LNG]) ?: $this->defaultTimezone;
     $seq = 0;
 
@@ -120,6 +120,7 @@ class ShardProcessor {
         foreach($this->localSpans($start, $end, $timezone) as [$localDate, $seconds]) {
           self::add($days[$localDate]['stopped_s'], $seconds);
           self::add($places[$localDate][($place['country'] ?? '').'|'.($place['city_id'] ?? 0)]['stopped_s'], $seconds);
+          self::add($cells[$localDate][self::cell($segment['lat'], $segment['lng'])], $seconds);
         }
         $result['segments'][] = $this->row($segment, $seq++, $start, $end, $timezone, 0, $place['country'], $place['city_id'], null);
         continue;
@@ -199,6 +200,9 @@ class ShardProcessor {
         self::add($modes[$localDate][$mode]['duration_s'], $seconds);
         if($country)
           self::add($places[$localDate][$country.'|0']['moving_s'], $seconds);
+        // Where the track went on the ground, for the world map. Flying over a place isn't a visit.
+        if(!$isFlight)
+          $cells[$localDate][self::cell($hopLat, $hopLng)] ??= 0;
       }
       if(!$owned)
         continue;
@@ -220,7 +224,18 @@ class ShardProcessor {
         $result['places'][] = ['local_date' => $localDate, 'country' => $country, 'city_id' => (int)$city] + self::rounded($values, ['stopped_s', 'moving_s']);
       }
     }
+    foreach($cells as $localDate => $byCell) {
+      foreach($byCell as $cell => $seconds) {
+        [$latI, $lngI] = explode('|', $cell);
+        $result['cells'][] = ['local_date' => $localDate, 'lat_i' => (int)$latI, 'lng_i' => (int)$lngI, 'stopped_s' => (int)round($seconds)];
+      }
+    }
     return $result;
+  }
+
+  // The tenth-of-a-degree cell a point is in, as "lat|lng" in tenths
+  private static function cell(float $lat, float $lng): string {
+    return (int)floor($lat * 10).'|'.(int)floor($lng * 10);
   }
 
   // The day's points with a few hours of its neighbours on either side, plus

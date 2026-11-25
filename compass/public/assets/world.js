@@ -1,5 +1,9 @@
-// World map of countries visited. Draws country outlines from world.geojson
-// and fills the visited ones, darker for more days.
+// World map of places visited. Countries are drawn from world.geojson and
+// covered with a grid of hexagons (world-hex.json); the hexagons where time
+// was spent on the ground are filled, darker for more days. The hexagons are
+// big when the map is zoomed out and smaller as it is zoomed in.
+//
+// The grid is the one in app/Stats/Geo/HexGrid.php; keep the two in step.
 (function() {
   var data = JSON.parse(document.getElementById('world-data').textContent);
   var visited = {};
@@ -7,7 +11,7 @@
 
   var styles = getComputedStyle(document.documentElement);
   var css = function(name) { return styles.getPropertyValue(name).trim(); };
-  var shades = [css('--heat-1'), css('--heat-2'), css('--heat-3'), css('--heat-4')];
+  var shades = [css('--hex-1'), css('--hex-2'), css('--hex-3'), css('--hex-4')];
 
   function shade(days) {
     if(days >= 100) return shades[3];
@@ -16,17 +20,143 @@
     return shades[0];
   }
 
-  function style(feature) {
-    var country = visited[feature.properties.code];
-    return {
-      color: css('--border'),
-      weight: 0.6,
-      fillColor: country ? shade(country.days) : css('--heat-0'),
-      fillOpacity: 1
-    };
+  ////////////////////////////////////////////////////////////
+  // Hexagon grids: pointy-top hexagons in the Mercator plane, odd rows half
+  // a column to the east. A grid is named by its number of columns around
+  // the world: 360 columns makes hexagons one degree of longitude wide.
+
+  var ANGLES = [30, 90, 150, 210, 270, 330].map(function(degrees) {
+    var angle = degrees * Math.PI / 180;
+    return [Math.cos(angle), Math.sin(angle)];
+  });
+
+  function latitude(y) {
+    return (2 * Math.atan(Math.exp(y * Math.PI / 180)) - Math.PI / 2) * 180 / Math.PI;
   }
 
-  function describe(feature) {
+  // The corners of a hexagon as [lat, lng] pairs
+  function hexagon(column, row, columns) {
+    var width = 360 / columns;
+    var size = width / Math.sqrt(3);
+    var x = width * (column + 0.5 * (row & 1));
+    var y = 1.5 * size * row;
+    if(x >= 180) x -= 360;
+    return ANGLES.map(function(angle) {
+      return [latitude(y + size * angle[1]), x + size * angle[0]];
+    });
+  }
+
+  // Which grid to show at a zoom level: hexagons stay between about 8 and 16 pixels wide
+  function gridFor(zoom) {
+    if(zoom < 2.5) return 90;
+    if(zoom < 3.5) return 180;
+    if(zoom < 4.5) return 360;
+    return 720;
+  }
+
+  ////////////////////////////////////////////////////////////
+
+  var map = L.map('world-map', {
+    preferCanvas: true,
+    zoomSnap: 0.25,
+    minZoom: 0.5,
+    maxZoom: 7,
+    worldCopyJump: true,
+    attributionControl: false,
+    maxBounds: [[-85, -220], [85, 220]]
+  }).setView([25, 10], 1.5);
+
+  // Bottom to top: country shapes (hover and tooltips), the grid of land
+  // hexagons, the visited hexagons, then the borders
+  var countryLayers = {};
+  var gridLayer = L.layerGroup().addTo(map);
+  var visitedLayer = L.layerGroup().addTo(map);
+  var borderLayer = null;
+  var visitedShapes = [];
+  // Land hexagons per grid, as they arrive: {columns: {country: [column, row, ...]}}
+  var land = {};
+  // Leaflet layers already built for a grid's land hexagons
+  var landLayers = {};
+  var fineRequested = false;
+  var columns = null;
+  // "all": anywhere on the ground. "stops": only where a stop was made.
+  var view = data.flat ? 'all' : remembered();
+
+  function remembered() {
+    try {
+      return localStorage.getItem('compass-world-view') == 'stops' ? 'stops' : 'all';
+    } catch(e) {
+      return 'all';
+    }
+  }
+
+  function describeHex(hex) {
+    var days = view == 'stops' ? hex[3] : hex[2];
+    if(view == 'stops')
+      return 'Stopped here on ' + days.toLocaleString() + (days == 1 ? ' day' : ' days');
+    return days.toLocaleString() + (days == 1 ? ' day' : ' days') + ' here';
+  }
+
+  // One shape per country for all of its hexagons: a few hundred shapes to draw, not tens of thousands
+  function drawGrid() {
+    gridLayer.clearLayers();
+    if(!land[columns]) {
+      // The finest grid is a big file, fetched the first time the map is zoomed in that far
+      if(columns == 720 && !fineRequested) {
+        fineRequested = true;
+        fetch(data.fineGrid).then(function(response) { return response.json(); }).then(function(grid) {
+          land[720] = grid.levels[720];
+          if(columns == 720) drawGrid();
+        });
+      }
+      return;
+    }
+    if(!landLayers[columns]) {
+      var level = land[columns];
+      landLayers[columns] = Object.keys(level).map(function(code) {
+        var cells = level[code], rings = [];
+        for(var i = 0; i < cells.length; i += 2)
+          rings.push([hexagon(cells[i], cells[i + 1], columns)]);
+        return L.polygon(rings, {
+          fillColor: css('--heat-0'), fillOpacity: 1, color: css('--surface'), weight: 1, interactive: false
+        });
+      });
+    }
+    landLayers[columns].forEach(function(shape) { gridLayer.addLayer(shape); });
+    // Keep the order: grid under the visited hexagons, borders on top
+    visitedShapes.forEach(function(shape) { shape.bringToFront(); });
+    if(borderLayer) borderLayer.bringToFront();
+  }
+
+  function drawVisited() {
+    visitedLayer.clearLayers();
+    visitedShapes = [];
+    (data.hexes[columns] || []).forEach(function(hex) {
+      // The embed gets [column, row] only: no day counts, one colour
+      var days = data.flat ? 1 : (view == 'stops' ? hex[3] : hex[2]);
+      if(!days) return;
+      var shape = L.polygon(hexagon(hex[0], hex[1], columns), {
+        fillColor: data.flat ? shades[1] : shade(days), fillOpacity: 1, color: css('--surface'), weight: 1,
+        interactive: !data.flat
+      });
+      if(!data.flat)
+        shape.bindTooltip(function() { return describeHex(hex); }, {sticky: true});
+      visitedShapes.push(shape);
+      visitedLayer.addLayer(shape);
+    });
+    if(borderLayer) borderLayer.bringToFront();
+  }
+
+  // Switches to the grid that suits the zoom level
+  function chooseGrid() {
+    var wanted = gridFor(map.getZoom());
+    if(wanted == columns) return;
+    columns = wanted;
+    drawGrid();
+    drawVisited();
+  }
+
+  function describeCountry(feature) {
     var country = visited[feature.properties.code];
     var text = document.createElement('div');
     var name = document.createElement('strong');
@@ -44,49 +174,79 @@
     return text;
   }
 
-  var map = L.map('world-map', {
-    zoomSnap: 0.25,
-    minZoom: 0.5,
-    maxZoom: 6,
-    worldCopyJump: true,
-    attributionControl: false,
-    maxBounds: [[-85, -220], [85, 220]]
-  }).setView([25, 10], 1.5);
+  function borderStyle(code, on) {
+    return {fill: false, interactive: false, color: on ? css('--text') : css('--muted'), weight: on ? 1.8 : 0.5, opacity: on ? 1 : 0.6};
+  }
 
-  var layers = {};
-  fetch(data.outlines).then(function(response) { return response.json(); }).then(function(geojson) {
-    var layer = L.geoJSON(geojson, {
-      style: style,
-      onEachFeature: function(feature, shape) {
-        (layers[feature.properties.code] = layers[feature.properties.code] || []).push(shape);
-        shape.bindTooltip(function() { return describe(feature); }, {sticky: true});
-        shape.on('mouseover', function() { highlight(feature.properties.code, true); });
-        shape.on('mouseout', function() { highlight(feature.properties.code, false); });
-      }
-    }).addTo(map);
-
-    // Start zoomed to the countries visited, when there are any
-    var bounds = null;
-    Object.keys(visited).forEach(function(code) {
-      (layers[code] || []).forEach(function(shape) {
-        bounds = bounds ? bounds.extend(shape.getBounds()) : L.latLngBounds(shape.getBounds().getSouthWest(), shape.getBounds().getNorthEast());
-      });
-    });
-    if(bounds && bounds.getEast() - bounds.getWest() < 300)
-      map.fitBounds(bounds.pad(0.15), {maxZoom: 4});
-  });
-
+  var borders = {};
   function highlight(code, on) {
-    (layers[code] || []).forEach(function(shape) {
-      shape.setStyle({weight: on ? 1.8 : 0.6, color: on ? css('--text') : css('--border')});
+    (borders[code] || []).forEach(function(shape) {
+      shape.setStyle(borderStyle(code, on));
       if(on) shape.bringToFront();
     });
     var row = document.querySelector('.world-list tr[data-code="' + code + '"]');
     if(row) row.classList.toggle('highlight', on);
   }
 
+  Promise.all([
+    fetch(data.outlines).then(function(response) { return response.json(); }),
+    fetch(data.grid).then(function(response) { return response.json(); })
+  ]).then(function(loaded) {
+    var geojson = loaded[0], grid = loaded[1];
+
+    L.geoJSON(geojson, {
+      style: {stroke: false, fillColor: css('--heat-0'), fillOpacity: 1},
+      onEachFeature: function(feature, shape) {
+        var code = feature.properties.code;
+        (countryLayers[code] = countryLayers[code] || []).push(shape);
+        shape.bindTooltip(function() { return describeCountry(feature); }, {sticky: true});
+        shape.on('mouseover', function() { highlight(code, true); });
+        shape.on('mouseout', function() { highlight(code, false); });
+      }
+    }).addTo(map);
+
+    Object.keys(grid.levels).forEach(function(level) { land[level] = grid.levels[level]; });
+    chooseGrid();
+
+    borderLayer = L.geoJSON(geojson, {
+      style: function(feature) { return borderStyle(feature.properties.code, false); },
+      onEachFeature: function(feature, shape) {
+        (borders[feature.properties.code] = borders[feature.properties.code] || []).push(shape);
+      }
+    }).addTo(map);
+
+    // Start zoomed to the hexagons visited, when there are any
+    if(visitedShapes.length) {
+      var bounds = L.latLngBounds([]);
+      visitedShapes.forEach(function(shape) { bounds.extend(shape.getBounds()); });
+      if(bounds.getEast() - bounds.getWest() < 300)
+        map.fitBounds(bounds.pad(0.15), {maxZoom: 5});
+    }
+    map.on('zoomend', chooseGrid);
+  });
+
   document.querySelectorAll('.world-list tr[data-code]').forEach(function(row) {
     row.addEventListener('mouseenter', function() { highlight(row.dataset.code, true); });
     row.addEventListener('mouseleave', function() { highlight(row.dataset.code, false); });
   });
+
+  // Everywhere / Stops only
+  var buttons = document.querySelectorAll('[data-world-view]');
+  function showView(name) {
+    view = name;
+    buttons.forEach(function(button) {
+      button.setAttribute('aria-pressed', button.dataset.worldView == name ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-world-note]').forEach(function(note) {
+      note.hidden = note.dataset.worldNote != name;
+    });
+  }
+  buttons.forEach(function(button) {
+    button.addEventListener('click', function() {
+      showView(button.dataset.worldView);
+      try { localStorage.setItem('compass-world-view', view); } catch(e) {}
+      drawVisited();
+    });
+  });
+  showView(view);
 })();

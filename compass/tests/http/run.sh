@@ -56,7 +56,7 @@ EOF
 
 # --- Fresh database and cache -----------------------------------------------------
 mysql_test() { mysql -h127.0.0.1 -u"$(grep ^DB_USERNAME= "$APP/.env" | cut -d= -f2)" -p"$(grep ^DB_PASSWORD= "$APP/.env" | cut -d= -f2)" compass_test "$@"; }
-mysql_test -e 'DROP TABLE IF EXISTS users, `databases`, database_users, shares, failed_jobs, geo_cities, geo_countries, geo_cells, geo_tz_cells, stats_shards, stats_segments, stats_days, stats_day_modes, stats_day_places'
+mysql_test -e 'DROP TABLE IF EXISTS users, `databases`, database_users, shares, failed_jobs, geo_cities, geo_countries, geo_cells, geo_tz_cells, stats_shards, stats_segments, stats_days, stats_day_modes, stats_day_places, stats_day_cells'
 mysql_test < "$HERE/fixtures/schema.sql"
 mysql_test < "$HERE/fixtures/schema-stats.sql"
 mysql_test < "$HERE/fixtures/fixtures.sql"
@@ -205,10 +205,11 @@ mysql_test -e "SELECT database_id, shard_date, version, (dirty_at IS NOT NULL) A
     SELECT * FROM stats_days ORDER BY database_id, utc_date, local_date;
     SELECT * FROM stats_day_modes ORDER BY database_id, utc_date, local_date, mode;
     SELECT * FROM stats_day_places ORDER BY database_id, utc_date, local_date, country, city_id;
+    SELECT * FROM stats_day_cells ORDER BY database_id, utc_date, local_date, lat_i, lng_i;
     SELECT id, (stats_job_at IS NOT NULL) AS stats_job_queued FROM \`databases\` ORDER BY id" > "$OUT/responses/stats-after-input.txt"
 grep -q "^1	2026-01-17	" "$OUT/responses/stats-after-input.txt"; check "input registers its day file for stats" $?
-# Cache keys written by the dedupe check, and how long they live (in whole hours)
-for k in $(redis-cli -n 9 --scan | sort); do echo "$k ttl_hours=$(( $(redis-cli -n 9 ttl "$k") / 3600 ))"; done > "$OUT/responses/redis-keys.txt"
+# Cache keys written by the dedupe check, and how long they live (to the nearest hour, so a second or two of running time does not show)
+for k in $(redis-cli -n 9 --scan | sort); do echo "$k ttl_hours=$(( ($(redis-cli -n 9 ttl "$k") + 1800) / 3600 ))"; done > "$OUT/responses/redis-keys.txt"
 for f in $(cd "$OUT/storage" && find . -type f | sort); do echo "== $f"; cat "$OUT/storage/$f"; echo; done > "$OUT/responses/storage-after.txt"
 grep -q '"saved":3' "$OUT/responses/input-points.txt"; check "input saved 3 points (0,0 and bad dates skipped)" $?
 grep -q '"saved":1' "$OUT/responses/input-duplicates.txt"; check "input dedupes a repeated timestamp" $?
@@ -228,12 +229,16 @@ record world-embed-not-owner "${J[@]}" -d "embed=enable" $BASE/stats/other/embed
 embed_token=$(mysql_test -N -e "SELECT embed_token FROM \`databases\` WHERE name='fixture'")
 record world-embed-page "$BASE/embed/world/$embed_token"
 record world-embed-json "$BASE/embed/world/$embed_token.json"
+record world-embed-json-stops "$BASE/embed/world/$embed_token.json?view=stops"
 record world-with-embed "${J[@]}" $BASE/stats/fixture/world
 record world-embed-disable "${J[@]}" -d "embed=disable" $BASE/stats/fixture/embed
 record world-embed-after-disable "$BASE/embed/world/$embed_token"
 grep -q '"distance_m": 2715' "$OUT/responses/stats-api.txt"; check "stats API has the distance of the posted points" $?
 grep -q 'Total distance' "$OUT/responses/stats-year.txt"; check "stats page renders" $?
 grep -q '"code": "US"' "$OUT/responses/world-embed-json.txt"; check "embedded world map lists the country" $?
+# Hexagons, per grid, are [column, row, days, days stopped] for the owner and [column, row] in the public embed
+tr -d ' \n' < "$OUT/responses/world-api.txt" | grep -qE '"hexes":\{"90":\[\[[0-9]+,-?[0-9]+,[0-9]+,[0-9]+\]'; check "world API has hexagons with day counts" $?
+tr -d ' \n' < "$OUT/responses/world-embed-json.txt" | grep -qE '"hexes":\{"90":\[\[[0-9]+,-?[0-9]+\]\],"180"'; check "embedded world map has hexagons without day counts" $?
 grep -q ' 404' "$OUT/responses/world-embed-after-disable.txt"; check "embed stops working when turned off" $?
 
 # --- Share created through the API ------------------------------------------------------

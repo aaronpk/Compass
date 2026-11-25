@@ -11,7 +11,7 @@
   <body class="world-embed">
     <div id="world-map" class="world-map"></div>
     <div class="world-summary">{{ count($world['countries']) }} {{ count($world['countries']) == 1 ? 'country' : 'countries' }} on {{ $world['continents'] }} {{ $world['continents'] == 1 ? 'continent' : 'continents' }}</div>
-    <script type="application/json" id="world-data">{!! json_encode(['countries' => $world['countries'], 'outlines' => asset_v('/assets/world.geojson')], JSON_HEX_TAG|JSON_HEX_AMP) !!}</script>
+    <script type="application/json" id="world-data">{!! json_encode(['countries' => $world['countries'], 'hexes' => $world['hexes'], 'flat' => true, 'outlines' => asset_v('/assets/world.geojson'), 'grid' => asset_v('/assets/world-hex.json'), 'fineGrid' => asset_v('/assets/world-hex-fine.json')], JSON_HEX_TAG|JSON_HEX_AMP) !!}</script>
     <script src="{{ asset_v('/assets/leaflet-1.9.4/leaflet.js') }}"></script>
     <script src="{{ asset_v('/assets/world.js') }}"></script>
   </body>

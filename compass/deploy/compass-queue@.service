@@ -1,0 +1,32 @@
+# One Compass queue worker. Instances are started by compass-queue.target:
+#
+#   sudo cp compass-queue@.service compass-queue.target /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now compass-queue.target
+#
+# After deploying new code:   sudo systemctl restart compass-queue.target
+# Logs for all workers:       journalctl -u 'compass-queue@*'
+#
+# Adjust WorkingDirectory, User and the PHP binary to match the install.
+[Unit]
+Description=Compass queue worker %i
+After=network.target mariadb.service redis-server.service
+PartOf=compass-queue.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/web/sites/compass.p3k.io/compass
+# Compass puts all of its jobs on the "compass" queue. --timeout must stay
+# below the connection's retry_after (90 s by default), or a slow job can run twice.
+ExecStart=/usr/bin/php8.6 artisan queue:work --queue=compass --sleep=3 --tries=1 --timeout=60 --max-time=3600
+# The worker exits cleanly after --max-time so memory can't grow forever;
+# systemd starts it again.
+Restart=always
+RestartSec=5
+# Let the job in progress finish before the worker is killed
+KillSignal=SIGTERM
+TimeoutStopSec=75
+
+[Install]
+WantedBy=compass-queue.target

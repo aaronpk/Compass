@@ -1,0 +1,7 @@
+# Runs four Compass queue workers. See compass-queue@.service.
+[Unit]
+Description=Compass queue workers
+Wants=compass-queue@1.service compass-queue@2.service compass-queue@3.service compass-queue@4.service
+
+[Install]
+WantedBy=multi-user.target

@@ -4,52 +4,51 @@
 
 @include('partials/logged-in')
 
-<div class="dashboard">
+<div class="page dashboard">
 
-  <br>
   <h2>Database: {{ $database->name }}</h2>
 
-  <form class="ui form">
+  <form class="card">
     <div class="field">
-      <label>Read Token</label>
-      <input readonly="" value="{{ $database->read_token }}">
+      <label for="read-token">Read Token</label>
+      <input id="read-token" readonly="" value="{{ $database->read_token }}">
     </div>
 
     @if ($database->created_by == session('user_id'))
     <div class="field">
-      <label>Write Token <a href="#" class="show-api-endpoint">(show API endpoint)</a></label>
-      <input readonly="" value="{{ $database->write_token }}">
+      <label for="write-token">Write Token <a href="#" class="show-api-endpoint">(show API endpoint)</a></label>
+      <input id="write-token" readonly="" value="{{ $database->write_token }}">
     </div>
 
     <div class="api-endpoint field hidden">
-      <label>API Endpoint</label>
-      <input type="text" readonly value="{{ config('compass.base_url') }}api/input?token={{ $database->write_token }}">
+      <label for="api-endpoint">API Endpoint</label>
+      <input id="api-endpoint" type="text" readonly value="{{ config('compass.base_url') }}api/input?token={{ $database->write_token }}">
     </div>
     @endif
   </form>
 
-  <div style="margin-top: 20px;">
+  <div class="card">
     <h3>Users with Access</h3>
 
     <ul class="users">
       @foreach($users as $user)
       <li class="user">
         @if($user->id != session('user_id'))
-          <a href="#" data-user="{{ $user->url }}" class="remove-user hidden">&times;</a>
+          <a href="#" data-user="{{ $user->url }}" class="remove-user" title="Remove this user" aria-label="Remove {{ $user->url }}">&times;</a>
         @endif
         {{ $user->url }}
       </li>
       @endforeach
-      <li>
-        <a href="javascript:$('.users .create').removeClass('hidden');$('.create-link').addClass('hidden');" class="pure-button create-link {{ session('create-error') ? 'hidden' : '' }}">New User</a>
+      <li class="new">
+        <a href="#" class="button create-link {{ session('create-error') ? 'hidden' : '' }}">New User</a>
         @if(session('create-error'))
           <div class="error">{{ session('create-error') }}</div>
         @endif
         <span class="create {{ session('create-error') ? '' : 'hidden' }}">
-          <form action="/settings/{{ $database->name }}" method="post" class="ui form">
-            <div class="ui action input">
-              <input type="url" name="add_user" value="{{ session('add-user-url') }}" placeholder="github or indieauth url">
-              <button type="submit" class="ui button primary">Add User</button>
+          <form action="/settings/{{ $database->name }}" method="post">
+            <div class="input-group">
+              <input type="url" name="add_user" value="{{ session('add-user-url') }}" placeholder="github or indieauth url" aria-label="URL of the user to add">
+              <button type="submit" class="button primary">Add User</button>
             </div>
           </form>
         </span>
@@ -58,57 +57,52 @@
 
   </div>
 
-  <br>
-
   <h2>Settings</h2>
 
   <p>Here you can pick a default timezone and system of measurement to display this database in.</p>
 
-  <div class="panel">
-    <form action="/settings/{{ $database->name }}" method="post" class="ui form">
+  <div class="card panel">
+    <form action="/settings/{{ $database->name }}" method="post">
       <div class="field">
         <label for="timezone">Timezone</label>
-        <input name="timezone" type="text" class="pure-input-1" value="{{ $database->timezone }}">
+        <input id="timezone" name="timezone" type="text" value="{{ $database->timezone }}">
       </div>
 
       <div class="field">
-	<label for="metric">System</label>
-	<select name="metric" class="pure-input-1">
-	  <option value="0" {{ $database->metric ? '' : 'selected' }}>Imperial (miles)</option>
+        <label for="metric">System</label>
+        <select id="metric" name="metric">
+          <option value="0" {{ $database->metric ? '' : 'selected' }}>Imperial (miles)</option>
           <option value="1" {{ $database->metric ? 'selected' : '' }}>Metric (kilometer)</option>
         </select>
       </div>
 
-      <button type="submit" class="ui button primary">Save</button>
+      <button type="submit" class="button primary">Save</button>
     </form>
   </div>
-  <br>
 
   <h2>Micropub Trip Export</h2>
 
-  <div class="panel">
+  <div class="card panel">
     @if (empty($database->micropub_token))
     <p>Authorize Compass with a Micropub endpoint and any trips that are written to this database will be sent to that endpoint as well.</p>
-    <form action="/settings/{{ $database->name }}/auth/start" method="post" class="ui form">
+    <form action="/settings/{{ $database->name }}/auth/start" method="post">
       <div class="field">
         <label for="micropub_endpoint">web sign-in</label>
-        <input name="me" type="url" placeholder="https://example.com/" class="pure-input-1" value="">
+        <input id="micropub_endpoint" name="me" type="url" placeholder="https://example.com/" value="">
       </div>
 
-      <button type="submit" class="ui button primary">Connect</button>
+      <button type="submit" class="button primary">Connect</button>
     </form>
     @else
-      <form action="/settings/{{ $database->name }}/auth/remove" method="get" class="ui form">
+      <form action="/settings/{{ $database->name }}/auth/remove" method="get">
         <div class="field">
           <p>You are currently posting to <strong>{{$database->micropub_endpoint}}</strong>. Any trips that are written to this database will be sent to that endpoint as well.</p>
         </div>
 
-        <button type="submit" class="ui button primary">Disconnect</button>
+        <button type="submit" class="button primary">Disconnect</button>
       </form>
     @endif
   </div>
-
-  <br>
 
   <h2>Web Hooks</h2>
 
@@ -118,40 +112,57 @@
 
   <p>Enter one or more URLs separated by whitespace.</p>
 
-  <div class="panel">
-    <form action="/settings/{{ $database->name }}" method="post" class="ui form">
+  <div class="card panel">
+    <form action="/settings/{{ $database->name }}" method="post">
       <div class="field">
         <label for="ping_urls">Ping URLs</label>
-        <textarea name="ping_urls" class="pure-input-1">{{ $database->ping_urls }}</textarea>
+        <textarea id="ping_urls" name="ping_urls">{{ $database->ping_urls }}</textarea>
       </div>
 
-      <button type="submit" class="ui button primary">Save</button>
+      <button type="submit" class="button primary">Save</button>
     </form>
   </div>
 
-  <br>
-
 </div>
 <script>
-jQuery(function($){
-  $(".users .user").hover(function(){
-    $(this).children(".remove-user").removeClass("hidden");
-  }, function(){
-    $(this).children(".remove-user").addClass("hidden");
+(function(){
+  var settingsURL = @json('/settings/'.$database->name);
+  var databaseName = @json($database->name);
+
+  document.querySelector('.users .create-link').addEventListener('click', function(evt){
+    evt.preventDefault();
+    document.querySelector('.users .create').classList.remove('hidden');
+    this.classList.add('hidden');
+    document.querySelector('.users .create input').focus();
   });
-  $(".remove-user").click(function(){
-    $.post("/settings/{{ $database->name }}", {
-      database: "{{ $database->name }}",
-      remove_user: $(this).data('user')
-    }, function(data){
-      window.location = window.location;
+
+  document.querySelectorAll('.remove-user').forEach(function(link){
+    link.addEventListener('click', function(evt){
+      evt.preventDefault();
+      if(!confirm('Remove ' + link.dataset.user + ' from this database?')) {
+        return;
+      }
+      fetch(settingsURL, {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: new URLSearchParams({
+          database: databaseName,
+          remove_user: link.dataset.user
+        })
+      }).then(function(){
+        window.location.reload();
+      });
     });
-    return false;
   });
-  $(".show-api-endpoint").click(function(){
-    $(".api-endpoint").removeClass("hidden");
-    $(".show-api-endpoint").addClass("hidden");
-  });
-});
+
+  var showEndpoint = document.querySelector('.show-api-endpoint');
+  if(showEndpoint) {
+    showEndpoint.addEventListener('click', function(evt){
+      evt.preventDefault();
+      document.querySelector('.api-endpoint').classList.remove('hidden');
+      showEndpoint.classList.add('hidden');
+    });
+  }
+})();
 </script>
 @endsection

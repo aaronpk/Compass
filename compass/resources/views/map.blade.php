@@ -58,7 +58,7 @@
     </div>
     <table class="calendar" id="cal-grid"></table>
     <div class="cal-foot">
-      <span class="cal-legend" aria-hidden="true">Less <i class="lv1"></i><i class="lv2"></i><i class="lv3"></i><i class="lv4"></i> More <span class="flight">Flight</span></span>
+      <span class="cal-legend" aria-hidden="true">Less <i class="lv1"></i><i class="lv2"></i><i class="lv3"></i><i class="lv4"></i><i class="lv5"></i> More <span class="flight">Flight</span></span>
       <button type="button" class="button small" id="cal-today">Today</button>
     </div>
   </div>

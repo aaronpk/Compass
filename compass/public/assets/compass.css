@@ -754,11 +754,12 @@ table.calendar {
   text-decoration: none;
 }
 /* Shading by distance travelled that day */
-.calendar a.lv1, .cal-legend .lv1 { background: color-mix(in srgb, var(--accent) 18%, transparent); }
-.calendar a.lv2, .cal-legend .lv2 { background: color-mix(in srgb, var(--accent) 38%, transparent); }
-.calendar a.lv3, .cal-legend .lv3 { background: color-mix(in srgb, var(--accent) 62%, transparent); }
-.calendar a.lv4, .cal-legend .lv4 { background: var(--accent); }
-.calendar a.lv4 { color: var(--on-accent); }
+.calendar a.lv1, .cal-legend .lv1 { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.calendar a.lv2, .cal-legend .lv2 { background: color-mix(in srgb, var(--accent) 26%, transparent); }
+.calendar a.lv3, .cal-legend .lv3 { background: color-mix(in srgb, var(--accent) 46%, transparent); }
+.calendar a.lv4, .cal-legend .lv4 { background: color-mix(in srgb, var(--accent) 70%, transparent); }
+.calendar a.lv5, .cal-legend .lv5 { background: var(--accent); }
+.calendar a.lv5 { color: var(--on-accent); }
 /* A day with a flight */
 .calendar a.flight::after,
 .cal-legend .flight::before {

@@ -236,15 +236,15 @@ function formatDate(str, options) {
   return new Intl.DateTimeFormat(undefined, options).format(parseDate(str));
 }
 
-// Shading goes by distance on the ground: 0 for a day with no movement to
-// speak of, up to 4 for a long drive. Flights get a dot instead, or every
-// travel day would look the same.
+// Every day with data is shaded, darker the further was travelled on the
+// ground: 1 for a day spent in one place, up to 5 for a long drive. Flights
+// get a dot instead, or every travel day would look the same.
 function activityLevel(day) {
-  if(day[0] >= 200000) return 4;
-  if(day[0] >= 50000) return 3;
-  if(day[0] >= 10000) return 2;
-  if(day[0] >= 1000) return 1;
-  return 0;
+  if(day[0] >= 200000) return 5;
+  if(day[0] >= 50000) return 4;
+  if(day[0] >= 10000) return 3;
+  if(day[0] >= 1000) return 2;
+  return 1;
 }
 
 function describeDay(date, day) {

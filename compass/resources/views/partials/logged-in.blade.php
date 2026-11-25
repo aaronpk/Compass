@@ -5,8 +5,10 @@
       <span>Compass</span>
     </a>
     @if(isset($menu))
+      <?php /* The year pages under /stats/name/2025 belong to Stats */ ?>
+      <?php $current = preg_replace('#^(/stats/[^/]+)/\d{4}$#', '$1', '/'.request()->path()); ?>
       @foreach($menu as $u=>$n)
-        <a href="{{ $u }}" class="item">{{ $n }}</a>
+        <a href="{{ $u }}" class="item{{ $u == $current ? ' current' : '' }}"@if($u == $current) aria-current="page"@endif>{{ $n }}</a>
       @endforeach
     @endif
     <span class="spacer"></span>

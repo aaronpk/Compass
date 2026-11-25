@@ -96,12 +96,7 @@ class Controller
       'displayURL' => self::displayURL(),
       'database' => $db,
       'first_stats_year' => $years ? min($years) : null,
-      'menu' => [
-        '/stats/'.$name => 'Stats',
-        '/stats/'.$name.'/world' => 'World',
-        '/shares/'.$name => 'Share',
-        '/settings/'.$name => 'Settings'
-      ],
+      'menu' => database_menu($db),
       'range_from' => $request->input('from') ?: '',
       'range_to' => $request->input('to') ?: '',
       'range_tz' => $request->input('tz') ?: $db->timezone
@@ -130,9 +125,7 @@ class Controller
       'displayURL' => self::displayURL(),
       'database' => $db,
       'users' => $users,
-      'menu' => [
-        '/map/'.$name => 'Map'
-      ]
+      'menu' => database_menu($db),
     ]);
   }
 

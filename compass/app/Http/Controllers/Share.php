@@ -129,7 +129,7 @@ class Share
 
     $now = date('Y-m-d H:i:s');
     $shares = DB::table('shares')->where('database_id', $db->id)
-      ->orderByRaw('(revoked_at IS NULL AND (expires_at IS NULL OR expires_at > ?)) DESC, created_at DESC', [$now])
+      ->orderByRaw('(revoked_at IS NULL AND (expires_at IS NULL OR expires_at > ?)) DESC, created_at DESC, id DESC', [$now])
       ->limit(30)->get()
       ->map(function($share) use($now) {
         $share->active = !$share->revoked_at && (!$share->expires_at || $share->expires_at > $now);
@@ -140,7 +140,7 @@ class Share
     return view('shares', [
       'displayURL' => preg_replace('/(^https?:\/\/|\/$)/', '', session('me')),
       'database' => $db,
-      'menu' => ['/map/'.$name => 'Map', '/stats/'.$name => 'Stats', '/stats/'.$name.'/world' => 'World', '/shares/'.$name => 'Share'],
+      'menu' => database_menu($db),
       'shares' => $shares,
       'durations' => self::DURATIONS,
       'live' => (bool)config('compass.nchan_publish_url'),

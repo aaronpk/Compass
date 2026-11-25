@@ -34,10 +34,6 @@ class Stats extends BaseController
       ->header('Content-Type', 'application/json');
   }
 
-  private static function menu(string $name): array {
-    return ['/map/'.$name => 'Map', '/stats/'.$name => 'Stats', '/stats/'.$name.'/world' => 'World', '/shares/'.$name => 'Share'];
-  }
-
   private static function displayURL() {
     return preg_replace('/(^https?:\/\/|\/$)/', '', session('me'));
   }
@@ -60,7 +56,7 @@ class Stats extends BaseController
     return view('stats', [
       'displayURL' => self::displayURL(),
       'database' => $db,
-      'menu' => self::menu($name),
+      'menu' => database_menu($db),
       'stats' => $stats,
       'metric' => (bool)$db->metric,
     ]);
@@ -107,7 +103,7 @@ class Stats extends BaseController
     return view('world', [
       'displayURL' => self::displayURL(),
       'database' => $db,
-      'menu' => self::menu($name),
+      'menu' => database_menu($db),
       'world' => self::countries($db, $request->input('year')),
       'isOwner' => $db->created_by == session('user_id'),
       'embedURL' => $db->embed_token ? config('compass.base_url').'embed/world/'.$db->embed_token : null,

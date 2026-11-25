@@ -84,6 +84,8 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Keeps the centred header in the same place on pages with and without a scrollbar */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -161,6 +163,11 @@ code {
 .site-header a:hover,
 .site-header summary:hover {
   background: var(--surface-2);
+}
+/* Marked without a change of weight, which would nudge the links after it */
+.site-header .item.current {
+  box-shadow: inset 0 -2px 0 var(--accent);
+  border-radius: 0;
 }
 .site-header .brand {
   font-weight: 600;
@@ -591,9 +598,6 @@ body.map-page {
 .map-page .site-header {
   flex: none;
 }
-.map-page .site-header .in {
-  max-width: none;
-}
 .map-stage {
   position: relative;
   flex: 1;
@@ -880,6 +884,21 @@ html.full, .share-page {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+@media (max-width: 420px) {
+  .site-header .menu .label {
+    display: none;
+  }
+  .site-header .in {
+    padding: 0 var(--space-2);
+  }
+  .site-header a,
+  .site-header summary {
+    padding: var(--space-2) 6px;
+    font-size: 14px;
+  }
+}
+@media (max-width: 700px) {
 
   /* The map page becomes one scrolling column:
      date and calendar, map, graph, range form */

@@ -1,0 +1,2018 @@
+[
+    {
+        "num": 1,
+        "code": "ID",
+        "iso3": "IDN",
+        "name": "Indonesia",
+        "continent": "Asia",
+        "sovereign": "IDN"
+    },
+    {
+        "num": 2,
+        "code": "MY",
+        "iso3": "MYS",
+        "name": "Malaysia",
+        "continent": "Asia",
+        "sovereign": "MYS"
+    },
+    {
+        "num": 3,
+        "code": "CL",
+        "iso3": "CHL",
+        "name": "Chile",
+        "continent": "South America",
+        "sovereign": "CHL"
+    },
+    {
+        "num": 4,
+        "code": "BO",
+        "iso3": "BOL",
+        "name": "Bolivia",
+        "continent": "South America",
+        "sovereign": "BOL"
+    },
+    {
+        "num": 5,
+        "code": "PE",
+        "iso3": "PER",
+        "name": "Peru",
+        "continent": "South America",
+        "sovereign": "PER"
+    },
+    {
+        "num": 6,
+        "code": "AR",
+        "iso3": "ARG",
+        "name": "Argentina",
+        "continent": "South America",
+        "sovereign": "ARG"
+    },
+    {
+        "num": 7,
+        "code": "ESB",
+        "iso3": "ESB",
+        "name": "Dhekelia",
+        "continent": "Asia",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 8,
+        "code": "CY",
+        "iso3": "CYP",
+        "name": "Cyprus",
+        "continent": "Asia",
+        "sovereign": "CYP"
+    },
+    {
+        "num": 9,
+        "code": "IN",
+        "iso3": "IND",
+        "name": "India",
+        "continent": "Asia",
+        "sovereign": "IND"
+    },
+    {
+        "num": 10,
+        "code": "CN",
+        "iso3": "CHN",
+        "name": "China",
+        "continent": "Asia",
+        "sovereign": "CH1"
+    },
+    {
+        "num": 11,
+        "code": "IL",
+        "iso3": "ISR",
+        "name": "Israel",
+        "continent": "Asia",
+        "sovereign": "IS1"
+    },
+    {
+        "num": 12,
+        "code": "PS",
+        "iso3": "PSE",
+        "name": "Palestine",
+        "continent": "Asia",
+        "sovereign": "IS1"
+    },
+    {
+        "num": 13,
+        "code": "LB",
+        "iso3": "LBN",
+        "name": "Lebanon",
+        "continent": "Asia",
+        "sovereign": "LBN"
+    },
+    {
+        "num": 14,
+        "code": "ET",
+        "iso3": "ETH",
+        "name": "Ethiopia",
+        "continent": "Africa",
+        "sovereign": "ETH"
+    },
+    {
+        "num": 15,
+        "code": "SS",
+        "iso3": "SSD",
+        "name": "South Sudan",
+        "continent": "Africa",
+        "sovereign": "SDS"
+    },
+    {
+        "num": 16,
+        "code": "SO",
+        "iso3": "SOM",
+        "name": "Somalia",
+        "continent": "Africa",
+        "sovereign": "SOM"
+    },
+    {
+        "num": 17,
+        "code": "KE",
+        "iso3": "KEN",
+        "name": "Kenya",
+        "continent": "Africa",
+        "sovereign": "KEN"
+    },
+    {
+        "num": 18,
+        "code": "MW",
+        "iso3": "MWI",
+        "name": "Malawi",
+        "continent": "Africa",
+        "sovereign": "MWI"
+    },
+    {
+        "num": 19,
+        "code": "TZ",
+        "iso3": "TZA",
+        "name": "Tanzania",
+        "continent": "Africa",
+        "sovereign": "TZA"
+    },
+    {
+        "num": 20,
+        "code": "SY",
+        "iso3": "SYR",
+        "name": "Syria",
+        "continent": "Asia",
+        "sovereign": "SYR"
+    },
+    {
+        "num": 21,
+        "code": "SOL",
+        "iso3": "SOL",
+        "name": "Somaliland",
+        "continent": "Africa",
+        "sovereign": "SOL"
+    },
+    {
+        "num": 22,
+        "code": "FR",
+        "iso3": "FRA",
+        "name": "France",
+        "continent": "Europe",
+        "sovereign": "FR1"
+    },
+    {
+        "num": 23,
+        "code": "SR",
+        "iso3": "SUR",
+        "name": "Suriname",
+        "continent": "South America",
+        "sovereign": "SUR"
+    },
+    {
+        "num": 24,
+        "code": "GY",
+        "iso3": "GUY",
+        "name": "Guyana",
+        "continent": "South America",
+        "sovereign": "GUY"
+    },
+    {
+        "num": 25,
+        "code": "KR",
+        "iso3": "KOR",
+        "name": "Republic of Korea",
+        "continent": "Asia",
+        "sovereign": "KOR"
+    },
+    {
+        "num": 26,
+        "code": "KP",
+        "iso3": "PRK",
+        "name": "Dem. Rep. Korea",
+        "continent": "Asia",
+        "sovereign": "PRK"
+    },
+    {
+        "num": 27,
+        "code": "MA",
+        "iso3": "MAR",
+        "name": "Morocco",
+        "continent": "Africa",
+        "sovereign": "MAR"
+    },
+    {
+        "num": 28,
+        "code": "EH",
+        "iso3": "ESH",
+        "name": "Western Sahara",
+        "continent": "Africa",
+        "sovereign": "SAH"
+    },
+    {
+        "num": 29,
+        "code": "CR",
+        "iso3": "CRI",
+        "name": "Costa Rica",
+        "continent": "North America",
+        "sovereign": "CRI"
+    },
+    {
+        "num": 30,
+        "code": "NI",
+        "iso3": "NIC",
+        "name": "Nicaragua",
+        "continent": "North America",
+        "sovereign": "NIC"
+    },
+    {
+        "num": 31,
+        "code": "CG",
+        "iso3": "COG",
+        "name": "Republic of the Congo",
+        "continent": "Africa",
+        "sovereign": "COG"
+    },
+    {
+        "num": 32,
+        "code": "CD",
+        "iso3": "COD",
+        "name": "Democratic Republic of the Congo",
+        "continent": "Africa",
+        "sovereign": "COD"
+    },
+    {
+        "num": 33,
+        "code": "BT",
+        "iso3": "BTN",
+        "name": "Bhutan",
+        "continent": "Asia",
+        "sovereign": "BTN"
+    },
+    {
+        "num": 34,
+        "code": "UA",
+        "iso3": "UKR",
+        "name": "Ukraine",
+        "continent": "Europe",
+        "sovereign": "UKR"
+    },
+    {
+        "num": 35,
+        "code": "BY",
+        "iso3": "BLR",
+        "name": "Belarus",
+        "continent": "Europe",
+        "sovereign": "BLR"
+    },
+    {
+        "num": 36,
+        "code": "NA",
+        "iso3": "NAM",
+        "name": "Namibia",
+        "continent": "Africa",
+        "sovereign": "NAM"
+    },
+    {
+        "num": 37,
+        "code": "ZA",
+        "iso3": "ZAF",
+        "name": "South Africa",
+        "continent": "Africa",
+        "sovereign": "ZAF"
+    },
+    {
+        "num": 38,
+        "code": "MF",
+        "iso3": "MAF",
+        "name": "Saint-Martin",
+        "continent": "North America",
+        "sovereign": "FR1"
+    },
+    {
+        "num": 39,
+        "code": "SX",
+        "iso3": "SXM",
+        "name": "Sint Maarten",
+        "continent": "North America",
+        "sovereign": "NL1"
+    },
+    {
+        "num": 40,
+        "code": "OM",
+        "iso3": "OMN",
+        "name": "Oman",
+        "continent": "Asia",
+        "sovereign": "OMN"
+    },
+    {
+        "num": 41,
+        "code": "UZ",
+        "iso3": "UZB",
+        "name": "Uzbekistan",
+        "continent": "Asia",
+        "sovereign": "UZB"
+    },
+    {
+        "num": 42,
+        "code": "KZ",
+        "iso3": "KAZ",
+        "name": "Kazakhstan",
+        "continent": "Asia",
+        "sovereign": "KA1"
+    },
+    {
+        "num": 43,
+        "code": "TJ",
+        "iso3": "TJK",
+        "name": "Tajikistan",
+        "continent": "Asia",
+        "sovereign": "TJK"
+    },
+    {
+        "num": 44,
+        "code": "LT",
+        "iso3": "LTU",
+        "name": "Lithuania",
+        "continent": "Europe",
+        "sovereign": "LTU"
+    },
+    {
+        "num": 45,
+        "code": "BR",
+        "iso3": "BRA",
+        "name": "Brazil",
+        "continent": "South America",
+        "sovereign": "BRA"
+    },
+    {
+        "num": 46,
+        "code": "UY",
+        "iso3": "URY",
+        "name": "Uruguay",
+        "continent": "South America",
+        "sovereign": "URY"
+    },
+    {
+        "num": 47,
+        "code": "MN",
+        "iso3": "MNG",
+        "name": "Mongolia",
+        "continent": "Asia",
+        "sovereign": "MNG"
+    },
+    {
+        "num": 48,
+        "code": "RU",
+        "iso3": "RUS",
+        "name": "Russian Federation",
+        "continent": "Europe",
+        "sovereign": "RUS"
+    },
+    {
+        "num": 49,
+        "code": "CZ",
+        "iso3": "CZE",
+        "name": "Czech Republic",
+        "continent": "Europe",
+        "sovereign": "CZE"
+    },
+    {
+        "num": 50,
+        "code": "DE",
+        "iso3": "DEU",
+        "name": "Germany",
+        "continent": "Europe",
+        "sovereign": "DEU"
+    },
+    {
+        "num": 51,
+        "code": "EE",
+        "iso3": "EST",
+        "name": "Estonia",
+        "continent": "Europe",
+        "sovereign": "EST"
+    },
+    {
+        "num": 52,
+        "code": "LV",
+        "iso3": "LVA",
+        "name": "Latvia",
+        "continent": "Europe",
+        "sovereign": "LVA"
+    },
+    {
+        "num": 53,
+        "code": "NO",
+        "iso3": "NOR",
+        "name": "Norway",
+        "continent": "Europe",
+        "sovereign": "NOR"
+    },
+    {
+        "num": 54,
+        "code": "SE",
+        "iso3": "SWE",
+        "name": "Sweden",
+        "continent": "Europe",
+        "sovereign": "SWE"
+    },
+    {
+        "num": 55,
+        "code": "FI",
+        "iso3": "FIN",
+        "name": "Finland",
+        "continent": "Europe",
+        "sovereign": "FI1"
+    },
+    {
+        "num": 56,
+        "code": "VN",
+        "iso3": "VNM",
+        "name": "Vietnam",
+        "continent": "Asia",
+        "sovereign": "VNM"
+    },
+    {
+        "num": 57,
+        "code": "KH",
+        "iso3": "KHM",
+        "name": "Cambodia",
+        "continent": "Asia",
+        "sovereign": "KHM"
+    },
+    {
+        "num": 58,
+        "code": "LU",
+        "iso3": "LUX",
+        "name": "Luxembourg",
+        "continent": "Europe",
+        "sovereign": "LUX"
+    },
+    {
+        "num": 59,
+        "code": "AE",
+        "iso3": "ARE",
+        "name": "United Arab Emirates",
+        "continent": "Asia",
+        "sovereign": "ARE"
+    },
+    {
+        "num": 60,
+        "code": "BE",
+        "iso3": "BEL",
+        "name": "Belgium",
+        "continent": "Europe",
+        "sovereign": "BEL"
+    },
+    {
+        "num": 61,
+        "code": "GE",
+        "iso3": "GEO",
+        "name": "Georgia",
+        "continent": "Asia",
+        "sovereign": "GEO"
+    },
+    {
+        "num": 62,
+        "code": "MK",
+        "iso3": "MKD",
+        "name": "North Macedonia",
+        "continent": "Europe",
+        "sovereign": "MKD"
+    },
+    {
+        "num": 63,
+        "code": "AL",
+        "iso3": "ALB",
+        "name": "Albania",
+        "continent": "Europe",
+        "sovereign": "ALB"
+    },
+    {
+        "num": 64,
+        "code": "AZ",
+        "iso3": "AZE",
+        "name": "Azerbaijan",
+        "continent": "Asia",
+        "sovereign": "AZE"
+    },
+    {
+        "num": 65,
+        "code": "XK",
+        "iso3": "KOS",
+        "name": "Kosovo",
+        "continent": "Europe",
+        "sovereign": "KOS"
+    },
+    {
+        "num": 66,
+        "code": "TR",
+        "iso3": "TUR",
+        "name": "Turkey",
+        "continent": "Asia",
+        "sovereign": "TUR"
+    },
+    {
+        "num": 67,
+        "code": "ES",
+        "iso3": "ESP",
+        "name": "Spain",
+        "continent": "Europe",
+        "sovereign": "ESP"
+    },
+    {
+        "num": 68,
+        "code": "LA",
+        "iso3": "LAO",
+        "name": "Lao PDR",
+        "continent": "Asia",
+        "sovereign": "LAO"
+    },
+    {
+        "num": 69,
+        "code": "KG",
+        "iso3": "KGZ",
+        "name": "Kyrgyzstan",
+        "continent": "Asia",
+        "sovereign": "KGZ"
+    },
+    {
+        "num": 70,
+        "code": "AM",
+        "iso3": "ARM",
+        "name": "Armenia",
+        "continent": "Asia",
+        "sovereign": "ARM"
+    },
+    {
+        "num": 71,
+        "code": "DK",
+        "iso3": "DNK",
+        "name": "Denmark",
+        "continent": "Europe",
+        "sovereign": "DN1"
+    },
+    {
+        "num": 72,
+        "code": "LY",
+        "iso3": "LBY",
+        "name": "Libya",
+        "continent": "Africa",
+        "sovereign": "LBY"
+    },
+    {
+        "num": 73,
+        "code": "TN",
+        "iso3": "TUN",
+        "name": "Tunisia",
+        "continent": "Africa",
+        "sovereign": "TUN"
+    },
+    {
+        "num": 74,
+        "code": "RO",
+        "iso3": "ROU",
+        "name": "Romania",
+        "continent": "Europe",
+        "sovereign": "ROU"
+    },
+    {
+        "num": 75,
+        "code": "HU",
+        "iso3": "HUN",
+        "name": "Hungary",
+        "continent": "Europe",
+        "sovereign": "HUN"
+    },
+    {
+        "num": 76,
+        "code": "SK",
+        "iso3": "SVK",
+        "name": "Slovakia",
+        "continent": "Europe",
+        "sovereign": "SVK"
+    },
+    {
+        "num": 77,
+        "code": "PL",
+        "iso3": "POL",
+        "name": "Poland",
+        "continent": "Europe",
+        "sovereign": "POL"
+    },
+    {
+        "num": 78,
+        "code": "IE",
+        "iso3": "IRL",
+        "name": "Ireland",
+        "continent": "Europe",
+        "sovereign": "IRL"
+    },
+    {
+        "num": 79,
+        "code": "GB",
+        "iso3": "GBR",
+        "name": "United Kingdom",
+        "continent": "Europe",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 80,
+        "code": "GR",
+        "iso3": "GRC",
+        "name": "Greece",
+        "continent": "Europe",
+        "sovereign": "GRC"
+    },
+    {
+        "num": 81,
+        "code": "ZM",
+        "iso3": "ZMB",
+        "name": "Zambia",
+        "continent": "Africa",
+        "sovereign": "ZMB"
+    },
+    {
+        "num": 82,
+        "code": "SL",
+        "iso3": "SLE",
+        "name": "Sierra Leone",
+        "continent": "Africa",
+        "sovereign": "SLE"
+    },
+    {
+        "num": 83,
+        "code": "GN",
+        "iso3": "GIN",
+        "name": "Guinea",
+        "continent": "Africa",
+        "sovereign": "GIN"
+    },
+    {
+        "num": 84,
+        "code": "LR",
+        "iso3": "LBR",
+        "name": "Liberia",
+        "continent": "Africa",
+        "sovereign": "LBR"
+    },
+    {
+        "num": 85,
+        "code": "CF",
+        "iso3": "CAF",
+        "name": "Central African Republic",
+        "continent": "Africa",
+        "sovereign": "CAF"
+    },
+    {
+        "num": 86,
+        "code": "SD",
+        "iso3": "SDN",
+        "name": "Sudan",
+        "continent": "Africa",
+        "sovereign": "SDN"
+    },
+    {
+        "num": 87,
+        "code": "DJ",
+        "iso3": "DJI",
+        "name": "Djibouti",
+        "continent": "Africa",
+        "sovereign": "DJI"
+    },
+    {
+        "num": 88,
+        "code": "ER",
+        "iso3": "ERI",
+        "name": "Eritrea",
+        "continent": "Africa",
+        "sovereign": "ERI"
+    },
+    {
+        "num": 89,
+        "code": "AT",
+        "iso3": "AUT",
+        "name": "Austria",
+        "continent": "Europe",
+        "sovereign": "AUT"
+    },
+    {
+        "num": 90,
+        "code": "IQ",
+        "iso3": "IRQ",
+        "name": "Iraq",
+        "continent": "Asia",
+        "sovereign": "IRQ"
+    },
+    {
+        "num": 91,
+        "code": "IT",
+        "iso3": "ITA",
+        "name": "Italy",
+        "continent": "Europe",
+        "sovereign": "ITA"
+    },
+    {
+        "num": 92,
+        "code": "CH",
+        "iso3": "CHE",
+        "name": "Switzerland",
+        "continent": "Europe",
+        "sovereign": "CHE"
+    },
+    {
+        "num": 93,
+        "code": "IR",
+        "iso3": "IRN",
+        "name": "Iran",
+        "continent": "Asia",
+        "sovereign": "IRN"
+    },
+    {
+        "num": 94,
+        "code": "NL",
+        "iso3": "NLD",
+        "name": "Netherlands",
+        "continent": "Europe",
+        "sovereign": "NL1"
+    },
+    {
+        "num": 95,
+        "code": "LI",
+        "iso3": "LIE",
+        "name": "Liechtenstein",
+        "continent": "Europe",
+        "sovereign": "LIE"
+    },
+    {
+        "num": 96,
+        "code": "CI",
+        "iso3": "CIV",
+        "name": "Côte d'Ivoire",
+        "continent": "Africa",
+        "sovereign": "CIV"
+    },
+    {
+        "num": 97,
+        "code": "RS",
+        "iso3": "SRB",
+        "name": "Serbia",
+        "continent": "Europe",
+        "sovereign": "SRB"
+    },
+    {
+        "num": 98,
+        "code": "ML",
+        "iso3": "MLI",
+        "name": "Mali",
+        "continent": "Africa",
+        "sovereign": "MLI"
+    },
+    {
+        "num": 99,
+        "code": "SN",
+        "iso3": "SEN",
+        "name": "Senegal",
+        "continent": "Africa",
+        "sovereign": "SEN"
+    },
+    {
+        "num": 100,
+        "code": "NG",
+        "iso3": "NGA",
+        "name": "Nigeria",
+        "continent": "Africa",
+        "sovereign": "NGA"
+    },
+    {
+        "num": 101,
+        "code": "BJ",
+        "iso3": "BEN",
+        "name": "Benin",
+        "continent": "Africa",
+        "sovereign": "BEN"
+    },
+    {
+        "num": 102,
+        "code": "AO",
+        "iso3": "AGO",
+        "name": "Angola",
+        "continent": "Africa",
+        "sovereign": "AGO"
+    },
+    {
+        "num": 103,
+        "code": "HR",
+        "iso3": "HRV",
+        "name": "Croatia",
+        "continent": "Europe",
+        "sovereign": "HRV"
+    },
+    {
+        "num": 104,
+        "code": "SI",
+        "iso3": "SVN",
+        "name": "Slovenia",
+        "continent": "Europe",
+        "sovereign": "SVN"
+    },
+    {
+        "num": 105,
+        "code": "QA",
+        "iso3": "QAT",
+        "name": "Qatar",
+        "continent": "Asia",
+        "sovereign": "QAT"
+    },
+    {
+        "num": 106,
+        "code": "SA",
+        "iso3": "SAU",
+        "name": "Saudi Arabia",
+        "continent": "Asia",
+        "sovereign": "SAU"
+    },
+    {
+        "num": 107,
+        "code": "BW",
+        "iso3": "BWA",
+        "name": "Botswana",
+        "continent": "Africa",
+        "sovereign": "BWA"
+    },
+    {
+        "num": 108,
+        "code": "ZW",
+        "iso3": "ZWE",
+        "name": "Zimbabwe",
+        "continent": "Africa",
+        "sovereign": "ZWE"
+    },
+    {
+        "num": 109,
+        "code": "PK",
+        "iso3": "PAK",
+        "name": "Pakistan",
+        "continent": "Asia",
+        "sovereign": "PAK"
+    },
+    {
+        "num": 110,
+        "code": "BG",
+        "iso3": "BGR",
+        "name": "Bulgaria",
+        "continent": "Europe",
+        "sovereign": "BGR"
+    },
+    {
+        "num": 111,
+        "code": "TH",
+        "iso3": "THA",
+        "name": "Thailand",
+        "continent": "Asia",
+        "sovereign": "THA"
+    },
+    {
+        "num": 112,
+        "code": "SM",
+        "iso3": "SMR",
+        "name": "San Marino",
+        "continent": "Europe",
+        "sovereign": "SMR"
+    },
+    {
+        "num": 113,
+        "code": "HT",
+        "iso3": "HTI",
+        "name": "Haiti",
+        "continent": "North America",
+        "sovereign": "HTI"
+    },
+    {
+        "num": 114,
+        "code": "DO",
+        "iso3": "DOM",
+        "name": "Dominican Republic",
+        "continent": "North America",
+        "sovereign": "DOM"
+    },
+    {
+        "num": 115,
+        "code": "TD",
+        "iso3": "TCD",
+        "name": "Chad",
+        "continent": "Africa",
+        "sovereign": "TCD"
+    },
+    {
+        "num": 116,
+        "code": "KW",
+        "iso3": "KWT",
+        "name": "Kuwait",
+        "continent": "Asia",
+        "sovereign": "KWT"
+    },
+    {
+        "num": 117,
+        "code": "SV",
+        "iso3": "SLV",
+        "name": "El Salvador",
+        "continent": "North America",
+        "sovereign": "SLV"
+    },
+    {
+        "num": 118,
+        "code": "GT",
+        "iso3": "GTM",
+        "name": "Guatemala",
+        "continent": "North America",
+        "sovereign": "GTM"
+    },
+    {
+        "num": 119,
+        "code": "TL",
+        "iso3": "TLS",
+        "name": "Timor-Leste",
+        "continent": "Asia",
+        "sovereign": "TLS"
+    },
+    {
+        "num": 120,
+        "code": "BN",
+        "iso3": "BRN",
+        "name": "Brunei Darussalam",
+        "continent": "Asia",
+        "sovereign": "BRN"
+    },
+    {
+        "num": 121,
+        "code": "MC",
+        "iso3": "MCO",
+        "name": "Monaco",
+        "continent": "Europe",
+        "sovereign": "MCO"
+    },
+    {
+        "num": 122,
+        "code": "DZ",
+        "iso3": "DZA",
+        "name": "Algeria",
+        "continent": "Africa",
+        "sovereign": "DZA"
+    },
+    {
+        "num": 123,
+        "code": "MZ",
+        "iso3": "MOZ",
+        "name": "Mozambique",
+        "continent": "Africa",
+        "sovereign": "MOZ"
+    },
+    {
+        "num": 124,
+        "code": "SZ",
+        "iso3": "SWZ",
+        "name": "Kingdom of eSwatini",
+        "continent": "Africa",
+        "sovereign": "SWZ"
+    },
+    {
+        "num": 125,
+        "code": "BI",
+        "iso3": "BDI",
+        "name": "Burundi",
+        "continent": "Africa",
+        "sovereign": "BDI"
+    },
+    {
+        "num": 126,
+        "code": "RW",
+        "iso3": "RWA",
+        "name": "Rwanda",
+        "continent": "Africa",
+        "sovereign": "RWA"
+    },
+    {
+        "num": 127,
+        "code": "MM",
+        "iso3": "MMR",
+        "name": "Myanmar",
+        "continent": "Asia",
+        "sovereign": "MMR"
+    },
+    {
+        "num": 128,
+        "code": "BD",
+        "iso3": "BGD",
+        "name": "Bangladesh",
+        "continent": "Asia",
+        "sovereign": "BGD"
+    },
+    {
+        "num": 129,
+        "code": "AD",
+        "iso3": "AND",
+        "name": "Andorra",
+        "continent": "Europe",
+        "sovereign": "AND"
+    },
+    {
+        "num": 130,
+        "code": "AF",
+        "iso3": "AFG",
+        "name": "Afghanistan",
+        "continent": "Asia",
+        "sovereign": "AFG"
+    },
+    {
+        "num": 131,
+        "code": "ME",
+        "iso3": "MNE",
+        "name": "Montenegro",
+        "continent": "Europe",
+        "sovereign": "MNE"
+    },
+    {
+        "num": 132,
+        "code": "BA",
+        "iso3": "BIH",
+        "name": "Bosnia and Herzegovina",
+        "continent": "Europe",
+        "sovereign": "BIH"
+    },
+    {
+        "num": 133,
+        "code": "UG",
+        "iso3": "UGA",
+        "name": "Uganda",
+        "continent": "Africa",
+        "sovereign": "UGA"
+    },
+    {
+        "num": 134,
+        "code": "USG",
+        "iso3": "USG",
+        "name": "US Naval Base Guantanamo Bay",
+        "continent": "North America",
+        "sovereign": "CU1"
+    },
+    {
+        "num": 135,
+        "code": "CU",
+        "iso3": "CUB",
+        "name": "Cuba",
+        "continent": "North America",
+        "sovereign": "CU1"
+    },
+    {
+        "num": 136,
+        "code": "HN",
+        "iso3": "HND",
+        "name": "Honduras",
+        "continent": "North America",
+        "sovereign": "HND"
+    },
+    {
+        "num": 137,
+        "code": "EC",
+        "iso3": "ECU",
+        "name": "Ecuador",
+        "continent": "South America",
+        "sovereign": "ECU"
+    },
+    {
+        "num": 138,
+        "code": "CO",
+        "iso3": "COL",
+        "name": "Colombia",
+        "continent": "South America",
+        "sovereign": "COL"
+    },
+    {
+        "num": 139,
+        "code": "PY",
+        "iso3": "PRY",
+        "name": "Paraguay",
+        "continent": "South America",
+        "sovereign": "PRY"
+    },
+    {
+        "num": 140,
+        "code": "PT",
+        "iso3": "PRT",
+        "name": "Portugal",
+        "continent": "Europe",
+        "sovereign": "PRT"
+    },
+    {
+        "num": 141,
+        "code": "MD",
+        "iso3": "MDA",
+        "name": "Moldova",
+        "continent": "Europe",
+        "sovereign": "MDA"
+    },
+    {
+        "num": 142,
+        "code": "TM",
+        "iso3": "TKM",
+        "name": "Turkmenistan",
+        "continent": "Asia",
+        "sovereign": "TKM"
+    },
+    {
+        "num": 143,
+        "code": "JO",
+        "iso3": "JOR",
+        "name": "Jordan",
+        "continent": "Asia",
+        "sovereign": "JOR"
+    },
+    {
+        "num": 144,
+        "code": "NP",
+        "iso3": "NPL",
+        "name": "Nepal",
+        "continent": "Asia",
+        "sovereign": "NPL"
+    },
+    {
+        "num": 145,
+        "code": "LS",
+        "iso3": "LSO",
+        "name": "Lesotho",
+        "continent": "Africa",
+        "sovereign": "LSO"
+    },
+    {
+        "num": 146,
+        "code": "CM",
+        "iso3": "CMR",
+        "name": "Cameroon",
+        "continent": "Africa",
+        "sovereign": "CMR"
+    },
+    {
+        "num": 147,
+        "code": "GA",
+        "iso3": "GAB",
+        "name": "Gabon",
+        "continent": "Africa",
+        "sovereign": "GAB"
+    },
+    {
+        "num": 148,
+        "code": "NE",
+        "iso3": "NER",
+        "name": "Niger",
+        "continent": "Africa",
+        "sovereign": "NER"
+    },
+    {
+        "num": 149,
+        "code": "BF",
+        "iso3": "BFA",
+        "name": "Burkina Faso",
+        "continent": "Africa",
+        "sovereign": "BFA"
+    },
+    {
+        "num": 150,
+        "code": "TG",
+        "iso3": "TGO",
+        "name": "Togo",
+        "continent": "Africa",
+        "sovereign": "TGO"
+    },
+    {
+        "num": 151,
+        "code": "GH",
+        "iso3": "GHA",
+        "name": "Ghana",
+        "continent": "Africa",
+        "sovereign": "GHA"
+    },
+    {
+        "num": 152,
+        "code": "GW",
+        "iso3": "GNB",
+        "name": "Guinea-Bissau",
+        "continent": "Africa",
+        "sovereign": "GNB"
+    },
+    {
+        "num": 153,
+        "code": "GI",
+        "iso3": "GIB",
+        "name": "Gibraltar",
+        "continent": "Europe",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 154,
+        "code": "US",
+        "iso3": "USA",
+        "name": "United States",
+        "continent": "North America",
+        "sovereign": "US1"
+    },
+    {
+        "num": 155,
+        "code": "CA",
+        "iso3": "CAN",
+        "name": "Canada",
+        "continent": "North America",
+        "sovereign": "CAN"
+    },
+    {
+        "num": 156,
+        "code": "MX",
+        "iso3": "MEX",
+        "name": "Mexico",
+        "continent": "North America",
+        "sovereign": "MEX"
+    },
+    {
+        "num": 157,
+        "code": "BZ",
+        "iso3": "BLZ",
+        "name": "Belize",
+        "continent": "North America",
+        "sovereign": "BLZ"
+    },
+    {
+        "num": 158,
+        "code": "PA",
+        "iso3": "PAN",
+        "name": "Panama",
+        "continent": "North America",
+        "sovereign": "PAN"
+    },
+    {
+        "num": 159,
+        "code": "VE",
+        "iso3": "VEN",
+        "name": "Venezuela",
+        "continent": "South America",
+        "sovereign": "VEN"
+    },
+    {
+        "num": 160,
+        "code": "PG",
+        "iso3": "PNG",
+        "name": "Papua New Guinea",
+        "continent": "Oceania",
+        "sovereign": "PNG"
+    },
+    {
+        "num": 161,
+        "code": "EG",
+        "iso3": "EGY",
+        "name": "Egypt",
+        "continent": "Africa",
+        "sovereign": "EGY"
+    },
+    {
+        "num": 162,
+        "code": "YE",
+        "iso3": "YEM",
+        "name": "Yemen",
+        "continent": "Asia",
+        "sovereign": "YEM"
+    },
+    {
+        "num": 163,
+        "code": "MR",
+        "iso3": "MRT",
+        "name": "Mauritania",
+        "continent": "Africa",
+        "sovereign": "MRT"
+    },
+    {
+        "num": 164,
+        "code": "GQ",
+        "iso3": "GNQ",
+        "name": "Equatorial Guinea",
+        "continent": "Africa",
+        "sovereign": "GNQ"
+    },
+    {
+        "num": 165,
+        "code": "GM",
+        "iso3": "GMB",
+        "name": "The Gambia",
+        "continent": "Africa",
+        "sovereign": "GMB"
+    },
+    {
+        "num": 166,
+        "code": "HK",
+        "iso3": "HKG",
+        "name": "Hong Kong",
+        "continent": "Asia",
+        "sovereign": "CH1"
+    },
+    {
+        "num": 167,
+        "code": "VA",
+        "iso3": "VAT",
+        "name": "Vatican",
+        "continent": "Europe",
+        "sovereign": "VAT"
+    },
+    {
+        "num": 168,
+        "code": "CYN",
+        "iso3": "CYN",
+        "name": "Northern Cyprus",
+        "continent": "Asia",
+        "sovereign": "CYN"
+    },
+    {
+        "num": 169,
+        "code": "CNM",
+        "iso3": "CNM",
+        "name": "Cyprus U.N. Buffer Zone",
+        "continent": "Asia",
+        "sovereign": "CNM"
+    },
+    {
+        "num": 170,
+        "code": "KAS",
+        "iso3": "KAS",
+        "name": "Siachen Glacier",
+        "continent": "Asia",
+        "sovereign": "KAS"
+    },
+    {
+        "num": 171,
+        "code": "WSB",
+        "iso3": "WSB",
+        "name": "Akrotiri",
+        "continent": "Asia",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 172,
+        "code": "SPI",
+        "iso3": "SPI",
+        "name": "Southern Patagonian Ice Field",
+        "continent": "South America",
+        "sovereign": "SPI"
+    },
+    {
+        "num": 173,
+        "code": "BRT",
+        "iso3": "BRT",
+        "name": "Bir Tawil",
+        "continent": "Africa",
+        "sovereign": "BRT"
+    },
+    {
+        "num": 174,
+        "code": "AQ",
+        "iso3": "ATA",
+        "name": "Antarctica",
+        "continent": "Antarctica",
+        "sovereign": "ATA"
+    },
+    {
+        "num": 175,
+        "code": "AU",
+        "iso3": "AUS",
+        "name": "Australia",
+        "continent": "Oceania",
+        "sovereign": "AU1"
+    },
+    {
+        "num": 176,
+        "code": "GL",
+        "iso3": "GRL",
+        "name": "Greenland",
+        "continent": "North America",
+        "sovereign": "DN1"
+    },
+    {
+        "num": 177,
+        "code": "FJ",
+        "iso3": "FJI",
+        "name": "Fiji",
+        "continent": "Oceania",
+        "sovereign": "FJI"
+    },
+    {
+        "num": 178,
+        "code": "NZ",
+        "iso3": "NZL",
+        "name": "New Zealand",
+        "continent": "Oceania",
+        "sovereign": "NZ1"
+    },
+    {
+        "num": 179,
+        "code": "NC",
+        "iso3": "NCL",
+        "name": "New Caledonia",
+        "continent": "Oceania",
+        "sovereign": "FR1"
+    },
+    {
+        "num": 180,
+        "code": "MG",
+        "iso3": "MDG",
+        "name": "Madagascar",
+        "continent": "Africa",
+        "sovereign": "MDG"
+    },
+    {
+        "num": 181,
+        "code": "PH",
+        "iso3": "PHL",
+        "name": "Philippines",
+        "continent": "Asia",
+        "sovereign": "PHL"
+    },
+    {
+        "num": 182,
+        "code": "LK",
+        "iso3": "LKA",
+        "name": "Sri Lanka",
+        "continent": "Asia",
+        "sovereign": "LKA"
+    },
+    {
+        "num": 183,
+        "code": "CW",
+        "iso3": "CUW",
+        "name": "Curaçao",
+        "continent": "North America",
+        "sovereign": "NL1"
+    },
+    {
+        "num": 184,
+        "code": "AW",
+        "iso3": "ABW",
+        "name": "Aruba",
+        "continent": "North America",
+        "sovereign": "NL1"
+    },
+    {
+        "num": 185,
+        "code": "BS",
+        "iso3": "BHS",
+        "name": "Bahamas",
+        "continent": "North America",
+        "sovereign": "BHS"
+    },
+    {
+        "num": 186,
+        "code": "TC",
+        "iso3": "TCA",
+        "name": "Turks and Caicos Islands",
+        "continent": "North America",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 187,
+        "code": "TW",
+        "iso3": "TWN",
+        "name": "Taiwan",
+        "continent": "Asia",
+        "sovereign": "TWN"
+    },
+    {
+        "num": 188,
+        "code": "JP",
+        "iso3": "JPN",
+        "name": "Japan",
+        "continent": "Asia",
+        "sovereign": "JPN"
+    },
+    {
+        "num": 189,
+        "code": "PM",
+        "iso3": "SPM",
+        "name": "Saint Pierre and Miquelon",
+        "continent": "North America",
+        "sovereign": "FR1"
+    },
+    {
+        "num": 190,
+        "code": "IS",
+        "iso3": "ISL",
+        "name": "Iceland",
+        "continent": "Europe",
+        "sovereign": "ISL"
+    },
+    {
+        "num": 191,
+        "code": "PN",
+        "iso3": "PCN",
+        "name": "Pitcairn Islands",
+        "continent": "Oceania",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 192,
+        "code": "PF",
+        "iso3": "PYF",
+        "name": "French Polynesia",
+        "continent": "Oceania",
+        "sovereign": "FR1"
+    },
+    {
+        "num": 193,
+        "code": "TF",
+        "iso3": "ATF",
+        "name": "French Southern and Antarctic Lands",
+        "continent": "Seven seas (open ocean)",
+        "sovereign": "FR1"
+    },
+    {
+        "num": 194,
+        "code": "SC",
+        "iso3": "SYC",
+        "name": "Seychelles",
+        "continent": "Seven seas (open ocean)",
+        "sovereign": "SYC"
+    },
+    {
+        "num": 195,
+        "code": "KI",
+        "iso3": "KIR",
+        "name": "Kiribati",
+        "continent": "Oceania",
+        "sovereign": "KIR"
+    },
+    {
+        "num": 196,
+        "code": "MH",
+        "iso3": "MHL",
+        "name": "Marshall Islands",
+        "continent": "Oceania",
+        "sovereign": "MHL"
+    },
+    {
+        "num": 197,
+        "code": "TT",
+        "iso3": "TTO",
+        "name": "Trinidad and Tobago",
+        "continent": "North America",
+        "sovereign": "TTO"
+    },
+    {
+        "num": 198,
+        "code": "GD",
+        "iso3": "GRD",
+        "name": "Grenada",
+        "continent": "North America",
+        "sovereign": "GRD"
+    },
+    {
+        "num": 199,
+        "code": "VC",
+        "iso3": "VCT",
+        "name": "Saint Vincent and the Grenadines",
+        "continent": "North America",
+        "sovereign": "VCT"
+    },
+    {
+        "num": 200,
+        "code": "BB",
+        "iso3": "BRB",
+        "name": "Barbados",
+        "continent": "North America",
+        "sovereign": "BRB"
+    },
+    {
+        "num": 201,
+        "code": "LC",
+        "iso3": "LCA",
+        "name": "Saint Lucia",
+        "continent": "North America",
+        "sovereign": "LCA"
+    },
+    {
+        "num": 202,
+        "code": "DM",
+        "iso3": "DMA",
+        "name": "Dominica",
+        "continent": "North America",
+        "sovereign": "DMA"
+    },
+    {
+        "num": 203,
+        "code": "UM",
+        "iso3": "UMI",
+        "name": "United States Minor Outlying Islands",
+        "continent": "North America",
+        "sovereign": "US1"
+    },
+    {
+        "num": 204,
+        "code": "MS",
+        "iso3": "MSR",
+        "name": "Montserrat",
+        "continent": "North America",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 205,
+        "code": "AG",
+        "iso3": "ATG",
+        "name": "Antigua and Barbuda",
+        "continent": "North America",
+        "sovereign": "ATG"
+    },
+    {
+        "num": 206,
+        "code": "KN",
+        "iso3": "KNA",
+        "name": "Saint Kitts and Nevis",
+        "continent": "North America",
+        "sovereign": "KNA"
+    },
+    {
+        "num": 207,
+        "code": "VI",
+        "iso3": "VIR",
+        "name": "United States Virgin Islands",
+        "continent": "North America",
+        "sovereign": "US1"
+    },
+    {
+        "num": 208,
+        "code": "BL",
+        "iso3": "BLM",
+        "name": "Saint-Barthélemy",
+        "continent": "North America",
+        "sovereign": "FR1"
+    },
+    {
+        "num": 209,
+        "code": "PR",
+        "iso3": "PRI",
+        "name": "Puerto Rico",
+        "continent": "North America",
+        "sovereign": "US1"
+    },
+    {
+        "num": 210,
+        "code": "AI",
+        "iso3": "AIA",
+        "name": "Anguilla",
+        "continent": "North America",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 211,
+        "code": "VG",
+        "iso3": "VGB",
+        "name": "British Virgin Islands",
+        "continent": "North America",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 212,
+        "code": "JM",
+        "iso3": "JAM",
+        "name": "Jamaica",
+        "continent": "North America",
+        "sovereign": "JAM"
+    },
+    {
+        "num": 213,
+        "code": "KY",
+        "iso3": "CYM",
+        "name": "Cayman Islands",
+        "continent": "North America",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 214,
+        "code": "BM",
+        "iso3": "BMU",
+        "name": "Bermuda",
+        "continent": "North America",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 215,
+        "code": "HM",
+        "iso3": "HMD",
+        "name": "Heard I. and McDonald Islands",
+        "continent": "Seven seas (open ocean)",
+        "sovereign": "AU1"
+    },
+    {
+        "num": 216,
+        "code": "SH",
+        "iso3": "SHN",
+        "name": "Saint Helena",
+        "continent": "Seven seas (open ocean)",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 217,
+        "code": "MU",
+        "iso3": "MUS",
+        "name": "Mauritius",
+        "continent": "Seven seas (open ocean)",
+        "sovereign": "MUS"
+    },
+    {
+        "num": 218,
+        "code": "KM",
+        "iso3": "COM",
+        "name": "Comoros",
+        "continent": "Africa",
+        "sovereign": "COM"
+    },
+    {
+        "num": 219,
+        "code": "ST",
+        "iso3": "STP",
+        "name": "São Tomé and Principe",
+        "continent": "Africa",
+        "sovereign": "STP"
+    },
+    {
+        "num": 220,
+        "code": "CV",
+        "iso3": "CPV",
+        "name": "Republic of Cabo Verde",
+        "continent": "Africa",
+        "sovereign": "CPV"
+    },
+    {
+        "num": 221,
+        "code": "MT",
+        "iso3": "MLT",
+        "name": "Malta",
+        "continent": "Europe",
+        "sovereign": "MLT"
+    },
+    {
+        "num": 222,
+        "code": "JE",
+        "iso3": "JEY",
+        "name": "Jersey",
+        "continent": "Europe",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 223,
+        "code": "GG",
+        "iso3": "GGY",
+        "name": "Guernsey",
+        "continent": "Europe",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 224,
+        "code": "IM",
+        "iso3": "IMN",
+        "name": "Isle of Man",
+        "continent": "Europe",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 225,
+        "code": "AX",
+        "iso3": "ALA",
+        "name": "Åland Islands",
+        "continent": "Europe",
+        "sovereign": "FI1"
+    },
+    {
+        "num": 226,
+        "code": "FO",
+        "iso3": "FRO",
+        "name": "Faeroe Islands",
+        "continent": "Europe",
+        "sovereign": "DN1"
+    },
+    {
+        "num": 227,
+        "code": "IO",
+        "iso3": "IOT",
+        "name": "British Indian Ocean Territory",
+        "continent": "Seven seas (open ocean)",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 228,
+        "code": "SG",
+        "iso3": "SGP",
+        "name": "Singapore",
+        "continent": "Asia",
+        "sovereign": "SGP"
+    },
+    {
+        "num": 229,
+        "code": "NF",
+        "iso3": "NFK",
+        "name": "Norfolk Island",
+        "continent": "Oceania",
+        "sovereign": "AU1"
+    },
+    {
+        "num": 230,
+        "code": "CK",
+        "iso3": "COK",
+        "name": "Cook Islands",
+        "continent": "Oceania",
+        "sovereign": "NZ1"
+    },
+    {
+        "num": 231,
+        "code": "TO",
+        "iso3": "TON",
+        "name": "Tonga",
+        "continent": "Oceania",
+        "sovereign": "TON"
+    },
+    {
+        "num": 232,
+        "code": "WF",
+        "iso3": "WLF",
+        "name": "Wallis and Futuna Islands",
+        "continent": "Oceania",
+        "sovereign": "FR1"
+    },
+    {
+        "num": 233,
+        "code": "WS",
+        "iso3": "WSM",
+        "name": "Samoa",
+        "continent": "Oceania",
+        "sovereign": "WSM"
+    },
+    {
+        "num": 234,
+        "code": "SB",
+        "iso3": "SLB",
+        "name": "Solomon Islands",
+        "continent": "Oceania",
+        "sovereign": "SLB"
+    },
+    {
+        "num": 235,
+        "code": "TV",
+        "iso3": "TUV",
+        "name": "Tuvalu",
+        "continent": "Oceania",
+        "sovereign": "TUV"
+    },
+    {
+        "num": 236,
+        "code": "MV",
+        "iso3": "MDV",
+        "name": "Maldives",
+        "continent": "Seven seas (open ocean)",
+        "sovereign": "MDV"
+    },
+    {
+        "num": 237,
+        "code": "NR",
+        "iso3": "NRU",
+        "name": "Nauru",
+        "continent": "Oceania",
+        "sovereign": "NRU"
+    },
+    {
+        "num": 238,
+        "code": "FM",
+        "iso3": "FSM",
+        "name": "Federated States of Micronesia",
+        "continent": "Oceania",
+        "sovereign": "FSM"
+    },
+    {
+        "num": 239,
+        "code": "GS",
+        "iso3": "SGS",
+        "name": "South Georgia and the Islands",
+        "continent": "Seven seas (open ocean)",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 240,
+        "code": "FK",
+        "iso3": "FLK",
+        "name": "Falkland Islands \/ Malvinas",
+        "continent": "South America",
+        "sovereign": "GB1"
+    },
+    {
+        "num": 241,
+        "code": "VU",
+        "iso3": "VUT",
+        "name": "Vanuatu",
+        "continent": "Oceania",
+        "sovereign": "VUT"
+    },
+    {
+        "num": 242,
+        "code": "NU",
+        "iso3": "NIU",
+        "name": "Niue",
+        "continent": "Oceania",
+        "sovereign": "NZ1"
+    },
+    {
+        "num": 243,
+        "code": "AS",
+        "iso3": "ASM",
+        "name": "American Samoa",
+        "continent": "Oceania",
+        "sovereign": "US1"
+    },
+    {
+        "num": 244,
+        "code": "PW",
+        "iso3": "PLW",
+        "name": "Palau",
+        "continent": "Oceania",
+        "sovereign": "PLW"
+    },
+    {
+        "num": 245,
+        "code": "GU",
+        "iso3": "GUM",
+        "name": "Guam",
+        "continent": "Oceania",
+        "sovereign": "US1"
+    },
+    {
+        "num": 246,
+        "code": "MP",
+        "iso3": "MNP",
+        "name": "Northern Mariana Islands",
+        "continent": "Oceania",
+        "sovereign": "US1"
+    },
+    {
+        "num": 247,
+        "code": "BH",
+        "iso3": "BHR",
+        "name": "Bahrain",
+        "continent": "Asia",
+        "sovereign": "BHR"
+    },
+    {
+        "num": 248,
+        "code": "PGA",
+        "iso3": "PGA",
+        "name": "Spratly Islands",
+        "continent": "Asia",
+        "sovereign": "PGA"
+    },
+    {
+        "num": 249,
+        "code": "MO",
+        "iso3": "MAC",
+        "name": "Macao",
+        "continent": "Asia",
+        "sovereign": "CH1"
+    },
+    {
+        "num": 250,
+        "code": "BJN",
+        "iso3": "BJN",
+        "name": "Bajo Nuevo Bank (Petrel Islands)",
+        "continent": "North America",
+        "sovereign": "BJN"
+    },
+    {
+        "num": 251,
+        "code": "SER",
+        "iso3": "SER",
+        "name": "Serranilla Bank",
+        "continent": "North America",
+        "sovereign": "SER"
+    },
+    {
+        "num": 252,
+        "code": "SCR",
+        "iso3": "SCR",
+        "name": "Scarborough Reef",
+        "continent": "Asia",
+        "sovereign": "SCR"
+    }
+]

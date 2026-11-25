@@ -1,7 +1,10 @@
 {
     "name": "p3k/compass",
     "description": "Compass is a GPS tracking server that stores data in flat files.",
-    "keywords": ["p3k", "gps"],
+    "keywords": [
+        "p3k",
+        "gps"
+    ],
     "license": "MIT",
     "type": "project",
     "require": {
@@ -20,6 +23,11 @@
             "App\\": "app/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -35,5 +43,8 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "require-dev": {
+        "phpunit/phpunit": "^12.5"
+    }
 }

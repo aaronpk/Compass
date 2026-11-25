@@ -34,6 +34,7 @@ IGNORE=(
   --ignore '(Date: )[^\\]+'
   --ignore '(Max-Age=)[0-9]+'
   --ignore '(id="share_token" value=")[A-Za-z0-9]{15}'
+  --ignore '(data-today=")[0-9-]+'
   --ignore '(code_challenge=)[A-Za-z0-9_-]+'
   --ignore '(code_verifier=)[A-Za-z0-9_-]+'
   # The built-in server stopped echoing the request's Host header in PHP 8.6

@@ -187,7 +187,8 @@ jQuery(function($){
 
   if($("#range-from").val() == "") {
     console.log("Autoselecting calendar day");
-    $(".calendar a[data-date="+((new Date()).toISOString().slice(0,10))+"]").focus().click();
+    // Today in the database's timezone, not the browser's or UTC
+    $(".calendar a[data-date="+$("#database").data("today")+"]").focus().click();
   } else {
     console.log("Loading range");
     $("#range-go").click();

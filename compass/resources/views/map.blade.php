@@ -70,6 +70,7 @@
   <div id="battery-chart" width="800" height="160"></div>
 </div>
 
-<div id="database" data-name="{{ $database->name }}" data-token="{{ $database->read_token }}" data-write-token="{{ $database->write_token }}"></div>
+<?php /* Today's date in the database's timezone ($tz and $end are set above), for selecting the calendar day */ ?>
+<div id="database" data-name="{{ $database->name }}" data-token="{{ $database->read_token }}" data-write-token="{{ $database->write_token }}" data-today="{{ $end->format('Y-m-d') }}"></div>
 
 @endsection

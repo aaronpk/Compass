@@ -20,4 +20,8 @@ return [
     // Duplicate location points are only filtered out when a cache is configured
     'dedupe_cache' => env('CACHE_STORE', env('CACHE_DRIVER')),
 
+    // Mapbox access token and style (as "user/style-id") for the map tiles
+    'mapbox_token' => env('MAPBOX_TOKEN', 'pk.eyJ1IjoiYWFyb25wayIsImEiOiJja3A0eXV2ZXIwMGt3MnVuc2Uzcm1yYzFuIn0.-_qwPOLRiQk8t56xs6vkfg'),
+    'mapbox_style' => env('MAPBOX_STYLE', 'mapbox/light-v10'),
+
 ];

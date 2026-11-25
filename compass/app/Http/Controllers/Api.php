@@ -257,6 +257,8 @@ class Api
     $num = 0;
     $trips = 0;
     $last_location = false;
+    // UTC dates of the day files this request adds to, for the stats pipeline
+    $statsDates = [];
     foreach($request->input('locations') as $loc) {
       if(array_key_exists('properties', $loc)) {
         if(array_key_exists('timestamp', $loc['properties'])) {
@@ -292,6 +294,7 @@ class Api
               if($shouldAdd) {
                 $num++;
                 $qz->add($date, $loc);
+                $statsDates = array_merge($statsDates, self::statsDates($date->getTimestamp(), $loc['properties']));
                 if(config('compass.dedupe_cache'))
                   Cache::put($cacheKey, 1, 360*60); // cache this for 6 hours (Lumen took minutes, Laravel takes seconds)
                 $last_location = $loc;
@@ -321,6 +324,19 @@ class Api
     if($request->input('current')) {
       $last_location = $request->input('current');
       Log::info('Device sent current location');
+    }
+
+    if($statsDates && config('compass.stats_enabled')) {
+      \App\Stats\Ledger::markDirty($db->id, $statsDates);
+      // Queue one job to recompute the stats, at most every five minutes per
+      // database, however often the device reports in
+      $queued = DB::table('databases')->where('id', $db->id)
+        ->where(function($q) {
+          $q->whereNull('stats_job_at')->orWhere('stats_job_at', '<', date('Y-m-d H:i:s', time() - 300));
+        })
+        ->update(['stats_job_at' => date('Y-m-d H:i:s')]);
+      if($queued)
+        dispatch((new \App\Jobs\Stats\ProcessShards($db->id))->onQueue('compass-stats')->delay(300));
     }
 
     $response = [
@@ -386,6 +402,21 @@ class Api
     }
 
     return response(json_encode($response))->header('Content-Type', 'application/json');
+  }
+
+  // The day files whose stats are affected by a newly stored record
+  private static function statsDates(int $timestamp, array $properties): array {
+    $dates = [gmdate('Y-m-d', $timestamp)];
+    // The stats for a day look a few hours into its neighbours
+    $context = \App\Stats\ShardProcessor::CONTEXT_SECONDS;
+    $dates[] = gmdate('Y-m-d', $timestamp - $context);
+    $dates[] = gmdate('Y-m-d', $timestamp + $context);
+    // A trip record changes the mode of everything since the trip started
+    if(($properties['type'] ?? null) == 'trip' && !empty($properties['start']) && ($start = strtotime((string)$properties['start']))) {
+      for($t = max($start, $timestamp - 7 * 86400); $t < $timestamp; $t += 86400)
+        $dates[] = gmdate('Y-m-d', $t);
+    }
+    return $dates;
   }
 
   public function trip_complete(Request $request) {

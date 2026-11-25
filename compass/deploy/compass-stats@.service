@@ -1,0 +1,34 @@
+# The Compass stats worker. It keeps the stats tables up to date as location
+# data arrives (queue "compass-stats") and works through backfills started
+# with "artisan stats:backfill" (queue "compass-backfill"). One instance is
+# enough:
+#
+#   sudo cp compass-stats@.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now compass-stats@1
+#
+# After deploying new code:   sudo systemctl restart compass-stats@1
+#
+# It runs at low priority and is separate from compass-queue@.service, so
+# recomputing stats never delays trip posts or pings.
+# Adjust WorkingDirectory, User and the PHP binary to match the install.
+[Unit]
+Description=Compass stats worker %i
+After=network.target mariadb.service redis-server.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/web/sites/compass.p3k.io/compass
+# New data is handled before backfill work. Jobs stop themselves after 40 s
+# and queue the rest, so --timeout is never reached in normal use.
+ExecStart=/usr/bin/php8.6 artisan queue:work --queue=compass-stats,compass-backfill --sleep=3 --tries=1 --timeout=60 --max-time=3600
+Nice=10
+IOSchedulingClass=idle
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=75
+
+[Install]
+WantedBy=multi-user.target

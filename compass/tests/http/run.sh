@@ -55,8 +55,9 @@ EOF
 
 # --- Fresh database and cache -----------------------------------------------------
 mysql_test() { mysql -h127.0.0.1 -u"$(grep ^DB_USERNAME= "$APP/.env" | cut -d= -f2)" -p"$(grep ^DB_PASSWORD= "$APP/.env" | cut -d= -f2)" compass_test "$@"; }
-mysql_test -e 'DROP TABLE IF EXISTS users, `databases`, database_users, shares, failed_jobs'
+mysql_test -e 'DROP TABLE IF EXISTS users, `databases`, database_users, shares, failed_jobs, geo_cities, geo_countries, geo_cells, geo_tz_cells, stats_shards, stats_segments, stats_days, stats_day_modes, stats_day_places'
 mysql_test < "$HERE/fixtures/schema.sql"
+mysql_test < "$HERE/fixtures/schema-stats.sql"
 mysql_test < "$HERE/fixtures/fixtures.sql"
 redis-cli -n 9 flushdb > /dev/null
 
@@ -195,6 +196,16 @@ record trip-complete-bad-token -d "start=x" "$BASE/api/trip-complete?token=nope"
 record share -d "duration=3600" "$BASE/api/share?token=w-fixture"
 record share-bad-token -d "duration=3600" "$BASE/api/share?token=r-fixture"
 snapshot_db db-after-input
+# What the stats pipeline derived from the points posted above. The queue is
+# "sync" here, so the job that /api/input queues runs inside the first request
+# that saves a point; later requests only mark their day as needing another pass.
+mysql_test -e "SELECT database_id, shard_date, version, (dirty_at IS NOT NULL) AS dirty, (processed_at IS NOT NULL) AS processed, error, points_total, points_used FROM stats_shards ORDER BY database_id, shard_date;
+    SELECT database_id, shard_date, seq, type, inferred, mode, mode_source, motion, start_at, end_at, tz, local_date, duration_s, distance_m, points, country, city_id, countries, clipped_start, clipped_end FROM stats_segments ORDER BY database_id, shard_date, seq;
+    SELECT * FROM stats_days ORDER BY database_id, utc_date, local_date;
+    SELECT * FROM stats_day_modes ORDER BY database_id, utc_date, local_date, mode;
+    SELECT * FROM stats_day_places ORDER BY database_id, utc_date, local_date, country, city_id;
+    SELECT id, (stats_job_at IS NOT NULL) AS stats_job_queued FROM \`databases\` ORDER BY id" > "$OUT/responses/stats-after-input.txt"
+grep -q "^1	2026-01-17	" "$OUT/responses/stats-after-input.txt"; check "input registers its day file for stats" $?
 # Cache keys written by the dedupe check, and how long they live (in whole hours)
 for k in $(redis-cli -n 9 --scan | sort); do echo "$k ttl_hours=$(( $(redis-cli -n 9 ttl "$k") / 3600 ))"; done > "$OUT/responses/redis-keys.txt"
 for f in $(cd "$OUT/storage" && find . -type f | sort); do echo "== $f"; cat "$OUT/storage/$f"; echo; done > "$OUT/responses/storage-after.txt"

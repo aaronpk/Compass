@@ -17,6 +17,11 @@ return [
     'github_id' => env('GITHUB_ID'),
     'github_secret' => env('GITHUB_SECRET'),
 
+    // Keep the stats tables up to date as location data arrives. Needs the
+    // lookup tables from "artisan geo:import" and a queue worker on the
+    // compass-stats queue (deploy/compass-stats@.service).
+    'stats_enabled' => env('STATS_ENABLED', true),
+
     // Duplicate location points are only filtered out when a cache is configured
     'dedupe_cache' => env('CACHE_STORE', env('CACHE_DRIVER')),
 

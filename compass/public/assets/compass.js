@@ -16,14 +16,18 @@ var Compass = (function(){
     var el = document.getElementById(id);
     var map = L.map(el, { zoomControl: false }).setView([45.516, -122.660], 14);
 
-    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-      attribution: options.attribution || attribution,
-      maxZoom: options.maxZoom || 18,
-      zoomOffset: -1,
-      tileSize: 512,
-      id: el.dataset.mapboxStyle,
-      accessToken: el.dataset.mapboxToken
-    }).addTo(map);
+    // Without a token (MAPBOX_TOKEN isn't set) there are no tiles to ask for:
+    // the tracks are drawn on a plain background
+    if(el.dataset.mapboxToken) {
+      L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        attribution: options.attribution || attribution,
+        maxZoom: options.maxZoom || 18,
+        zoomOffset: -1,
+        tileSize: 512,
+        id: el.dataset.mapboxStyle,
+        accessToken: el.dataset.mapboxToken
+      }).addTo(map);
+    }
 
     if(options.zoomControl !== false) {
       L.control.zoom({ position: 'topleft' }).addTo(map);

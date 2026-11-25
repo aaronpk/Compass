@@ -92,7 +92,7 @@ function shareEnded() {
 Compass.getJSON('/share/history.json?token=' + encodeURIComponent(shareToken)).then(function(data) {
   if(data.linestring && data.linestring.coordinates.length) {
     var history = L.geoJSON(data.linestring, {style: Compass.lineStyle}).addTo(map);
-    if(!marker && following) map.fitBounds(history.getBounds(), {maxZoom: 16});
+    if(!marker && following) map.fitBounds(history.getBounds(), {maxZoom: Compass.fitMaxZoom});
   }
 }).catch(function(error) { console.error(error); });
 

@@ -67,7 +67,9 @@ function displayLineOnMap(response, options) {
       visible_layers.forEach(function(l){
         full_bounds.extend(l.getBounds());
       });
-      map.fitBounds(full_bounds);
+      // Not closer than street level: a day with a single point, or one spent
+      // in one building, would otherwise zoom in as far as the map goes
+      map.fitBounds(full_bounds, {maxZoom: Compass.fitMaxZoom});
     }
 
     showBatteryGraph(response, timezone.value);

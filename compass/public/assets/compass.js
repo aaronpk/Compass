@@ -75,6 +75,9 @@ var Compass = (function(){
     pinIcon: pinIcon,
     pointFromGeoJSON: pointFromGeoJSON,
     getJSON: getJSON,
+    // The closest a map zooms by itself to fit a track (street level).
+    // Zooming in further by hand still works.
+    fitMaxZoom: 16,
     lineStyle: {
       color: "#0033ff",
       weight: 4,

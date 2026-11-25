@@ -10,7 +10,7 @@
         "indieauth/client": "^1.2",
         "laravel/framework": "^13.0",
         "p3k/multipart": "^0.2",
-        "p3k/quartz-db": "^0.2.1",
+        "p3k/quartz-db": "^0.3",
         "p3k/timezone": "^0.1",
         "p3k/utils": "^1.2.2",
         "predis/predis": "^2.3"

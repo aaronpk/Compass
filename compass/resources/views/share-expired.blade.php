@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div style="text-align: center; margin-top: 3em;">
+<div class="message">
   This shared link has expired.
 </div>
 

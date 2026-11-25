@@ -4,7 +4,7 @@
 
 <div class="splash">
   <h1>Something went wrong</h1>
-  <p>{{ $error }}</p>
+  <p class="alert error">{{ $error }}</p>
 </div>
 
 @endsection

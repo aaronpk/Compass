@@ -620,7 +620,7 @@ body.map-page {
 #daterange {
   top: 10px;
   left: 54px;
-  width: min(660px, calc(100% - 330px));
+  width: min(660px, calc(100% - 360px));
 }
 #daterange .in {
   padding: var(--space-2);
@@ -636,7 +636,7 @@ body.map-page {
 #calendar {
   top: 10px;
   right: 10px;
-  width: 250px;
+  width: 280px;
   max-height: calc(100% - 34px);
   overflow-y: auto;
   font-size: 13px;
@@ -706,8 +706,9 @@ body.map-page {
   min-width: 0;
   padding: 4px 6px;
 }
-.cal-nav #cal-month {
-  flex-grow: 1.5;
+/* The year only needs four digits; the month gets the rest, enough for "September" */
+.cal-nav #cal-year {
+  flex: 0 0 70px;
 }
 .cal-foot {
   display: flex;

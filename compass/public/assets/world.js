@@ -67,11 +67,13 @@
   }).setView([25, 10], 1.5);
 
   // Bottom to top: country shapes (hover and tooltips), the grid of land
-  // hexagons, the visited hexagons, then the borders
+  // hexagons, the sea (which trims the grid to the coastlines), the visited
+  // hexagons, then the borders
   var countryLayers = {};
   var gridLayer = L.layerGroup().addTo(map);
   var visitedLayer = L.layerGroup().addTo(map);
   var borderLayer = null;
+  var seaLayer = null;
   var visitedShapes = [];
   // Land hexagons per grid, as they arrive: {columns: {country: [column, row, ...]}}
   var land = {};
@@ -123,7 +125,8 @@
       });
     }
     landLayers[columns].forEach(function(shape) { gridLayer.addLayer(shape); });
-    // Keep the order: grid under the visited hexagons, borders on top
+    // Keep the order: grid, sea, visited hexagons, borders
+    if(seaLayer) seaLayer.bringToFront();
     visitedShapes.forEach(function(shape) { shape.bringToFront(); });
     if(borderLayer) borderLayer.bringToFront();
   }
@@ -204,6 +207,21 @@
         shape.on('mouseout', function() { highlight(code, false); });
       }
     }).addTo(map);
+
+    // The grid's hexagons overhang the coast. Rather than cut each one to
+    // shape, the sea is painted back over them: one shape covering the world
+    // with every country cut out of it (the even-odd fill makes each outline a
+    // hole, and a lake inside a country sea again). Visited hexagons are drawn
+    // above it, whole, so a visit to a small island or a harbour never disappears.
+    var sea = [[[-89, -540], [-89, 540], [89, 540], [89, -540]]];
+    geojson.features.forEach(function(feature) {
+      feature.geometry.coordinates.forEach(function(polygon) {
+        polygon.forEach(function(ring) {
+          sea.push(ring.map(function(point) { return [point[1], point[0]]; }));
+        });
+      });
+    });
+    seaLayer = L.polygon(sea, {stroke: false, fillColor: css('--surface'), fillOpacity: 1, interactive: false}).addTo(map);
 
     Object.keys(grid.levels).forEach(function(level) { land[level] = grid.levels[level]; });
     chooseGrid();

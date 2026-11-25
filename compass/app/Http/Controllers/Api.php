@@ -67,7 +67,8 @@ class Api
             $rec = $record->data;
             # add a unixtime property
             $rec->properties->unixtime = (int)$record->date->format('U');
-            $events[] = $rec;
+            if(!in_array('events', explode(',', (string)$request->input('exclude'))))
+              $events[] = $rec;
           } else {
             #$record->date->format('U.u');
             // Ignore super inaccurate locations
@@ -80,7 +81,9 @@ class Api
               $date->setTimeZone(new DateTimeZone($tz));
               $props->timestamp = $date->format('c');
               $props->unixtime = (int)$date->format('U');
-              $properties[] = $props;
+
+              if(!in_array('properties', explode(',', (string)$request->input('exclude'))))
+                $properties[] = $props;
             }
           }
         }
@@ -89,7 +92,6 @@ class Api
       $linestring = array(
         'type' => 'LineString',
         'coordinates' => [],
-        'properties' => $properties
       );
       foreach($locations as $loc) {
         if(property_exists($loc, 'geometry'))
@@ -98,10 +100,14 @@ class Api
           $linestring['coordinates'][] = null;
       }
 
+      if(count($properties))
+        $linestring['properties'] = $properties;
+
       $response = array(
         'linestring' => $linestring,
-        'events' => $events
       );
+      if(count($events))
+        $response['events'] = $events;
 
     } else {
       foreach($results as $id=>$record) {
@@ -269,6 +275,10 @@ class Api
               // Skip adding if the timestamp is already in the cache.
               // Helps prevent writing duplicate data when the HTTP request is interrupted.
               $cacheKey = 'compass::'.$db->name.'::'.$date->format('U');
+              // Trip records get their own key, since they usually have the same timestamp as the trip's
+              // last location and would otherwise be skipped as a duplicate of it
+              if(array_key_exists('type', $loc['properties']) && $loc['properties']['type'] == 'trip')
+                $cacheKey .= '::trip';
               if(config('compass.dedupe_cache') && Cache::has($cacheKey))
                 $shouldAdd = false;
 
@@ -353,6 +363,7 @@ class Api
 
       // Notify subscribers that new data is available
       if($db->ping_urls) {
+        #Log::info('Pinging external URLs');
         $job = (new NotifyOfNewLocations($db->id))->onQueue('compass');
         dispatch($job);
       }

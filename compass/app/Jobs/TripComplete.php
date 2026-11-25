@@ -93,15 +93,15 @@ class TripComplete extends Job implements ShouldQueue
     $features = [];
     foreach($results as $id=>$record) {
       // Don't include app action tracking data
-      if(!property_exists($record->data->properties, 'action')) {
-	    // Ignore locations with accuracy worse than 5000m
-	    if(property_exists($record->data->properties, 'horizontal_accuracy') && $record->data->properties->horizontal_accuracy <= 5000) {
-	      $record->data->properties = array_filter((array)$record->data->properties, function($k){
-	        // Remove some of the app-specific tracking keys from each record
-	        return !in_array($k, ['locations_in_payload','desired_accuracy','significant_change','pauses','deferred']);
-	      }, ARRAY_FILTER_USE_KEY);
-	      $features[] = $record->data;
-	    }
+      if(is_object($record) && !property_exists($record->data->properties, 'action')) {
+        // Ignore locations with accuracy worse than 5000m
+        if(property_exists($record->data->properties, 'horizontal_accuracy') && $record->data->properties->horizontal_accuracy <= 5000) {
+          $record->data->properties = array_filter((array)$record->data->properties, function($k){
+            // Remove some of the app-specific tracking keys from each record
+            return !in_array($k, ['locations_in_payload','desired_accuracy','significant_change','pauses','deferred']);
+          }, ARRAY_FILTER_USE_KEY);
+          $features[] = $record->data;
+        }
       }
     }
 
@@ -112,6 +112,15 @@ class TripComplete extends Job implements ShouldQueue
     ];
     $file_path = tempnam(sys_get_temp_dir(), 'compass');
     file_put_contents($file_path, json_encode($geojson));
+
+    // Overland includes the trip mode's icon in the trip record as an SVG data URI
+    $icon_path = false;
+    if(isset($this->_data['properties']['icon']) && is_string($this->_data['properties']['icon'])
+      && preg_match('/^data:image\/svg\+xml;base64,(.+)$/', $this->_data['properties']['icon'], $match)
+      && ($svg = base64_decode($match[1], true))) {
+      $icon_path = tempnam(sys_get_temp_dir(), 'compass');
+      file_put_contents($icon_path, $svg);
+    }
 
     // If there are no start/end coordinates in the request, use the first and last coordinates
     if(count($features)) {
@@ -191,6 +200,10 @@ class TripComplete extends Job implements ShouldQueue
       ]
     ];
 
+    if($icon_path) {
+      $params['trip']['properties']['icon'] = 'icon.svg';
+    }
+
     if($startAdr) {
       $params['trip']['properties']['start-location'] = $startAdr;
     }
@@ -266,6 +279,9 @@ class TripComplete extends Job implements ShouldQueue
     $multipart = new Multipart();
     $multipart->addArray($params);
     $multipart->addFile('route.json', $file_path, 'application/json');
+    if($icon_path) {
+      $multipart->addFile('icon.svg', $icon_path, 'image/svg+xml');
+    }
 
     $httpheaders = [
       'Authorization: Bearer ' . $db->micropub_token,

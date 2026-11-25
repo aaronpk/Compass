@@ -43,12 +43,7 @@ class IndieAuth
       $this->configureIndieAuthClient($this->_redirectURI());
 
       list($authorizationURL, $error) = $this->withIndieAuthSession('indieauth', function() use($me) {
-        list($url, $error) = \IndieAuth\Client::begin($me);
-        // Sites that don't advertise an authorization endpoint sign in through the default one
-        if($error && $error['error'] == 'missing_authorization_endpoint' && config('compass.default_auth_endpoint')) {
-          list($url, $error) = \IndieAuth\Client::begin($me, false, config('compass.default_auth_endpoint'));
-        }
-        return [$url, $error];
+        return \IndieAuth\Client::begin($me);
       });
 
       if($error) {

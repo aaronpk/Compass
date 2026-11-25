@@ -2,7 +2,9 @@
 INSERT INTO users (id, url, created_at, last_login) VALUES
   (1, 'http://127.0.0.1:18280/me/', '2025-11-01 00:00:00', '2025-11-02 00:00:00'),
   (2, 'https://someone-else.example/', '2025-11-01 00:00:00', NULL),
-  (3, 'https://friend.example/', '2025-11-01 00:00:00', NULL);
+  (3, 'https://friend.example/', '2025-11-01 00:00:00', NULL),
+  -- Registered, but the page advertises no IndieAuth endpoints
+  (4, 'http://127.0.0.1:18280/nolinks/', '2025-11-01 00:00:00', NULL);
 
 INSERT INTO `databases` (id, name, read_token, write_token, created_by, created_at,
     micropub_endpoint, micropub_token, ping_urls, timezone, metric, last_location, last_location_date, current_trip) VALUES

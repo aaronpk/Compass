@@ -41,7 +41,6 @@ APP_KEY=0123456789abcdef0123456789abcdef
 BASE_URL=$BASE/
 STORAGE_DIR=$OUT/storage/
 ATLAS_BASE=$FIX/atlas/
-DEFAULT_AUTH_ENDPOINT=$FIX/auth
 ALLOW_NEW_USERS=false
 DB_CONNECTION=mysql
 DB_DATABASE=compass_test
@@ -106,7 +105,7 @@ grep -q 'name="me"' "$OUT"/responses/get/0000-GET-.txt; check "logged-out home s
 J=(-b "$OUT/jar" -c "$OUT/jar")
 record login-unregistered "${J[@]}" -d "me=https://nobody.example/" $BASE/auth/start
 record login-invalid-url "${J[@]}" -d "me=" $BASE/auth/start
-record login-start-default-endpoint "${J[@]}" -d "me=$FIX/nolinks/" $BASE/auth/start
+record login-start-no-endpoint "${J[@]}" -d "me=$FIX/nolinks/" $BASE/auth/start
 record login-bad-state "${J[@]}" "$BASE/auth/callback?code=fixture-code&state=wrong"
 record login-start "${J[@]}" -d "me=$FIX/me/" $BASE/auth/start
 state=$(grep -i '^location:' "$OUT/responses/login-start.txt" | grep -o 'state=[^&]*' | cut -d= -f2)

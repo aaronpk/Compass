@@ -11,9 +11,6 @@ return [
     // Atlas is used for geocoding trips
     'atlas_base' => env('ATLAS_BASE'),
 
-    // Used to sign in when a site doesn't advertise its own authorization endpoint
-    'default_auth_endpoint' => env('DEFAULT_AUTH_ENDPOINT'),
-
     // If false, only existing users can sign in
     'allow_new_users' => env('ALLOW_NEW_USERS', false),
 

@@ -74,6 +74,19 @@ class Stats extends BaseController
     return self::json($queries->year(self::pickYear($request->input('year'), $queries->years())));
   }
 
+  // Distance per day for one year, for shading the calendar on the map page:
+  // {"2026-01-15": [ground metres, flight metres]}
+  public function daysJson(Request $request) {
+    $db = self::databaseFromReadToken($request);
+    if(!$db)
+      return self::json(['error' => 'invalid token']);
+    $year = preg_match('/^(19|20)\d\d$/', (string)$request->input('year')) ? (int)$request->input('year') : (int)date('Y');
+    $days = [];
+    foreach((new Queries($db->id))->days("$year-01-01", "$year-12-31") as $date => $day)
+      $days[$date] = [$day['distance_m'], $day['flight_m']];
+    return self::json(['year' => $year, 'days' => (object)$days]);
+  }
+
   // Countries visited, for all time or one year
   private static function countries(object $db, $year): array {
     $queries = new Queries($db->id);

@@ -616,7 +616,7 @@ body.map-page {
 #daterange {
   top: 10px;
   left: 54px;
-  width: min(660px, calc(100% - 290px));
+  width: min(660px, calc(100% - 330px));
 }
 #daterange .in {
   padding: var(--space-2);
@@ -632,29 +632,108 @@ body.map-page {
 #calendar {
   top: 10px;
   right: 10px;
-  bottom: 24px;
-  width: 210px;
-  overflow: hidden;
-  font-size: 12px;
-  line-height: 20px;
-}
-#calendar .scroll {
-  height: 100%;
+  width: 250px;
+  max-height: calc(100% - 34px);
   overflow-y: auto;
-  padding: var(--space-2);
+  font-size: 13px;
+}
+.cal-bar,
+.cal-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+}
+.cal-step,
+#cal-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 32px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.cal-step {
+  flex: none;
+  width: 32px;
+  font-size: 18px;
+}
+#cal-toggle {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+#cal-toggle .icon {
+  flex: none;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+#cal-toggle[aria-expanded="true"] .icon {
+  transform: rotate(180deg);
+}
+.cal-step:hover:not(:disabled),
+#cal-toggle:hover {
+  background: var(--surface-2);
+}
+.cal-step:disabled {
+  color: var(--muted);
+  opacity: 0.4;
+  cursor: default;
+}
+.cal-step:focus-visible,
+#cal-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+#cal-panel {
+  padding: 0 var(--space-2) var(--space-2);
+  border-top: 1px solid var(--border);
+}
+.cal-nav {
+  padding: var(--space-2) 0;
+}
+.cal-nav select {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 4px 6px;
+}
+.cal-nav #cal-month {
+  flex-grow: 1.5;
+}
+.cal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+}
+.cal-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.cal-legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
 }
 
 table.calendar {
   width: 100%;
-  margin-bottom: var(--space-3);
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 2px;
   table-layout: fixed;
-}
-.calendar caption {
-  padding-bottom: 2px;
-  font-weight: 600;
+  line-height: 28px;
+  font-variant-numeric: tabular-nums;
 }
 .calendar th {
+  font-size: 11px;
   font-weight: 400;
   color: var(--muted);
 }
@@ -663,21 +742,56 @@ table.calendar {
   padding: 0;
   text-align: center;
 }
+.calendar td.future {
+  color: var(--muted);
+  opacity: 0.5;
+}
 .calendar td a {
   display: block;
-  border-radius: 4px;
+  position: relative;
+  border-radius: 5px;
   color: var(--text);
   text-decoration: none;
 }
-.calendar td a:hover,
-.calendar td a.selected:hover {
-  background: var(--muted);
-  color: var(--surface);
+/* Shading by distance travelled that day */
+.calendar a.lv1, .cal-legend .lv1 { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.calendar a.lv2, .cal-legend .lv2 { background: color-mix(in srgb, var(--accent) 38%, transparent); }
+.calendar a.lv3, .cal-legend .lv3 { background: color-mix(in srgb, var(--accent) 62%, transparent); }
+.calendar a.lv4, .cal-legend .lv4 { background: var(--accent); }
+.calendar a.lv4 { color: var(--on-accent); }
+/* A day with a flight */
+.calendar a.flight::after,
+.cal-legend .flight::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.cal-legend .flight {
+  position: relative;
+  margin-left: var(--space-2);
+  padding-left: 9px;
+}
+.cal-legend .flight::before {
+  top: 50%;
+  left: 0;
+  right: auto;
+  margin-top: -2px;
+}
+.calendar td a.today {
+  font-weight: 700;
+  text-decoration: underline;
+}
+.calendar td a:hover {
+  box-shadow: inset 0 0 0 2px var(--muted);
 }
 .calendar td a.selected {
-  background: var(--selected);
-  color: var(--on-selected);
-  font-weight: 600;
+  box-shadow: inset 0 0 0 2px var(--text);
+  font-weight: 700;
 }
 
 #graphs {
@@ -750,20 +864,35 @@ html.full, .share-page {
   .site-header summary {
     padding: var(--space-2);
   }
+  /* Room for the menu: the logo stands for the name, the address is cut short */
+  .site-header .brand span {
+    display: none;
+  }
+  .site-header .in {
+    gap: 0;
+  }
+  .site-header .menu {
+    min-width: 0;
+  }
+  .site-header .menu .label {
+    max-width: 22vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   /* The map page becomes one scrolling column:
-     range form, map, graph, calendar */
+     date and calendar, map, graph, range form */
   body.map-page {
     height: auto;
   }
   .map-stage {
     display: contents;
   }
-  #daterange { order: 1; }
+  #calendar { order: 1; }
   #map { order: 2; flex: none; }
   /* Taller, the legend wraps over several lines at this width */
   #graphs { order: 3; height: 300px; }
-  #calendar { order: 4; }
+  #daterange { order: 4; }
   #daterange,
   #calendar {
     position: static;
@@ -776,18 +905,33 @@ html.full, .share-page {
     height: 58vh;
     min-height: 300px;
   }
+  /* The date stays in reach while the page scrolls */
   #calendar {
-    border-width: 1px 0 0;
-    font-size: 14px;
-    line-height: 30px;
+    position: sticky;
+    top: var(--header-h);
+    max-height: calc(100dvh - var(--header-h));
+    font-size: 15px;
   }
-  #calendar .scroll {
-    height: auto;
-    max-height: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: var(--space-4);
-    padding: var(--space-3);
+  .cal-step,
+  #cal-toggle {
+    min-height: 44px;
+  }
+  .cal-step {
+    width: 44px;
+  }
+  #cal-panel {
+    padding: 0 var(--space-3) var(--space-3);
+  }
+  table.calendar {
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 40px;
+  }
+  .cal-nav select {
+    padding: 9px 8px;
+  }
+  #daterange {
+    border-width: 1px 0 0;
   }
   .fields {
     flex-wrap: wrap;

@@ -90,6 +90,8 @@ HEAD /api/last?token=r-fixture
 /api/stats
 /api/stats?token=nope
 /api/stats?token=r-fixture&year=2026
+/api/days
+/api/days?token=r-fixture&year=2026
 /api/countries?token=r-fixture
 /api/countries?token=w-fixture
 /embed/world/nope

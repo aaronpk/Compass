@@ -88,10 +88,14 @@ class Controller
     if(!$db)
       return redirect('/');
 
+    // The calendar starts at the earliest year with stats, which can be before
+    // the database was created here if older data was imported
+    $years = (new \App\Stats\Queries($db->id))->years();
 
     return view('map', [
       'displayURL' => self::displayURL(),
       'database' => $db,
+      'first_stats_year' => $years ? min($years) : null,
       'menu' => [
         '/stats/'.$name => 'Stats',
         '/stats/'.$name.'/world' => 'World',

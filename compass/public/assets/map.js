@@ -81,15 +81,19 @@ function queryURL(params) {
 }
 
 // Shows one day. If append is true, it is added to what is already on the map.
-function loadDay(link, append) {
+function loadDay(date, append) {
   if(!append) {
     removeVisibleLayers();
   }
-  link.classList.add('selected');
+  if(selectedDates.indexOf(date) != -1) {
+    return;
+  }
+  selectedDates.push(date);
+  showMonth(date.substr(0, 7));
+  updateCalendarLabel();
 
   resetAnimation();
 
-  var date = link.dataset.date;
   Compass.getJSON(queryURL({date: date})).then(function(data){
     displayLineOnMap(data, {pins: false});
   }).catch(function(error){
@@ -106,6 +110,10 @@ function loadRange() {
   window.history.pushState(stateObj, "GPS Log", historyURL);
   resetAnimation();
   removeVisibleLayers();
+  updateCalendarLabel();
+  if(/^\d{4}-\d\d/.test(rangeFrom.value)) {
+    showMonth(rangeFrom.value.substr(0, 7));
+  }
 
   rangeGo.classList.add("loading");
   Compass.getJSON(queryURL({start: rangeFrom.value, end: rangeTo.value})).then(function(data){
@@ -163,9 +171,8 @@ function createTrip(button) {
 }
 
 function removeVisibleLayers() {
-  document.querySelectorAll('.calendar a.selected').forEach(function(link){
-    link.classList.remove('selected');
-  });
+  selectedDates = [];
+  renderCalendar();
   visible_layers.forEach(function(layer){
     map.removeLayer(layer);
   });
@@ -192,14 +199,217 @@ function moveMarkerToPosition(point) {
   }
 }
 
-document.getElementById('calendar').addEventListener('click', function(evt){
-  var link = evt.target.closest('.calendar a');
+////////////////////////////////////////////////////////////
+// Calendar: one month at a time, days shaded by how far was travelled
+
+var calendar = document.getElementById('calendar');
+var calPanel = document.getElementById('cal-panel');
+var calGrid = document.getElementById('cal-grid');
+var calMonth = document.getElementById('cal-month');
+var calYear = document.getElementById('cal-year');
+var calToggle = document.getElementById('cal-toggle');
+var calLabel = document.getElementById('cal-label');
+var firstMonth = calendar.dataset.first;        // "YYYY-MM"
+var lastMonth = database.today.substr(0, 7);
+var shownMonth = lastMonth;
+var selectedDates = [];
+var dayStats = {};                              // year => {date: [ground m, flight m]}, or false while loading
+var phone = window.matchMedia('(max-width: 700px)');
+
+// Dates are plain "YYYY-MM-DD" strings; UTC is only used to do arithmetic on them
+function parseDate(str) {
+  var p = str.split('-');
+  return new Date(Date.UTC(+p[0], p[1] - 1, +(p[2] || 1)));
+}
+function addDays(str, n) {
+  var d = parseDate(str);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().substr(0, 10);
+}
+function addMonths(month, n) {
+  var d = parseDate(month);
+  d.setUTCMonth(d.getUTCMonth() + n);
+  return d.toISOString().substr(0, 7);
+}
+function formatDate(str, options) {
+  options.timeZone = 'UTC';
+  return new Intl.DateTimeFormat(undefined, options).format(parseDate(str));
+}
+
+// Shading goes by distance on the ground: 0 for a day with no movement to
+// speak of, up to 4 for a long drive. Flights get a dot instead, or every
+// travel day would look the same.
+function activityLevel(day) {
+  if(day[0] >= 200000) return 4;
+  if(day[0] >= 50000) return 3;
+  if(day[0] >= 10000) return 2;
+  if(day[0] >= 1000) return 1;
+  return 0;
+}
+
+function describeDay(date, day) {
+  var text = formatDate(date, {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
+  if(day) {
+    var metric = document.getElementById('is-metric').value == '1';
+    var total = (day[0] + day[1]) / (metric ? 1000 : 1609.344);
+    text += ': ' + (total < 10 ? total.toFixed(1) : Math.round(total).toLocaleString()) + (metric ? ' km' : ' mi');
+    if(day[1] > 0) {
+      text += ', with a flight';
+    }
+  }
+  return text;
+}
+
+function loadDayStats(year) {
+  if(year in dayStats) {
+    return;
+  }
+  dayStats[year] = false;
+  Compass.getJSON('/api/days?' + new URLSearchParams({token: database.token, year: year})).then(function(data){
+    dayStats[year] = data.days || {};
+    if(shownMonth.substr(0, 4) == year) {
+      renderCalendar();
+    }
+  }).catch(function(error){
+    // The calendar works without the shading
+    console.error(error);
+  });
+}
+
+function renderCalendar() {
+  var year = shownMonth.substr(0, 4);
+  var stats = dayStats[year] || {};
+  var first = parseDate(shownMonth);
+  var days = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+  var offset = (first.getUTCDay() + 6) % 7;   // weeks start on Monday
+
+  var html = '<tr>';
+  for(var n = 0; n < 7; n++) {
+    // 2024-01-01 was a Monday
+    html += '<th>' + formatDate(addDays('2024-01-01', n), {weekday: 'short'}) + '</th>';
+  }
+  html += '</tr><tr>';
+  if(offset > 0) {
+    html += '<td colspan="' + offset + '"></td>';
+  }
+  for(var d = 1; d <= days; d++) {
+    if(d > 1 && (offset + d - 1) % 7 == 0) {
+      html += '</tr><tr>';
+    }
+    var date = shownMonth + '-' + (d < 10 ? '0' : '') + d;
+    if(date > database.today) {
+      html += '<td class="future">' + d + '</td>';
+      continue;
+    }
+    var classes = [];
+    if(stats[date]) classes.push('lv' + activityLevel(stats[date]));
+    if(stats[date] && stats[date][1] > 0) classes.push('flight');
+    if(selectedDates.indexOf(date) != -1) classes.push('selected');
+    if(date == database.today) classes.push('today');
+    html += '<td><a href="#" data-date="' + date + '" class="' + classes.join(' ') + '" title="' + describeDay(date, stats[date]) + '">' + d + '</a></td>';
+  }
+  calGrid.innerHTML = html + '</tr>';
+
+  calYear.value = year;
+  calMonth.value = shownMonth.substr(5, 2);
+  Array.prototype.forEach.call(calMonth.options, function(option){
+    var month = year + '-' + option.value;
+    option.disabled = month < firstMonth || month > lastMonth;
+  });
+  document.getElementById('cal-prev-month').disabled = shownMonth <= firstMonth;
+  document.getElementById('cal-next-month').disabled = shownMonth >= lastMonth;
+}
+
+function showMonth(month) {
+  if(month < firstMonth) month = firstMonth;
+  if(month > lastMonth) month = lastMonth;
+  shownMonth = month;
+  loadDayStats(month.substr(0, 4));
+  renderCalendar();
+}
+
+// What is on the map, in the bar above the calendar
+function updateCalendarLabel() {
+  var from = rangeFrom.value.substr(0, 10), to = rangeTo.value.substr(0, 10);
+  var short = {month: 'short', day: 'numeric', year: 'numeric'};
+  var isDate = /^\d{4}-\d\d-\d\d$/;
+  if(selectedDates.length == 1) {
+    calLabel.textContent = formatDate(selectedDates[0], {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'});
+  } else if(selectedDates.length > 1) {
+    calLabel.textContent = selectedDates.length + ' days';
+  } else if(isDate.test(from) && isDate.test(to) && from != to) {
+    calLabel.textContent = formatDate(from, short) + ' – ' + formatDate(to, short);
+  } else if(isDate.test(from)) {
+    calLabel.textContent = formatDate(from, short);
+  } else {
+    calLabel.textContent = 'Choose a day';
+  }
+  var current = currentDate();
+  document.getElementById('cal-prev-day').disabled = addDays(current, -1) < firstMonth + '-01';
+  document.getElementById('cal-next-day').disabled = current >= database.today;
+}
+
+// The day the previous and next buttons step from
+function currentDate() {
+  if(selectedDates.length) {
+    return selectedDates[selectedDates.length - 1];
+  }
+  var from = rangeFrom.value.substr(0, 10);
+  return /^\d{4}-\d\d-\d\d$/.test(from) ? from : database.today;
+}
+
+function stepDay(n) {
+  var date = addDays(currentDate(), n);
+  if(date > database.today || date < firstMonth + '-01') {
+    return;
+  }
+  loadDay(date, false);
+}
+
+function setCalendarOpen(open) {
+  calPanel.hidden = !open;
+  calToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+(function(){
+  for(var y = +lastMonth.substr(0, 4); y >= +firstMonth.substr(0, 4); y--) {
+    calYear.add(new Option(y, y));
+  }
+  for(var m = 1; m <= 12; m++) {
+    var value = (m < 10 ? '0' : '') + m;
+    calMonth.add(new Option(formatDate('2024-' + value, {month: 'long'}), value));
+  }
+})();
+
+calGrid.addEventListener('click', function(evt){
+  var link = evt.target.closest('a[data-date]');
   if(link) {
     evt.preventDefault();
     // Alt-click adds the day to the ones already shown
-    loadDay(link, evt.altKey);
+    loadDay(link.dataset.date, evt.altKey);
+    if(phone.matches && !evt.altKey) {
+      setCalendarOpen(false);
+    }
   }
 });
+calToggle.addEventListener('click', function(){
+  setCalendarOpen(calPanel.hidden);
+});
+document.getElementById('cal-prev-day').addEventListener('click', function(){ stepDay(-1); });
+document.getElementById('cal-next-day').addEventListener('click', function(){ stepDay(1); });
+document.getElementById('cal-prev-month').addEventListener('click', function(){ showMonth(addMonths(shownMonth, -1)); });
+document.getElementById('cal-next-month').addEventListener('click', function(){ showMonth(addMonths(shownMonth, 1)); });
+document.getElementById('cal-today').addEventListener('click', function(){
+  loadDay(database.today, false);
+  if(phone.matches) {
+    setCalendarOpen(false);
+  }
+});
+calMonth.addEventListener('change', function(){ showMonth(calYear.value + '-' + calMonth.value); });
+calYear.addEventListener('change', function(){ showMonth(calYear.value + '-' + calMonth.value); });
+
+// Open beside the map on a wide screen, tucked under the date on a phone
+setCalendarOpen(!phone.matches);
 
 rangeGo.addEventListener('click', function(evt){
   evt.preventDefault();
@@ -229,11 +439,8 @@ if(tripCreate) {
 
 if(rangeFrom.value == "") {
   // Today in the database's timezone, not the browser's or UTC
-  var today = document.querySelector('.calendar a[data-date="'+database.today+'"]');
-  if(today) {
-    today.focus();
-    loadDay(today, false);
-  }
+  loadDay(database.today, false);
 } else {
+  showMonth(lastMonth);
   loadRange();
 }

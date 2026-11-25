@@ -47,4 +47,5 @@ Route::post('/api/input', [Api::class, 'input']);
 Route::post('/api/trip-complete', [Api::class, 'trip_complete']);
 Route::post('/api/share', [Api::class, 'share']);
 Route::get('/api/stats', [Stats::class, 'yearJson']);
+Route::get('/api/days', [Stats::class, 'daysJson']);
 Route::get('/api/countries', [Stats::class, 'worldJson']);

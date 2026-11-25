@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\IndieAuth;
 use App\Http\Controllers\LocalTime;
 use App\Http\Controllers\Share;
+use App\Http\Controllers\Stats;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [Controller::class, 'index']);
@@ -26,6 +27,12 @@ Route::get('/settings/{name}/auth/callback', [Controller::class, 'micropubCallba
 Route::get('/settings/{name}/auth/remove', [Controller::class, 'removeMicropub'])->where('name', '[A-Za-z0-9]+');
 Route::post('/database/create', [Controller::class, 'createDatabase']);
 
+Route::get('/stats/{name}/world', [Stats::class, 'world'])->where('name', '[A-Za-z0-9]+');
+Route::post('/stats/{name}/embed', [Stats::class, 'embedSetting'])->where('name', '[A-Za-z0-9]+');
+Route::get('/stats/{name}/{year?}', [Stats::class, 'year'])->where('name', '[A-Za-z0-9]+')->where('year', '[0-9]{4}');
+Route::get('/embed/world/{token}.json', [Stats::class, 'embedJson'])->where('token', '[A-Za-z0-9]+');
+Route::get('/embed/world/{token}', [Stats::class, 'embed'])->where('token', '[A-Za-z0-9]+');
+
 Route::get('/api/query', [Api::class, 'query']);
 Route::get('/api/last', [Api::class, 'last']);
 Route::get('/api/trip', [Api::class, 'trip']);
@@ -34,3 +41,5 @@ Route::get('/api/input', [Api::class, 'account']);
 Route::post('/api/input', [Api::class, 'input']);
 Route::post('/api/trip-complete', [Api::class, 'trip_complete']);
 Route::post('/api/share', [Api::class, 'share']);
+Route::get('/api/stats', [Stats::class, 'yearJson']);
+Route::get('/api/countries', [Stats::class, 'worldJson']);

@@ -93,6 +93,8 @@ class Controller
       'displayURL' => self::displayURL(),
       'database' => $db,
       'menu' => [
+        '/stats/'.$name => 'Stats',
+        '/stats/'.$name.'/world' => 'World',
         '/settings/'.$name => 'Settings'
       ],
       'range_from' => $request->input('from') ?: '',

@@ -214,6 +214,27 @@ grep -q '"saved":1' "$OUT/responses/input-duplicates.txt"; check "input dedupes 
 grep -q 'route.json' "$OUT/responses/input-trip.forwarded.txt"; check "trip posted to micropub with route.json" $?
 grep -q '"url"' "$OUT/responses/share.txt"; check "share created" $?
 
+# --- Stats pages, now that the points posted above have been processed --------------------
+record stats-year "${J[@]}" $BASE/stats/fixture
+record stats-year-empty "${J[@]}" $BASE/stats/fixture/2020
+record stats-no-access "${J[@]}" $BASE/stats/other
+record stats-api "$BASE/api/stats?token=r-fixture"
+record world "${J[@]}" $BASE/stats/fixture/world
+record world-api "$BASE/api/countries?token=r-fixture"
+record world-api-year "$BASE/api/countries?token=r-fixture&year=2020"
+record world-embed-enable "${J[@]}" -d "embed=enable" $BASE/stats/fixture/embed
+record world-embed-not-owner "${J[@]}" -d "embed=enable" $BASE/stats/other/embed
+embed_token=$(mysql_test -N -e "SELECT embed_token FROM \`databases\` WHERE name='fixture'")
+record world-embed-page "$BASE/embed/world/$embed_token"
+record world-embed-json "$BASE/embed/world/$embed_token.json"
+record world-with-embed "${J[@]}" $BASE/stats/fixture/world
+record world-embed-disable "${J[@]}" -d "embed=disable" $BASE/stats/fixture/embed
+record world-embed-after-disable "$BASE/embed/world/$embed_token"
+grep -q '"distance_m": 2715' "$OUT/responses/stats-api.txt"; check "stats API has the distance of the posted points" $?
+grep -q 'Total distance' "$OUT/responses/stats-year.txt"; check "stats page renders" $?
+grep -q '"code": "US"' "$OUT/responses/world-embed-json.txt"; check "embedded world map lists the country" $?
+grep -q ' 404' "$OUT/responses/world-embed-after-disable.txt"; check "embed stops working when turned off" $?
+
 # --- Share created through the API ------------------------------------------------------
 share_url=$(grep -o '"url":"[^"]*"' "$OUT/responses/share.txt" | cut -d'"' -f4 | sed 's#\\/#/#g')
 share_token=${share_url##*/}

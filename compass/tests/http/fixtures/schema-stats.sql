@@ -116,3 +116,4 @@ CREATE TABLE `stats_day_places` (
   KEY `stats_day_places_database_id_country_local_date_index` (`database_id`,`country`,`local_date`),
   KEY `stats_day_places_database_id_city_id_local_date_index` (`database_id`,`city_id`,`local_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+ALTER TABLE `databases` ADD `embed_token` varchar(40) DEFAULT NULL, ADD UNIQUE KEY `databases_embed_token_unique` (`embed_token`);

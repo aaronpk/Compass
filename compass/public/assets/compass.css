@@ -392,6 +392,7 @@ summary:focus-visible {
 
 /* Forms */
 
+input[type="search"],
 input[type="text"],
 input[type="url"],
 input[type="number"],
@@ -1606,4 +1607,54 @@ pre.code {
   background: #fff;
   border-color: var(--accent);
   cursor: ew-resize;
+}
+
+/* Searching for a place above the Places map. The "searching" note and the
+   results float over the map, so nothing on the page moves when they appear. */
+.place-search {
+  position: relative;
+  margin-bottom: var(--space-2);
+}
+.place-search p,
+.place-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin: var(--space-1) 0 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: 0 6px 20px rgba(16, 24, 32, 0.18);
+}
+.place-search p {
+  padding: var(--space-2) var(--space-3);
+}
+.place-results {
+  list-style: none;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.place-results li + li {
+  border-top: 1px solid var(--border);
+}
+.place-results button {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.place-results button:hover,
+.place-results button:focus-visible {
+  background: var(--surface-2);
+  outline: none;
 }

@@ -153,6 +153,8 @@ The Places page of a database holds its geofences. You can add two kinds:
 
 Every database also has three built-in areas that need no drawing: the **city**, **region** (state or province) and **country** you are in, worked out from the lookup tables that `geo:import` loads. They are always listed on the page, and can't be renamed or removed.
 
+The search box above the map finds a place or an address by name, moves the map there and, when you are adding a circle, puts the circle on it and suggests its name. The search goes from your browser to OpenStreetMap's [Nominatim](https://nominatim.org/) server, which is free for light use. Set `PLACE_SEARCH_URL` in `.env` to your own Nominatim server to keep searches in house, or to an empty value to hide the box.
+
 A place stands on its own: once it exists, Compass keeps track of whether you are in it, and records every arrival and departure on the Places page and in the API. Nothing else has to be set up.
 
 Web hooks are added separately. Open a place or an area to give it one or more, each with its own URL, its own choice of events (arriving, leaving, passing through) and its own limit on how late an event may be and still be sent. So "Home" is drawn once and can call one URL when you arrive and another when you leave. A web hook on an area is sent whenever that area changes. Phones sometimes deliver hours of locations at once; an event older than a web hook's limit is recorded but not sent to it.

@@ -23,6 +23,7 @@
   <div class="places-layout">
 
     <div class="places-map">
+      @include('partials/geofence-search')
       <div id="places-map" data-mapbox-token="{{ config('compass.mapbox_token') }}" data-mapbox-style="{{ config('compass.mapbox_style') }}"></div>
       <p class="muted small" id="places-map-hint">Click the map to place a circle. Drag its centre to move it and the handle on its edge to resize it.</p>
     </div>

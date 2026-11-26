@@ -28,6 +28,12 @@ return [
     // share pages ask for the current location every few seconds instead.
     'nchan_publish_url' => env('NCHAN_PUBLISH_URL'),
 
+    // The search box on the Places page asks this address for places by name.
+    // It has to speak the Nominatim search API. The default is OpenStreetMap's
+    // own server, which is free for light use; point it at your own Nominatim
+    // to keep searches in house, or set it to an empty value to hide the box.
+    'place_search_url' => env('PLACE_SEARCH_URL', 'https://nominatim.openstreetmap.org/search'),
+
     // Duplicate location points are only filtered out when a cache is configured
     'dedupe_cache' => env('CACHE_STORE', env('CACHE_DRIVER')),
 

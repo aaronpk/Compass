@@ -25,6 +25,7 @@
 
     @if($fence->kind != 'place')
     <div class="places-map">
+      @include('partials/geofence-search')
       <div id="places-map" data-mapbox-token="{{ config('compass.mapbox_token') }}" data-mapbox-style="{{ config('compass.mapbox_style') }}"></div>
       @if($fence->kind == 'circle')
         <p class="muted small" id="places-map-hint">Click the map or drag the centre to move the circle, drag the handle on its edge to resize it, then save.</p>

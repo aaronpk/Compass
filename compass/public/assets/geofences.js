@@ -183,6 +183,136 @@
   });
 
   ////////////////////////////////////////////////////////////
+  // Searching for a place by name. The search server (OpenStreetMap's
+  // Nominatim unless another is configured) asks not to be queried on every
+  // keystroke, so a search runs only when the form is sent.
+
+  (function(){
+    var form = document.getElementById('place-search');
+    if(!form) return;
+    var input = form.elements.q;
+    var button = form.querySelector('button');
+    var status = document.getElementById('place-search-status');
+    var list = document.getElementById('place-results');
+    var marker = null;
+    var lastQuery = null;
+
+    function say(text) {
+      status.textContent = text;
+      status.hidden = !text;
+    }
+
+    function clear() {
+      list.hidden = true;
+      list.textContent = '';
+    }
+
+    function choose(result) {
+      var latlng = L.latLng(parseFloat(result.lat), parseFloat(result.lon));
+      // boundingbox is [south, north, west, east]
+      var box = result.boundingbox;
+      if(box && box.length == 4) {
+        map.fitBounds([[parseFloat(box[0]), parseFloat(box[2])], [parseFloat(box[1]), parseFloat(box[3])]], { maxZoom: 17 });
+      } else {
+        map.setView(latlng, 16);
+      }
+      clear();
+      say('');
+      if(marker) { map.removeLayer(marker); marker = null; }
+
+      // Adding a circle: put it on the place that was found, and suggest its
+      // name. A circle that is already saved is left where it is; the map
+      // only moves, and a pin shows the spot.
+      var adding = editing && !editing.saved;
+      if(adding) {
+        editing.moveTo(latlng);
+        var name = editing.form.elements.name;
+        if(name && !name.value && result.name) name.value = result.name.slice(0, 100);
+      } else {
+        marker = L.circleMarker(latlng, { radius: 7, color: '#fff', weight: 2, fillColor: accent, fillOpacity: 1, interactive: false }).addTo(map);
+      }
+    }
+
+    function show(results) {
+      clear();
+      if(!results.length) {
+        say('Nothing found. Try adding the city, or a street address.');
+        return;
+      }
+      say('');
+      results.forEach(function(result){
+        var item = document.createElement('li');
+        var pick = document.createElement('button');
+        pick.type = 'button';
+        var title = document.createElement('strong');
+        // The full name starts with the short one; show the rest as the detail
+        var full = result.display_name || '';
+        var name = result.name || full.split(',')[0];
+        title.textContent = name;
+        var detail = document.createElement('span');
+        detail.className = 'muted small';
+        detail.textContent = full.indexOf(name + ', ') === 0 ? full.slice(name.length + 2) : full;
+        pick.appendChild(title);
+        pick.appendChild(detail);
+        pick.addEventListener('click', function(){ choose(result); });
+        item.appendChild(pick);
+        list.appendChild(item);
+      });
+      list.hidden = false;
+      // One clear answer needs no choosing
+      if(results.length == 1) choose(results[0]);
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var query = input.value.trim();
+      if(!query || button.disabled) return;
+      if(query === lastQuery && !list.hidden) return;
+      lastQuery = query;
+      // Prefer results near what the map is showing, without ruling out the rest
+      var view = map.getBounds();
+      var params = new URLSearchParams({
+        q: query, format: 'jsonv2', limit: 6,
+        viewbox: [view.getWest(), view.getNorth(), view.getEast(), view.getSouth()].join(',')
+      });
+      button.disabled = true;
+      say('Searching…');
+      fetch(form.dataset.url + '?' + params, { headers: { 'Accept': 'application/json' } })
+        .then(function(response){
+          if(!response.ok) throw new Error('HTTP ' + response.status);
+          return response.json();
+        })
+        .then(show)
+        .catch(function(){
+          clear();
+          say('The search didn\'t answer. Try again in a moment.');
+        })
+        .then(function(){
+          // The public server allows one search a second
+          setTimeout(function(){ button.disabled = false; }, 1000);
+        });
+    });
+
+    input.addEventListener('input', function(){
+      if(!input.value) { clear(); say(''); }
+    });
+
+    // The note and the list float over the map, so they need a way to be
+    // put away without choosing: Escape, or a click anywhere else
+    function dismiss() {
+      if(button.disabled && status.textContent == 'Searching…') return;
+      clear();
+      say('');
+    }
+    form.addEventListener('keydown', function(e){
+      if(e.key == 'Escape') dismiss();
+    });
+    document.addEventListener('click', function(e){
+      if(!form.contains(e.target)) dismiss();
+    });
+  })();
+
+  ////////////////////////////////////////////////////////////
   // Which form is in use decides what the map is editing
 
   function highlight(id, on) {

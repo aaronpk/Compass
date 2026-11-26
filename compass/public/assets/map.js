@@ -1,5 +1,23 @@
 var map = Compass.createMap('map', { maxZoom: 24 });
 
+// The database's places (geofences), drawn faintly under the track
+(function(){
+  var el = document.getElementById('database');
+  if(!el || !el.dataset.token) return;
+  var faint = { color: '#0e8f8a', weight: 1, opacity: 0.6, fillOpacity: 0.08, interactive: false };
+  Compass.getJSON('/api/geofences?' + new URLSearchParams({token: el.dataset.token})).then(function(data){
+    (data.geofences || []).forEach(function(fence){
+      if(fence.kind == 'circle') {
+        L.circle([fence.lat, fence.lng], Object.assign({ radius: fence.radius }, faint)).addTo(map);
+      } else if(fence.kind == 'polygon' && fence.geometry) {
+        L.geoJSON(fence.geometry, { style: faint, interactive: false }).addTo(map);
+      }
+    });
+  }).catch(function(){
+    // The map works without them
+  });
+})();
+
 var startIcon = Compass.pinIcon('start');
 var endIcon = Compass.pinIcon('end');
 

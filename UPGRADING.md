@@ -19,10 +19,11 @@ tables that can be emptied and rebuilt.
 - **The framework is Laravel 13.** The web root is still `compass/public` and
   the same rewrite rule to `index.php` applies, so the web server
   configuration only needs the new PHP-FPM socket.
-- **Six database migrations are pending.** They add tables and nullable
+- **Seven database migrations are pending.** They add tables and nullable
   columns only. Nothing existing is altered in a way the old code can't read.
-- **New pages:** yearly stats and a world map for each database, a page to
-  manage share links, and a one-month calendar on the map page.
+- **New pages:** yearly stats and a world map for each database, places
+  (geofences) that run web hooks, a page to manage share links, and a
+  one-month calendar on the map page.
 - **A second queue worker** keeps the stats up to date.
 - **Mapbox tiles need your own token** in `.env`. The token used to be built
   into the scripts. Without one the maps use OpenStreetMap's own tiles.
@@ -98,9 +99,9 @@ this guide.
 php artisan migrate --force
 ```
 
-Each one takes well under a second. They create the lookup and stats tables,
-and add columns for share links, the world map's public address and failed
-jobs.
+Each one takes well under a second. They create the lookup, stats and
+geofence tables, and add columns for share links, the world map's public
+address and failed jobs.
 
 ## 7. Load the lookup tables
 
@@ -109,8 +110,9 @@ php artisan geo:import
 ```
 
 This downloads the list of cities with more than 5,000 people from GeoNames
-(about 6 MB) so that Compass can name the country, city and timezone of a
-location without calling an outside service. Do this before step 9, or the
+(about 6 MB), and the names of states and provinces, so that Compass can name
+the country, region, city and timezone of a location without calling an
+outside service. Do this before step 9, or the
 stats come out with no countries or cities.
 
 ## 8. Install the queue workers
@@ -125,8 +127,8 @@ sudo systemctl enable --now compass-queue.target
 sudo systemctl enable --now compass-stats@1
 ```
 
-- `compass-queue.target` runs four workers for trips and notifications, in
-  place of the old `queue:listen`.
+- `compass-queue.target` runs four workers for trips, notifications and
+  geofences, in place of the old `queue:listen`.
 - `compass-stats@1` runs one low-priority worker that keeps the stats tables
   up to date. Without it the stats pages stay empty.
 
@@ -169,6 +171,10 @@ from devices is handled ahead of it.
   shows up.
 - **Share links show less.** A viewer gets the position, time, speed and
   accuracy. Battery level, wifi name and device id are no longer sent.
+- **Places.** A new page for geofences. Compass keeps track of whether you
+  are in each one, and each can have web hooks for arriving and leaving, or
+  for a change of city, region or country. Nothing happens until someone
+  adds one.
 - **Share links can be managed.** The Share page lists them and can stop one.
 - **The world map can be made public.** This is off until the database's
   owner turns it on from the World page.
@@ -200,6 +206,11 @@ php artisan migrate --force
 php artisan stats:backfill
 sudo systemctl restart compass-queue.target compass-stats@1
 ```
+
+If your install is from before geofences were added, run
+`php artisan geo:import --only-regions` once after the migration. It loads the
+names of states and provinces that "region changes" places show; without it
+they show a code such as `US.OR`.
 
 `stats:backfill` is quick when nothing needs redoing. When an update changes
 how the stats are worked out, it reprocesses the days done with the older

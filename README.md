@@ -9,6 +9,7 @@ What it does:
 * **Map** - browse any day or range of time on a map, with a graph of battery level, speed and app events. The calendar shades each day by how far you travelled.
 * **Stats** - a yearly page per database: distance, countries and cities, active days and streaks, a monthly digest, distance by mode of travel and first visits.
 * **World** - a map of everywhere you have been, as hexagons that get finer as you zoom in. It can be published and embedded in another website.
+* **Places** - geofences: circles and GeoJSON shapes that Compass knows you are in or out of, and watches on the city, region or country you are in. Each can run web hooks when you arrive, leave or pass through.
 * **Share** - links that show your current location and recent track to anyone who has them, for a set time or until you stop them.
 * **Trips** - trips recorded by a device can be posted to your website with Micropub, and other services can be pinged when a location arrives.
 * **API** - for writing and reading locations, used by [Overland](https://github.com/aaronpk/Overland-iOS) and other apps.
@@ -116,7 +117,7 @@ Compass works out the country, city and timezone of a location from data it ship
 $ php artisan geo:import
 ```
 
-This downloads the list of cities with a population over 5,000 from GeoNames (about 6 MB) and fills the `geo_cities` and `geo_countries` tables. Run it again whenever you want newer city data.
+This downloads the list of cities with a population over 5,000 from GeoNames (about 6 MB), and the names of states and provinces, and fills the `geo_cities`, `geo_countries` and `geo_admin1` tables. Run it again whenever you want newer city data.
 
 Data sources:
 
@@ -138,6 +139,64 @@ After an update that changes how the stats are worked out, run `php artisan stat
 The world map covers the land with hexagons and fills the ones you have been in, either anywhere on the ground or only where you stopped. The hexagons are four degrees of longitude wide when the map is zoomed out and get smaller as you zoom in, down to half a degree. The public, embeddable version of the map (turned on from the World page) shows the list of countries and the hexagons visited in one colour, without the number of days in each; add `?view=stops` to its address to leave out places you only passed through. The hexagons on land come from `public/assets/world-hex.json` and `world-hex-fine.json`, built by `php artisan geo:build-hex-grid`.
 
 Other commands: `stats:status` shows progress, and `stats:explain {database} {date}` shows the stops and moves found for one day. All of the stats tables can be emptied and rebuilt; the location files are never changed.
+
+### Places (geofences)
+
+The Places page of a database holds its geofences. You can add two kinds:
+
+* **Circle** - click the map to place it, drag to move and resize it. The smallest radius is 50 metres.
+* **Shape** - a GeoJSON Polygon or MultiPolygon, pasted in or loaded from a file. Holes are respected. A shape can't cross the 180° meridian.
+
+Every database also has three built-in areas that need no drawing: the **city**, **region** (state or province) and **country** you are in, worked out from the lookup tables that `geo:import` loads. They are always listed on the page, and can't be renamed or removed.
+
+A place stands on its own: once it exists, Compass keeps track of whether you are in it, and records every arrival and departure on the Places page and in the API. Nothing else has to be set up.
+
+Web hooks are added separately. Open a place or an area to give it one or more, each with its own URL, its own choice of events (arriving, leaving, passing through) and its own limit on how late an event may be and still be sent. So "Home" is drawn once and can call one URL when you arrive and another when you leave. A web hook on an area is sent whenever that area changes. Phones sometimes deliver hours of locations at once; an event older than a web hook's limit is recorded but not sent to it.
+
+Nothing extra has to run. Places are checked by the same `compass` queue worker that handles trips, as each batch of locations arrives.
+
+#### How arriving and leaving are decided
+
+The rules are there to keep bad GPS data from firing web hooks:
+
+* A location counts as inside only when its accuracy circle fits inside the place, and as outside only when the whole circle is beyond the edge by a margin (20% of the place's size, between 25 and 100 metres). Anything in between changes nothing, so sitting on the edge doesn't flap.
+* A change needs a second location that agrees with the first, at least 10 seconds later. A device that reports less than once a minute is taken at its word on one location.
+* A location that would need more than 300 m/s to reach is dropped, and so is anything older than the newest location already seen.
+* Passing through without stopping is reported as `cross`, not as an arrival and a departure.
+* A device that stops reporting while inside a place stays inside. No departure is made up.
+
+#### The web hook
+
+Compass sends a POST request with a JSON body:
+
+```json
+{
+  "event": "enter",
+  "id": 1234,
+  "time": "2026-11-26T18:04:09Z",
+  "delayed": false,
+  "database": "example",
+  "fence": { "id": 7, "name": "Home", "kind": "circle" },
+  "location": {
+    "type": "Feature",
+    "geometry": { "type": "Point", "coordinates": [-122.66, 45.51] },
+    "properties": { "horizontal_accuracy": 12 }
+  }
+}
+```
+
+* `event` is `enter`, `exit`, `cross`, or `change` when the city, region or country changes. A `change` also has `from` and `to`, each with a `code` (a country code, a GeoNames region code such as `US.OR`, or a GeoNames city id) and a `name`, and `fence.level`.
+* `time` is when it happened. `delayed` is true when the location reached the server more than five minutes after that.
+* The `Compass-Signature` header is `sha256=` followed by the hex HMAC-SHA256 of the request body, keyed with the database's signing secret, which is shown on the Places page. Unlike the "ping" web hooks, no token for the database is sent.
+* Answer with a 2xx status. Anything else is retried after 10 seconds, 1 minute, 5 minutes, 30 minutes and 1 hour, and then marked as failed. Retrying needs a real queue; with `QUEUE_DRIVER=sync` a failed web hook is not tried again.
+
+Checking the signature in PHP:
+
+```php
+$body = file_get_contents('php://input');
+$expected = 'sha256='.hash_hmac('sha256', $body, $secret);
+if(!hash_equals($expected, $_SERVER['HTTP_COMPASS_SIGNATURE'] ?? '')) { http_response_code(403); exit; }
+```
 
 ### Live sharing
 
@@ -270,6 +329,28 @@ Returns `{"days": {"2026-01-15": [ground metres, flight metres], ...}}`, with on
 * year - (optional, default all time)
 
 Returns the countries with the number of days in each and the first and last visit, and `hexes`: the hexagons of the world map with time on the ground, as `[column, row, days there, days stopped there]`, for each of the map's four grids.
+
+### Places
+
+These take the read token.
+
+#### Places and where you are
+
+`GET /api/geofences`
+
+* token - (required) the read token for the database
+
+Returns `{"geofences": [...]}`. Each has `id`, `name`, `kind` (`circle`, `polygon` or `place`), its shape (`lat`, `lng` and `radius` in metres, or a GeoJSON `geometry`), `state` (`inside`, `outside` or `unknown`) and `since`. The built-in areas (`kind` is `place`) have `level`, `value` and `value_name` instead of a shape and a state. They appear once the Places page has been opened.
+
+#### What happened
+
+`GET /api/geofence-events`
+
+* token - (required) the read token for the database
+* since - (optional) only events after this time
+* limit - (optional, default 100, at most 500)
+
+Returns `{"events": [...]}`, newest first, in the same form as the web hook body. Each has `web_hooks`: one of `sent`, `pending`, `failed` or `skipped` (too late for that web hook's limit) for every web hook the event went to, and an empty list when the place has none.
 
 
 ## Credits

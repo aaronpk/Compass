@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Geofences;
 use App\Http\Controllers\IndieAuth;
 use App\Http\Controllers\LocalTime;
 use App\Http\Controllers\Share;
@@ -18,6 +19,16 @@ Route::get('/share/viewer-connected', [Share::class, 'viewerConnected']);
 Route::get('/shares/{name}', [Share::class, 'index'])->where('name', '[A-Za-z0-9]+');
 Route::post('/shares/{name}', [Share::class, 'create'])->where('name', '[A-Za-z0-9]+');
 Route::post('/shares/{name}/{id}/stop', [Share::class, 'revoke'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');
+
+Route::get('/places/{name}', [Geofences::class, 'index'])->where('name', '[A-Za-z0-9]+');
+Route::post('/places/{name}', [Geofences::class, 'create'])->where('name', '[A-Za-z0-9]+');
+Route::get('/places/{name}/{id}', [Geofences::class, 'show'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');
+Route::post('/places/{name}/{id}', [Geofences::class, 'update'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');
+Route::post('/places/{name}/{id}/delete', [Geofences::class, 'delete'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');
+Route::post('/places/{name}/{id}/hooks', [Geofences::class, 'createHook'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');
+Route::post('/places/{name}/{id}/hooks/{hook}', [Geofences::class, 'updateHook'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+')->where('hook', '[0-9]+');
+Route::post('/places/{name}/{id}/hooks/{hook}/delete', [Geofences::class, 'deleteHook'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+')->where('hook', '[0-9]+');
+Route::post('/places/{name}/{id}/hooks/{hook}/test', [Geofences::class, 'testHook'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+')->where('hook', '[0-9]+');
 
 Route::post('/auth/start', [IndieAuth::class, 'start']);
 Route::get('/auth/callback', [IndieAuth::class, 'callback']);
@@ -49,3 +60,5 @@ Route::post('/api/share', [Api::class, 'share']);
 Route::get('/api/stats', [Stats::class, 'yearJson']);
 Route::get('/api/days', [Stats::class, 'daysJson']);
 Route::get('/api/countries', [Stats::class, 'worldJson']);
+Route::get('/api/geofences', [Geofences::class, 'listJson']);
+Route::get('/api/geofence-events', [Geofences::class, 'eventsJson']);

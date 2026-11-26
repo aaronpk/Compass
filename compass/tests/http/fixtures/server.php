@@ -1,7 +1,7 @@
 <?php
 // Router script for `php -S 127.0.0.1:18280 tests/http/fixtures/server.php`.
 // Stands in for everything Compass talks to over HTTP: Atlas geocoding, ping
-// URLs, a Micropub endpoint, nchan's publisher, and an IndieAuth profile with
+// URLs, geofence web hooks, a Micropub endpoint, nchan's publisher, and an IndieAuth profile with
 // authorization and token endpoints. Every request is appended to $FIXTURE_LOG as JSON so the
 // harness can check what Compass sent.
 
@@ -12,7 +12,7 @@ $body = file_get_contents('php://input');
 
 if($log = getenv('FIXTURE_LOG')) {
   $headers = [];
-  foreach(['HTTP_AUTHORIZATION' => 'Authorization', 'CONTENT_TYPE' => 'Content-Type', 'HTTP_COMPASS_URL' => 'Compass-Url'] as $k => $name) {
+  foreach(['HTTP_AUTHORIZATION' => 'Authorization', 'CONTENT_TYPE' => 'Content-Type', 'HTTP_COMPASS_URL' => 'Compass-Url', 'HTTP_COMPASS_SIGNATURE' => 'Compass-Signature', 'HTTP_COMPASS_EVENT' => 'Compass-Event'] as $k => $name) {
     if(isset($_SERVER[$k])) $headers[$name] = $_SERVER[$k];
   }
   // PHP doesn't populate php://input for multipart requests, so log the parsed parts
@@ -72,7 +72,12 @@ switch($path) {
 
   case '/ping':
   case '/ping2':
+  case '/hook':
     respond(200, ['result' => 'ok']);
+
+  // A geofence web hook receiver that is broken
+  case '/hook-fail':
+    respond(500, ['error' => 'broken']);
 
   case '/atlas/api/geocode':
     $lat = (float)($_GET['latitude'] ?? 0);

@@ -3,19 +3,29 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Stats\Geo\CountryIndex;
 
-// Loads the lookup tables used for stats: countries from the built index in
-// resources/geo, and cities from GeoNames (https://www.geonames.org, CC BY 4.0).
+// Loads the lookup tables used for stats and places: countries from the built
+// index in resources/geo, and cities and region names from GeoNames
+// (https://www.geonames.org, CC BY 4.0).
 // Safe to run again; it replaces what is there.
 class GeoImport extends Command {
 
   const CITIES_URL = 'https://download.geonames.org/export/dump/cities5000.zip';
+  const REGIONS_URL = 'https://download.geonames.org/export/dump/admin1CodesASCII.txt';
 
-  protected $signature = 'geo:import {cities? : Path to cities5000.txt or .zip; downloaded from GeoNames if not given}';
-  protected $description = 'Import the country and city lookup tables';
+  protected $signature = 'geo:import {cities? : Path to cities5000.txt or .zip; downloaded from GeoNames if not given}
+    {--regions= : Path to admin1CodesASCII.txt; downloaded from GeoNames if not given}
+    {--only-regions : Load the region names and leave the rest as it is}';
+  protected $description = 'Import the country, region and city lookup tables';
 
   public function handle() {
+    if($this->option('only-regions')) {
+      $this->regions();
+      return 0;
+    }
+
     $countries = array_map(fn($c) => [
       'code' => $c['code'], 'iso3' => $c['iso3'], 'name' => $c['name'],
       'continent' => $c['continent'], 'sovereign' => $c['sovereign'],
@@ -86,7 +96,37 @@ class GeoImport extends Command {
     DB::table('geo_cells')->delete();
 
     $this->info($count.' cities');
+    $this->regions();
     return 0;
+  }
+
+  // Names of states and provinces, for the "region changes" places. Cities
+  // only carry the region's code. Without the names the code is shown, so a
+  // failed download is not a reason to stop.
+  private function regions(): void {
+    if(!Schema::hasTable('geo_admin1'))
+      return;
+    $path = $this->option('regions');
+    if(!$path)
+      $this->info('Downloading '.self::REGIONS_URL);
+    $lines = @file($path ?: self::REGIONS_URL, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if(!$lines) {
+      $this->warn('Could not read the region names; regions will be shown by their code');
+      return;
+    }
+    $rows = [];
+    foreach($lines as $line) {
+      // code, name, name in ASCII, GeoNames id
+      $f = explode("\t", $line);
+      if(count($f) >= 2 && strlen($f[0]) <= 24)
+        $rows[$f[0]] = ['code' => $f[0], 'name' => mb_substr($f[1], 0, 200)];
+    }
+    DB::transaction(function() use($rows) {
+      DB::table('geo_admin1')->delete();
+      foreach(array_chunk(array_values($rows), 1000) as $chunk)
+        DB::table('geo_admin1')->insert($chunk);
+    });
+    $this->info(count($rows).' regions');
   }
 
 }

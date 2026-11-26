@@ -394,6 +394,7 @@ summary:focus-visible {
 
 input[type="text"],
 input[type="url"],
+input[type="number"],
 input:not([type]),
 select,
 textarea {
@@ -1395,4 +1396,214 @@ html.full, .share-page {
   margin-top: var(--space-2);
   font-family: var(--font-mono);
   font-size: 0.8rem;
+}
+
+/* Places (geofences) */
+
+.places-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+.places-single {
+  max-width: 720px;
+}
+.places-map {
+  position: sticky;
+  top: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+#places-map {
+  height: min(70vh, 620px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  /* Leaflet's panes use z-indexes up to 1000; keep them under the menu */
+  isolation: isolate;
+}
+.places-map p {
+  margin: var(--space-2) 0 0;
+}
+@media (max-width: 860px) {
+  .places-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .places-map {
+    position: static;
+  }
+  #places-map {
+    height: 50vh;
+  }
+}
+.places .card h3 {
+  margin-top: 0;
+}
+.places .card-title.with-tabs {
+  flex-wrap: wrap;
+}
+.places .tabs button {
+  white-space: nowrap;
+}
+.places form > .field,
+.places form > .fields {
+  margin-bottom: var(--space-3);
+}
+.places .field.narrow {
+  flex: 0 0 9.5em;
+}
+.places textarea {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.places input[type="file"] {
+  margin-top: var(--space-2);
+  font-size: 0.85rem;
+}
+.hook-options {
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.field.checks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.field.checks label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-weight: 400;
+  color: var(--text);
+}
+.field.checks input {
+  width: auto;
+}
+.place-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.place-list li {
+  border-bottom: 1px solid var(--border);
+}
+.place-list li:last-child {
+  border-bottom: 0;
+}
+.place-list summary,
+.place-list > li > a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) 0;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  list-style: none;
+}
+.place-list summary::-webkit-details-marker {
+  display: none;
+}
+.place-list summary:focus-visible,
+.place-list > li > a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.place-list .place-name {
+  font-weight: 600;
+}
+.place-list > li > a:hover .place-name {
+  color: var(--accent);
+}
+.place-list > li > a .place-name::after {
+  content: "›";
+  float: right;
+  font-weight: 400;
+  color: var(--muted);
+}
+.hook-list summary .place-name::after {
+  content: "Edit";
+  float: right;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--accent);
+}
+.hook-list details[open] summary .place-name::after {
+  content: "Close";
+}
+.hook-list .hook-url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.place-list details form {
+  padding-bottom: var(--space-3);
+}
+.add-hook {
+  margin-top: var(--space-3);
+}
+.add-hook > summary {
+  display: inline-block;
+  list-style: none;
+}
+.add-hook > summary::-webkit-details-marker {
+  display: none;
+}
+.add-hook[open] > summary {
+  display: none;
+}
+.places .back {
+  margin: 0 0 var(--space-2);
+  font-size: 0.9rem;
+}
+.places > h2.place-title .muted {
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+.place-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.button.danger {
+  margin-left: auto;
+  color: var(--danger);
+}
+.button.danger:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
+.place-events .bad {
+  color: var(--danger);
+}
+details.card > summary {
+  cursor: pointer;
+}
+details.card > summary h3 {
+  display: inline;
+  margin: 0;
+}
+details.card[open] > summary {
+  margin-bottom: var(--space-3);
+}
+pre.code {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  overflow-x: auto;
+}
+/* The two handles of a circle being edited */
+.place-handle {
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  cursor: move;
+}
+.place-handle.edge {
+  background: #fff;
+  border-color: var(--accent);
+  cursor: ew-resize;
 }

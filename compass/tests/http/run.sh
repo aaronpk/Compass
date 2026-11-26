@@ -56,7 +56,7 @@ EOF
 
 # --- Fresh database and cache -----------------------------------------------------
 mysql_test() { mysql -h127.0.0.1 -u"$(grep ^DB_USERNAME= "$APP/.env" | cut -d= -f2)" -p"$(grep ^DB_PASSWORD= "$APP/.env" | cut -d= -f2)" compass_test "$@"; }
-mysql_test -e 'DROP TABLE IF EXISTS users, `databases`, database_users, shares, failed_jobs, geo_cities, geo_countries, geo_cells, geo_tz_cells, stats_shards, stats_segments, stats_days, stats_day_modes, stats_day_places, stats_day_cells'
+mysql_test -e 'DROP TABLE IF EXISTS users, `databases`, database_users, shares, failed_jobs, geo_cities, geo_countries, geo_cells, geo_tz_cells, stats_shards, stats_segments, stats_days, stats_day_modes, stats_day_places, stats_day_cells, geofences, geofence_events, geofence_webhooks, geofence_deliveries, geo_admin1'
 mysql_test < "$HERE/fixtures/schema.sql"
 mysql_test < "$HERE/fixtures/schema-stats.sql"
 mysql_test < "$HERE/fixtures/fixtures.sql"
@@ -287,6 +287,142 @@ grep -q '\[\[-122.61,45.51\]\]' "$OUT/responses/share-live-history.txt"; check "
 grep -q '"speed":3.5' "$OUT/responses/share-live-current.txt"; check "share viewers get speed and accuracy" $?
 [ "$(grep -c '"uri":"/pub/' "$OUT/responses/input-live.forwarded.txt")" = "6" ]; check "the new point is published to each of the six active shares" $?
 ! grep -q "/pub/sharerevoked\|/pub/shareexpired\|/pub/$stop_token" "$OUT/responses/input-live.forwarded.txt"; check "nothing is published to ended shares" $?
+
+# --- Places (geofences) ---------------------------------------------------------------
+# Times and ids differ on every run; the signature is checked and then masked
+mask_places() { sed -i -E "s/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z/TIME/g; s/sha256=[0-9a-f]{64}/sha256=SIG/g; s/[A-Z][a-z]{2} [0-9]{1,2}, [0-9]{1,2}:[0-9]{2} [ap]m/WHEN/g; s/(id=\"webhook-secret\" readonly value=\")[A-Za-z0-9]{40}/\1SECRET/" "$@"; }
+PL() { local name=$1; shift; record "$name" "${J[@]}" "$@"; }
+sql() { mysql_test -N -e "$1"; }
+record places-logged-out $BASE/places/fixture
+PL places-no-access $BASE/places/other
+PL places-empty $BASE/places/fixture
+grep -q 'None yet' "$OUT/responses/places-empty.txt"; check "places page renders with no places" $?
+PL places-empty-again $BASE/places/fixture
+[ "$(sql 'SELECT GROUP_CONCAT(CONCAT(name, ":", place_level) ORDER BY id) FROM geofences WHERE kind = "place"')" = "City:city,Region:region,Country:country" ] && grep -q 'Where you are' "$OUT/responses/places-empty.txt"; check "city, region and country are always there, made once" $?
+grep -q '>Places</a>' "$OUT/responses/map.txt"; check "the menu has Places" $?
+
+PL places-create-no-position -d "kind=circle&name=Nowhere&radius=150" $BASE/places/fixture
+PL places-create-bad-geojson --data-urlencode "kind=polygon" --data-urlencode 'geojson={"type":"Point","coordinates":[0,0]}' $BASE/places/fixture
+PL places-after-mistakes $BASE/places/fixture
+grep -q 'needs to contain a Polygon or MultiPolygon' "$OUT/responses/places-after-mistakes.txt"; check "a mistake in the form is explained" $?
+[ "$(sql 'SELECT COUNT(*) FROM geofences WHERE kind != "place"')" = "0" ]; check "nothing is saved from a form with a mistake" $?
+
+# Places are made on their own, with no web hook
+PL places-create-home --data-urlencode "kind=circle" --data-urlencode "name=Home <b>" -d "lat=45.6&lng=-122.7&radius=150" $BASE/places/fixture
+PL places-create-tiny -d "kind=circle&name=Tiny&lat=45.6&lng=-122.7&radius=10" $BASE/places/fixture
+PL places-create-block --data-urlencode "kind=polygon" --data-urlencode "name=Block" \
+  --data-urlencode 'geojson={"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-123.13,49.27],[-123.11,49.27],[-123.11,49.29],[-123.13,49.29]]]}}' $BASE/places/fixture
+PL places-create-area -d "kind=place&place_level=country&name=Another" $BASE/places/fixture
+PL places-create-other-db -d "kind=circle&name=Sneaky&lat=45.6&lng=-122.7&radius=150" $BASE/places/other
+[ "$(sql 'SELECT GROUP_CONCAT(CONCAT(name, ":", kind, ":", COALESCE(radius, "")) ORDER BY id) FROM geofences WHERE kind != "place"')" = "Home <b>:circle:150,Tiny:circle:50,Block:polygon:" ] && [ "$(sql 'SELECT COUNT(*) FROM geofences WHERE kind = "place"')" = "3" ]; check "places are saved; a tiny radius is raised to 50 m; none for a database you can't see; no extra areas" $?
+home=$(sql 'SELECT id FROM geofences WHERE name LIKE "Home%"'); block=$(sql 'SELECT id FROM geofences WHERE name = "Block"'); country=$(sql 'SELECT id FROM geofences WHERE place_level = "country"')
+grep -qi "^location: .*/places/fixture/$home\$" "$OUT/responses/places-create-home.txt"; check "adding a place opens its page" $?
+[ "$(sql 'SELECT geofence_cursor IS NOT NULL FROM `databases` WHERE name = "fixture"')$(sql 'SELECT COUNT(*) FROM geofence_webhooks')" = "10" ]; check "the cursor is started, and no web hook is made" $?
+
+# Web hooks are added to a place one at a time, each for its own events
+PL place-page-new $BASE/places/fixture/$home
+PL place-page-other-db $BASE/places/other/$home
+grep -q 'Home &lt;b&gt;' "$OUT/responses/place-page-new.txt" && ! grep -q 'Home <b>' "$OUT/responses/place-page-new.txt" && grep -q 'id="webhook-secret"' "$OUT/responses/place-page-new.txt"; check "a place has its own page, with its name escaped and the signing secret" $?
+secret=$(sql 'SELECT webhook_secret FROM `databases` WHERE name = "fixture"')
+[ ${#secret} = 40 ]; check "the signing secret is made when a place's page is first opened" $?
+hook() { local name=$1 place=$2; shift 2; PL "$name" "$@" $BASE/places/fixture/$place/hooks; }
+hook hook-bad-url $home -d "on_enter=1&max_age=" --data-urlencode "url=ftp://example.com/x"
+hook hook-no-events $home -d "max_age=" --data-urlencode "url=$FIX/hook?f=nothing"
+PL place-page-after-mistakes $BASE/places/fixture/$home
+grep -q 'Choose at least one event' "$OUT/responses/place-page-after-mistakes.txt" && [ "$(sql 'SELECT COUNT(*) FROM geofence_webhooks')" = "0" ]; check "a web hook needs a URL and at least one event" $?
+hook hook-arrive $home -d "on_enter=1&max_age=" --data-urlencode "url=$FIX/hook?f=arrive"
+hook hook-leave $home -d "on_exit=1&max_age=900" --data-urlencode "url=$FIX/hook?f=leave"
+hook hook-fresh $home -d "on_enter=1&on_exit=1&max_age=300" --data-urlencode "url=$FIX/hook?f=fresh"
+hook hook-cross $home -d "on_cross=1&max_age=" --data-urlencode "url=$FIX/hook?f=cross"
+hook hook-block $block -d "on_enter=1&on_exit=1&max_age=" --data-urlencode "url=$FIX/hook-fail"
+hook hook-country $country -d "max_age=" --data-urlencode "url=$FIX/hook?f=country"
+PL hook-other-db -d "on_enter=1" --data-urlencode "url=$FIX/hook?f=sneaky" $BASE/places/other/$home/hooks
+record hook-logged-out -d "on_enter=1" --data-urlencode "url=$FIX/hook?f=sneaky" $BASE/places/fixture/$home/hooks
+[ "$(sql 'SELECT GROUP_CONCAT(CONCAT(geofence_id = '$home', on_enter, on_exit, on_cross, ":", COALESCE(max_age, "any")) ORDER BY id) FROM geofence_webhooks')" = "1100:any,1010:900,1110:300,1001:any,0110:any,0000:any" ]; check "one place can have several web hooks, each for its own events" $?
+
+# A device that was offline for two hours delivers its points late
+mysql_test -e "UPDATE \`databases\` SET geofence_cursor = '{\"seen\": $(( $(date +%s) - 7200 ))}' WHERE name = 'fixture'"
+point() { echo '{"type":"Feature","geometry":{"type":"Point","coordinates":['$2','$3']},"properties":{"timestamp":"'$1'","horizontal_accuracy":10}}'; }
+base=$(date +%s)
+ago() { date -u -d "@$(( base - $1 ))" +%Y-%m-%dT%H:%M:%SZ; }
+P geofence-late w-fixture '{"locations":['"$(point $(ago 3600) -122.5 45.4)"','"$(point $(ago 3000) -122.7 45.6)"','"$(point $(ago 2990) -122.7 45.6)"']}'
+hooks() { grep -c "\"uri\":\"/hook$2\"" "$OUT/responses/$1.forwarded.txt"; }
+allhooks() { grep -c '"uri":"/hook' "$OUT/responses/$1.forwarded.txt"; }
+deliveries() { sql "SELECT COALESCE(GROUP_CONCAT(CONCAT(SUBSTRING_INDEX(w.url, '/', -1), ':', e.type, ':', d.status, ':', e.delayed) ORDER BY d.id), '') FROM geofence_deliveries d JOIN geofence_events e ON e.id = d.event_id JOIN geofence_webhooks w ON w.id = d.webhook_id WHERE e.geofence_id = $1"; }
+[ "$(allhooks geofence-late)" = "1" ] && grep -q '"uri":"/hook?f=arrive".*\\"event\\":\\"enter\\".*\\"delayed\\":true' "$OUT/responses/geofence-late.forwarded.txt"; check "a late arrival goes only to the web hook for arriving that allows late events, marked delayed" $?
+[ "$(deliveries $home)" = "hook?f=arrive:enter:sent:1,hook?f=fresh:enter:skipped:1" ]; check "the web hook with a five minute limit is recorded as skipped; the one for leaving isn't involved" $?
+[ "$(sql 'SELECT GROUP_CONCAT(CONCAT(f.name, ":", e.type) ORDER BY e.id) FROM geofence_events e JOIN geofences f ON f.id = e.geofence_id')" = "Home <b>:enter,Tiny:enter" ]; check "a place with no web hook still records the arrival" $?
+# The signature is the HMAC of exactly the bytes that were sent
+python3 -I - "$OUT/responses/geofence-late.forwarded.txt" "$secret" <<'PY'
+import sys, json, hmac, hashlib
+ok = False
+for line in open(sys.argv[1]):
+    if not line.startswith('{'): continue
+    r = json.loads(line)
+    if r['uri'].startswith('/hook'):
+        want = 'sha256=' + hmac.new(sys.argv[2].encode(), r['body'].encode(), hashlib.sha256).hexdigest()
+        ok = r['headers'].get('Compass-Signature') == want and 'Authorization' not in r['headers'] and r['headers'].get('Compass-Event') == 'enter'
+        if not ok: break
+sys.exit(0 if ok else 1)
+PY
+check "the web hook is signed with the database's secret and carries no token" $?
+! grep '"uri":"/hook' "$OUT/responses/geofence-late.forwarded.txt" | grep -q 'r-fixture\|w-fixture'; check "the web hook doesn't give away the read or write token" $?
+
+# More old points, a few seconds off so they are stored as new ones: older than the newest already seen, so nothing happens
+P geofence-late-again w-fixture '{"locations":['"$(point $(ago 3605) -122.5 45.4)"','"$(point $(ago 3005) -122.7 45.6)"']}'
+grep -q '"saved":2' "$OUT/responses/geofence-late-again.txt"; check "the older points are stored" $?
+[ "$(allhooks geofence-late-again)" = "0" ] && [ "$(sql 'SELECT COUNT(*) FROM geofence_events')" = "2" ]; check "points older than the newest already seen change nothing" $?
+
+# (A second or two ahead of the clock, so the point can't share a timestamp with one posted earlier in this run)
+# Now: in another country, inside the Block shape, whose receiver is broken
+P geofence-live w-fixture '{"locations":['"$(point $(ago -2) -123.12 49.28)"']}'
+[ "$(hooks geofence-live '?f=leave')" = "1" ] && [ "$(hooks geofence-live '?f=fresh')" = "1" ] && [ "$(hooks geofence-live '?f=arrive')" = "0" ] && [ "$(hooks geofence-live '?f=cross')" = "0" ]; check "leaving goes to the web hooks for leaving and not to the one for arriving" $?
+grep '"uri":"/hook?f=leave"' "$OUT/responses/geofence-live.forwarded.txt" | grep -q '\\"event\\":\\"exit\\".*\\"delayed\\":false.*Home <b>'; check "the exit names the place and is not delayed" $?
+grep '"uri":"/hook?f=country"' "$OUT/responses/geofence-live.forwarded.txt" | grep -q '\\"event\\":\\"change\\".*\\"from\\":{\\"code\\":\\"US\\".*\\"to\\":{\\"code\\":\\"CA\\"'; check "crossing a border sends a country change" $?
+[ "$(hooks geofence-live '-fail')" = "1" ]; check "arriving inside a GeoJSON shape calls its web hook" $?
+P geofence-leave-block w-fixture '{"locations":['"$(point $(ago -90) -123.2 49.35)"']}'
+[ "$(hooks geofence-leave-block '-fail')" = "1" ] && [ "$(deliveries $block)" = "hook-fail:enter:failed:0,hook-fail:exit:failed:0" ] && [ "$(sql 'SELECT GROUP_CONCAT(CONCAT(response_code, ":", attempts)) FROM geofence_deliveries WHERE status = "failed"')" = "500:1,500:1" ]; check "a receiver that answers 500 is recorded as failed" $?
+
+record geofence-api "$BASE/api/geofences?token=r-fixture"
+record geofence-api-events "$BASE/api/geofence-events?token=r-fixture"
+record geofence-api-bad-token "$BASE/api/geofences?token=w-fixture"
+grep -q '"name":"Home <b>","kind":"circle","lat":45.6,"lng":-122.7,"radius":150,"state":"outside"' "$OUT/responses/geofence-api.txt" && grep -q '"level":"country","value":"CA"' "$OUT/responses/geofence-api.txt"; check "api/geofences gives each place and its state" $?
+[ "$(grep -o '"event":"[a-z]*"' "$OUT/responses/geofence-api-events.txt" | cut -d'"' -f4 | sort | uniq -c | tr -s ' \n' ' ')" = " 1 change 3 enter 3 exit " ] && grep -q '"web_hooks":\["sent","skipped"\]' "$OUT/responses/geofence-api-events.txt"; check "api/geofence-events lists what happened and how each web hook went" $?
+
+PL places-page $BASE/places/fixture
+PL place-page $BASE/places/fixture/$home
+PL place-page-country $BASE/places/fixture/$country
+grep -q 'Home &lt;b&gt;' "$OUT/responses/places-page.txt" && ! grep -q 'Home <b>' "$OUT/responses/places-page.txt" && grep -q '4 web hooks' "$OUT/responses/places-page.txt"; check "the places page lists each place with its web hooks counted" $?
+grep -q 'Failed, answered 500' "$OUT/responses/places-page.txt" && grep -q 'Too late, not sent' "$OUT/responses/places-page.txt" && grep -q 'United States → Canada\|US → CA' "$OUT/responses/places-page.txt"; check "the places page shows what happened and how the web hooks went" $?
+grep -q 'When I arrive or leave' "$OUT/responses/place-page.txt" && grep -q 'When I pass through' "$OUT/responses/place-page.txt" && ! grep -q 'hook-fail' "$OUT/responses/place-page.txt"; check "a place's page lists its own web hooks and no other place's" $?
+grep -q 'When the country changes' "$OUT/responses/place-page-country.txt" && ! grep -q 'name="on_enter"\|Delete place\|places-map' "$OUT/responses/place-page-country.txt"; check "an area has one kind of event, and nothing to draw, rename or delete" $?
+PL area-update -d "name=Renamed" $BASE/places/fixture/$country
+PL area-delete -X POST $BASE/places/fixture/$country/delete
+[ "$(sql "SELECT CONCAT(name, ':', deleted_at IS NULL) FROM geofences WHERE id = $country")" = "Country:1" ]; check "an area can't be renamed or deleted" $?
+
+arrive=$(sql 'SELECT id FROM geofence_webhooks WHERE url LIKE "%f=arrive"'); leave=$(sql 'SELECT id FROM geofence_webhooks WHERE url LIKE "%f=leave"')
+PL hook-test -X POST $BASE/places/fixture/$home/hooks/$arrive/test
+grep -q '"uri":"/hook?f=arrive".*\\"event\\":\\"test\\"' "$OUT/responses/hook-test.forwarded.txt"; check "the test button sends a test event to that web hook" $?
+PL hook-update -d "on_enter=1&on_cross=1&max_age=3600" --data-urlencode "url=$FIX/hook?f=arrive2" $BASE/places/fixture/$home/hooks/$arrive
+PL hook-update-wrong-place -d "on_enter=1" --data-urlencode "url=$FIX/hook?f=sneaky" $BASE/places/fixture/$block/hooks/$arrive
+[ "$(sql "SELECT CONCAT(SUBSTRING_INDEX(url, '=', -1), ':', on_enter, on_exit, on_cross, ':', max_age) FROM geofence_webhooks WHERE id = $arrive")" = "arrive2:101:3600" ]; check "a web hook can be edited, but only through its own place" $?
+PL hook-delete -X POST $BASE/places/fixture/$home/hooks/$leave/delete
+PL place-update -d "name=Home&lat=45.6&lng=-122.7&radius=150" $BASE/places/fixture/$home
+[ "$(sql "SELECT CONCAT(name, ':', radius, ':', state) FROM geofences WHERE id = $home")" = "Home:150:outside" ]; check "renaming a place keeps its state" $?
+PL place-move -d "name=Home&lat=49.35&lng=-123.2&radius=200" $BASE/places/fixture/$home
+[ "$(sql "SELECT CONCAT(name, ':', radius, ':', state) FROM geofences WHERE id = $home")" = "Home:200:unknown" ]; check "moving a place resets its state" $?
+# Home now sits where the device is. It settles as inside without an event; then the device goes back into Block.
+# (Points over a minute apart, so each is taken at its word.)
+P geofence-settle w-fixture '{"locations":['"$(point $(ago -160) -123.2 49.35)"']}'
+P geofence-back-in-block w-fixture '{"locations":['"$(point $(ago -230) -123.12 49.28)"']}'
+[ "$(allhooks geofence-settle)" = "0" ] && [ "$(hooks geofence-back-in-block '?f=fresh')" = "1" ] && [ "$(hooks geofence-back-in-block '?f=leave')" = "0" ] && [ "$(hooks geofence-back-in-block '-fail')" = "1" ]; check "a moved place settles without an event; a removed web hook is no longer called" $?
+PL place-delete -X POST $BASE/places/fixture/$block/delete
+record place-delete-logged-out -X POST $BASE/places/fixture/$home/delete
+[ "$(sql 'SELECT CONCAT(COUNT(*), ":", (SELECT COUNT(*) FROM geofence_webhooks WHERE deleted_at IS NOT NULL)) FROM geofences WHERE deleted_at IS NOT NULL')" = "1:2" ]; check "deleting a place removes its web hooks; not possible when signed out" $?
+P geofence-after-delete w-fixture '{"locations":['"$(point $(ago -295) -123.2 49.35)"']}'
+[ "$(hooks geofence-after-delete '-fail')" = "0" ] && [ "$(hooks geofence-after-delete '?f=fresh')" = "1" ]; check "a deleted place sends nothing, while the others carry on" $?
+PL place-page-deleted $BASE/places/fixture/$block
+mask_places "$OUT"/responses/geofence-*.txt "$OUT"/responses/places-*.txt "$OUT"/responses/place-*.txt "$OUT"/responses/hook-*.txt "$OUT"/responses/area-*.txt
 
 # --- Logout -------------------------------------------------------------------------------
 record logout "${J[@]}" $BASE/auth/logout

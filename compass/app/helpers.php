@@ -27,6 +27,7 @@ if(!function_exists('database_menu')) {
       '/map/'.$name => 'Map',
       '/stats/'.$name => 'Stats',
       '/stats/'.$name.'/world' => 'World',
+      '/places/'.$name => 'Places',
       '/shares/'.$name => 'Share',
     ];
     if($database->created_by == session('user_id'))

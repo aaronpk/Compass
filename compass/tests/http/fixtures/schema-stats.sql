@@ -128,3 +128,75 @@ CREATE TABLE `stats_day_cells` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 ALTER TABLE `databases` ADD `embed_token` varchar(40) DEFAULT NULL, ADD UNIQUE KEY `databases_embed_token_unique` (`embed_token`);
 ALTER TABLE `shares` ADD `label` varchar(100) DEFAULT NULL, ADD `revoked_at` datetime DEFAULT NULL, ADD `last_viewed_at` datetime DEFAULT NULL, ADD KEY `shares_token_index` (`token`);
+
+-- Geofences (2026_11_27_000000_geofences)
+ALTER TABLE `databases` ADD `geofence_cursor` varchar(500) DEFAULT NULL, ADD `webhook_secret` varchar(64) DEFAULT NULL;
+CREATE TABLE `geofences` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `database_id` int(10) unsigned NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `kind` enum('circle','polygon','place') NOT NULL,
+  `lat` decimal(8,5) DEFAULT NULL,
+  `lng` decimal(8,5) DEFAULT NULL,
+  `radius` int(10) unsigned DEFAULT NULL,
+  `geojson` longtext DEFAULT NULL,
+  `place_level` enum('city','region','country') DEFAULT NULL,
+  `state` enum('unknown','outside','inside') NOT NULL DEFAULT 'unknown',
+  `state_since` datetime DEFAULT NULL,
+  `value` varchar(40) DEFAULT NULL,
+  `value_label` varchar(200) DEFAULT NULL,
+  `candidate` varchar(500) DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `geofences_database_id_deleted_at_index` (`database_id`,`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+CREATE TABLE `geofence_events` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `geofence_id` int(10) unsigned NOT NULL,
+  `database_id` int(10) unsigned NOT NULL,
+  `type` enum('enter','exit','cross','change') NOT NULL,
+  `event_at` datetime NOT NULL,
+  `created_at` datetime NOT NULL,
+  `lat` decimal(8,5) NOT NULL,
+  `lng` decimal(8,5) NOT NULL,
+  `accuracy` int(10) unsigned DEFAULT NULL,
+  `from_value` varchar(40) DEFAULT NULL,
+  `from_label` varchar(200) DEFAULT NULL,
+  `to_value` varchar(40) DEFAULT NULL,
+  `to_label` varchar(200) DEFAULT NULL,
+  `delayed` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `geofence_events_geofence_id_type_event_at_unique` (`geofence_id`,`type`,`event_at`),
+  KEY `geofence_events_database_id_event_at_index` (`database_id`,`event_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+CREATE TABLE `geofence_webhooks` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `geofence_id` int(10) unsigned NOT NULL,
+  `database_id` int(10) unsigned NOT NULL,
+  `url` varchar(1024) NOT NULL,
+  `on_enter` tinyint(1) NOT NULL DEFAULT 0,
+  `on_exit` tinyint(1) NOT NULL DEFAULT 0,
+  `on_cross` tinyint(1) NOT NULL DEFAULT 0,
+  `max_age` int(10) unsigned DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `geofence_webhooks_geofence_id_deleted_at_index` (`geofence_id`,`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+CREATE TABLE `geofence_deliveries` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `event_id` bigint(20) unsigned NOT NULL,
+  `webhook_id` int(10) unsigned NOT NULL,
+  `status` enum('pending','sent','failed','skipped') NOT NULL DEFAULT 'pending',
+  `attempts` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `response_code` smallint(5) unsigned DEFAULT NULL,
+  `delivered_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `geofence_deliveries_event_id_webhook_id_unique` (`event_id`,`webhook_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+CREATE TABLE `geo_admin1` (
+  `code` varchar(24) NOT NULL,
+  `name` varchar(200) NOT NULL,
+  PRIMARY KEY (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;

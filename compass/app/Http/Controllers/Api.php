@@ -261,6 +261,9 @@ class Api
     $statsDates = [];
     // The new points in the form share viewers are given
     $shared = [];
+    // The new points as the geofences want them, if this database has any
+    // (the cursor is set when its first fence is made)
+    $fenced = empty($db->geofence_cursor) ? null : [];
     foreach($request->input('locations') as $loc) {
       if(array_key_exists('properties', $loc)) {
         if(array_key_exists('timestamp', $loc['properties'])) {
@@ -299,6 +302,8 @@ class Api
                 $statsDates = array_merge($statsDates, self::statsDates($date->getTimestamp(), $loc['properties']));
                 if(!isset($loc['properties']['type']) && !isset($loc['properties']['action']) && ($point = \App\Sharing\Shares::reduce($loc)))
                   $shared[] = $point;
+                if($fenced !== null && ($point = \App\Geofence\Runner::point((float)$date->format('U.u'), $loc)))
+                  $fenced[] = $point;
                 if(config('compass.dedupe_cache'))
                   Cache::put($cacheKey, 1, 360*60); // cache this for 6 hours (Lumen took minutes, Laravel takes seconds)
                 $last_location = $loc;
@@ -334,6 +339,16 @@ class Api
       // Send at most the newest hundred; a device catching up after hours
       // offline would otherwise flood the viewers
       dispatch((new \App\Jobs\PublishShareLocation($db->id, array_slice($shared, -100)))->onQueue('compass'));
+    }
+
+    if($fenced) {
+      // With no queue this runs right here, and a problem with a fence must
+      // never get in the way of storing the device's data
+      try {
+        dispatch((new \App\Jobs\EvaluateGeofences($db->id, $fenced))->onQueue('compass'));
+      } catch(\Throwable $e) {
+        Log::error('Geofences: '.$db->name.': '.$e->getMessage());
+      }
     }
 
     if($statsDates && config('compass.stats_enabled')) {

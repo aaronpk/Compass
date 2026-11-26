@@ -286,17 +286,18 @@ class Runner {
   }
 
   // Country, region and city for a position, each as [code, name] or null,
-  // from the lookup tables the stats use
+  // from the lookup tables the stats use, and the nearest airport (see Airports)
   public static function lookup(): callable {
-    static $resolver, $cities = [], $names = [];
+    static $resolver, $airports, $cities = [], $names = [];
     $resolver ??= new PlaceResolver(new CountryIndex, new MysqlCityIndex, new DbCellStore('geo_cells'));
-    return function(float $lat, float $lng) use(&$resolver, &$cities, &$names) {
+    $airports ??= new Airports;
+    return function(float $lat, float $lng) use(&$resolver, &$airports, &$cities, &$names) {
       $place = $resolver->resolve($lat, $lng);
       $country = $place['country'];
       $name = function(string $table, string $code) use(&$names) {
         return $names[$table.$code] ??= DB::table($table)->where('code', $code)->value('name') ?? $code;
       };
-      $result = ['country' => $country ? [$country, $name('geo_countries', $country)] : null, 'region' => null, 'city' => null];
+      $result = ['country' => $country ? [$country, $name('geo_countries', $country)] : null, 'region' => null, 'city' => null, 'airport' => $airports->at($lat, $lng)];
       if($place['city_id']) {
         $city = $cities[$place['city_id']] ??= DB::table('geo_cities')->where('id', $place['city_id'])->first() ?: false;
         // A city just over a border doesn't say which region this is

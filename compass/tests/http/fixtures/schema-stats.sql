@@ -140,7 +140,7 @@ CREATE TABLE `geofences` (
   `lng` decimal(8,5) DEFAULT NULL,
   `radius` int(10) unsigned DEFAULT NULL,
   `geojson` longtext DEFAULT NULL,
-  `place_level` enum('city','region','country') DEFAULT NULL,
+  `place_level` enum('city','region','country','airport') DEFAULT NULL,
   `state` enum('unknown','outside','inside') NOT NULL DEFAULT 'unknown',
   `state_since` datetime DEFAULT NULL,
   `value` varchar(40) DEFAULT NULL,

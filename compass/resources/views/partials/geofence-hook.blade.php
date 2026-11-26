@@ -4,7 +4,12 @@
   <input type="url" id="{{ $prefix }}-url" name="url" maxlength="1024" required placeholder="https://example.com/hook" value="{{ $hook ? $hook->url : old('url') }}">
 </div>
 <div class="fields hook-options">
-  @if($fence->kind != 'place')
+  @if($fence->kind == 'place' && $fence->place_level == 'airport')
+    <div class="field checks">
+      <label><input type="checkbox" name="on_enter" value="1" {{ $hook && $hook->on_enter ? 'checked' : '' }}> When I arrive at an airport</label>
+      <label><input type="checkbox" name="on_exit" value="1" {{ $hook && $hook->on_exit ? 'checked' : '' }}> When I leave an airport</label>
+    </div>
+  @elseif($fence->kind != 'place')
     <div class="field checks">
       <label><input type="checkbox" name="on_enter" value="1" {{ $hook && $hook->on_enter ? 'checked' : '' }}> When I arrive</label>
       <label><input type="checkbox" name="on_exit" value="1" {{ $hook && $hook->on_exit ? 'checked' : '' }}> When I leave</label>

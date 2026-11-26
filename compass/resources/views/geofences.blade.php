@@ -97,7 +97,7 @@
 
       <div class="card">
         <h3>Where you are</h3>
-        <p class="muted small">Compass always keeps track of these. Open one to add a web hook for when it changes.</p>
+        <p class="muted small">Compass always keeps track of these. Open one to add a web hook for when it changes, or for arriving at and leaving an airport.</p>
         <ul class="place-list">
           @foreach($areas as $area)
             <li>

@@ -18,6 +18,7 @@ class Webhook {
 
   // Does this web hook (a geofence_webhooks row) want this kind of event?
   // A change of city, region or country is the only event its place has.
+  // An airport has arriving and leaving.
   public static function wants(object $hook, string $type): bool {
     return match($type) {
       'enter' => (bool)$hook->on_enter,
@@ -43,6 +44,13 @@ class Webhook {
     ];
     if($fence->kind == 'place') {
       $payload['fence']['level'] = $fence->place_level;
+      if($fence->place_level == 'airport') {
+        // The one arrived at, or the one left
+        $payload['airport'] = $event->type == 'exit'
+          ? ['code' => $event->from_value, 'name' => $event->from_label]
+          : ['code' => $event->to_value, 'name' => $event->to_label];
+        return $payload;
+      }
       $payload['from'] = ['code' => $event->from_value, 'name' => $event->from_label];
       $payload['to'] = ['code' => $event->to_value, 'name' => $event->to_label];
     }

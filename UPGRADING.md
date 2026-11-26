@@ -19,8 +19,8 @@ tables that can be emptied and rebuilt.
 - **The framework is Laravel 13.** The web root is still `compass/public` and
   the same rewrite rule to `index.php` applies, so the web server
   configuration only needs the new PHP-FPM socket.
-- **Eight database migrations are pending.** They add tables and nullable
-  columns only. Nothing existing is altered in a way the old code can't read.
+- **Nine database migrations are pending.** They add tables and nullable
+  columns, and one new value to a list of allowed values. Nothing existing is altered in a way the old code can't read.
 - **New pages:** yearly stats and a world map for each database, places
   (geofences) that run web hooks, a page to manage share links, and a
   one-month calendar on the map page.
@@ -173,8 +173,8 @@ from devices is handled ahead of it.
   accuracy. Battery level, wifi name and device id are no longer sent.
 - **Places.** A new page for geofences. Compass keeps track of whether you
   are in each one, and each can have web hooks for arriving and leaving, or
-  for a change of city, region or country. Nothing happens until someone
-  adds one.
+  for a change of city, region or country. It also records arriving at
+  and leaving airports. No web hook is sent until someone adds one.
 - **Share links can be managed.** The Share page lists them and can stop one.
 - **The world map can be made public.** This is off until the database's
   owner turns it on from the World page.

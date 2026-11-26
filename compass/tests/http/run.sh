@@ -298,7 +298,7 @@ PL places-no-access $BASE/places/other
 PL places-empty $BASE/places/fixture
 grep -q 'None yet' "$OUT/responses/places-empty.txt"; check "places page renders with no places" $?
 PL places-empty-again $BASE/places/fixture
-[ "$(sql 'SELECT GROUP_CONCAT(CONCAT(name, ":", place_level) ORDER BY id) FROM geofences WHERE kind = "place"')" = "City:city,Region:region,Country:country" ] && grep -q 'Where you are' "$OUT/responses/places-empty.txt"; check "city, region and country are always there, made once" $?
+[ "$(sql 'SELECT GROUP_CONCAT(CONCAT(name, ":", place_level) ORDER BY id) FROM geofences WHERE kind = "place"')" = "City:city,Region:region,Country:country,Airport:airport" ] && grep -q 'Where you are' "$OUT/responses/places-empty.txt"; check "city, region, country and airport are always there, made once" $?
 grep -q '>Places</a>' "$OUT/responses/map.txt"; check "the menu has Places" $?
 
 PL places-create-no-position -d "kind=circle&name=Nowhere&radius=150" $BASE/places/fixture
@@ -314,7 +314,7 @@ PL places-create-block --data-urlencode "kind=polygon" --data-urlencode "name=Bl
   --data-urlencode 'geojson={"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-123.13,49.27],[-123.11,49.27],[-123.11,49.29],[-123.13,49.29]]]}}' $BASE/places/fixture
 PL places-create-area -d "kind=place&place_level=country&name=Another" $BASE/places/fixture
 PL places-create-other-db -d "kind=circle&name=Sneaky&lat=45.6&lng=-122.7&radius=150" $BASE/places/other
-[ "$(sql 'SELECT GROUP_CONCAT(CONCAT(name, ":", kind, ":", COALESCE(radius, "")) ORDER BY id) FROM geofences WHERE kind != "place"')" = "Home <b>:circle:150,Tiny:circle:50,Block:polygon:" ] && [ "$(sql 'SELECT COUNT(*) FROM geofences WHERE kind = "place"')" = "3" ]; check "places are saved; a tiny radius is raised to 50 m; none for a database you can't see; no extra areas" $?
+[ "$(sql 'SELECT GROUP_CONCAT(CONCAT(name, ":", kind, ":", COALESCE(radius, "")) ORDER BY id) FROM geofences WHERE kind != "place"')" = "Home <b>:circle:150,Tiny:circle:50,Block:polygon:" ] && [ "$(sql 'SELECT COUNT(*) FROM geofences WHERE kind = "place"')" = "4" ]; check "places are saved; a tiny radius is raised to 50 m; none for a database you can't see; no extra areas" $?
 home=$(sql 'SELECT id FROM geofences WHERE name LIKE "Home%"'); block=$(sql 'SELECT id FROM geofences WHERE name = "Block"'); country=$(sql 'SELECT id FROM geofences WHERE place_level = "country"')
 grep -qi "^location: .*/places/fixture/$home\$" "$OUT/responses/places-create-home.txt"; check "adding a place opens its page" $?
 [ "$(sql 'SELECT geofence_cursor IS NOT NULL FROM `databases` WHERE name = "fixture"')$(sql 'SELECT COUNT(*) FROM geofence_webhooks')" = "10" ]; check "the cursor is started, and no web hook is made" $?
@@ -492,6 +492,33 @@ grep -q 'other: no places' "$OUT/responses/backfill-none.txt"; check "a database
 [ "$(sql "SELECT CONCAT(JSON_VALUE(geofence_cursor, '\$.last[1]'), ':', JSON_VALUE(geofence_cursor, '\$.last[0]') - $base) FROM \`databases\` WHERE name = 'fixture'")" = "49.35:295" ]; check "the cursor is left at the newest point, for new points to carry on from" $?
 sed -i -E 's/[0-9]+ points read/N points read/' "$OUT"/responses/backfill-*.txt
 mask_places "$OUT"/responses/backfill-*.txt
+
+# --- The airport ----------------------------------------------------------------------------
+airport=$(sql 'SELECT id FROM geofences WHERE place_level = "airport"')
+PL airport-page-new $BASE/places/fixture/$airport
+grep -q 'Not at an airport' "$OUT/responses/airport-page-new.txt" && grep -q 'When I arrive at an airport' "$OUT/responses/airport-page-new.txt" && ! grep -q 'name="on_cross"\|Delete place\|places-map' "$OUT/responses/airport-page-new.txt"; check "the airport has arriving and leaving, and nothing to draw, rename or delete" $?
+hook airport-hook-none $airport --data-urlencode "url=$FIX/hook?f=airport-none"
+hook airport-hook-in $airport -d "on_enter=1&on_cross=1" --data-urlencode "url=$FIX/hook?f=airport-in"
+hook airport-hook-out $airport -d "on_exit=1&max_age=300" --data-urlencode "url=$FIX/hook?f=airport-out"
+[ "$(sql "SELECT GROUP_CONCAT(CONCAT(SUBSTRING_INDEX(url, '=', -1), ':', on_enter, on_exit, on_cross) ORDER BY id) FROM geofence_webhooks WHERE geofence_id = $airport")" = "airport-in:100,airport-out:010" ]; check "an airport web hook needs arriving or leaving, and has no passing through" $?
+# Go back in time, so points a minute apart are each taken at their word: far from any airport, at Portland's, and away again
+mysql_test -e "UPDATE \`databases\` SET geofence_cursor = '{\"seen\": $(( base - 9000 ))}' WHERE name = 'fixture'"
+P airport-arrive w-fixture '{"locations":['"$(point $(ago 8000) -122.5 45.4)"','"$(point $(ago 7000) -122.598 45.5887)"']}'
+[ "$(hooks airport-arrive '?f=airport-in')" = "1" ] && [ "$(hooks airport-arrive '?f=airport-out')" = "0" ] && grep '"uri":"/hook?f=airport-in"' "$OUT/responses/airport-arrive.forwarded.txt" | grep -q '\\"event\\":\\"enter\\".*\\"level\\":\\"airport\\".*\\"airport\\":{\\"code\\":\\"PDX\\",\\"name\\":\\"Portland International Airport\\"}'; check "arriving at an airport calls the web hook for arriving, with its code and name" $?
+[ "$(sql "SELECT CONCAT(value, ':', value_label) FROM geofences WHERE id = $airport")" = "PDX:Portland International Airport" ]; check "the airport you are at is kept" $?
+PL airport-page-there $BASE/places/fixture/$airport
+grep -q 'PDX (Portland International Airport) since' "$OUT/responses/airport-page-there.txt"; check "the airport is shown as its code and name" $?
+P airport-leave w-fixture '{"locations":['"$(point $(ago 6000) -122.5 45.4)"']}'
+[ "$(hooks airport-leave '?f=airport-in')" = "0" ] && [ "$(hooks airport-leave '?f=airport-out')" = "0" ] && [ "$(sql "SELECT GROUP_CONCAT(CONCAT(e.type, ':', COALESCE(e.from_value, ''), ':', COALESCE(e.to_value, ''), ':', d.status) ORDER BY e.id) FROM geofence_events e JOIN geofence_deliveries d ON d.event_id = e.id WHERE e.geofence_id = $airport")" = "enter::PDX:sent,exit:PDX::skipped" ]; check "leaving is recorded with the airport left, and is too late for a web hook with a limit" $?
+PL airport-page $BASE/places/fixture/$airport
+PL airport-places-page $BASE/places/fixture
+grep -q 'Arrived at PDX (Portland International Airport)' "$OUT/responses/airport-page.txt" && grep -q 'Left PDX (Portland International Airport)' "$OUT/responses/airport-page.txt" && grep -q 'Not at an airport since' "$OUT/responses/airport-places-page.txt" && grep -q 'When I leave an airport' "$OUT/responses/airport-page.txt"; check "the pages say which airport, and that you are at none now" $?
+record airport-api "$BASE/api/geofences?token=r-fixture"
+record airport-api-events "$BASE/api/geofence-events?token=r-fixture"
+grep -q '"level":"airport","value":""' "$OUT/responses/airport-api.txt" && grep -q '"event":"exit".*"airport":{"code":"PDX"' "$OUT/responses/airport-api-events.txt"; check "the api gives the airport and its events" $?
+PL airport-hook-test -X POST $BASE/places/fixture/$airport/hooks/$(sql "SELECT id FROM geofence_webhooks WHERE url LIKE '%f=airport-in'")/test
+grep -q '"uri":"/hook?f=airport-in".*\\"event\\":\\"test\\".*\\"airport\\":{\\"code\\":null' "$OUT/responses/airport-hook-test.forwarded.txt"; check "the test button works for the airport" $?
+mask_places "$OUT"/responses/airport-*.txt
 
 # --- Logout -------------------------------------------------------------------------------
 record logout "${J[@]}" $BASE/auth/logout

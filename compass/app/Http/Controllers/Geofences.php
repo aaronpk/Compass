@@ -32,7 +32,7 @@ class Geofences
   // How much history the suggested places are worked out from
   const SPANS = ['3' => 'Last 3 months', '12' => 'Last 12 months', 'all' => 'All time'];
 
-  const LEVELS = ['city' => 'City', 'region' => 'Region', 'country' => 'Country'];
+  const LEVELS = ['city' => 'City', 'region' => 'Region', 'country' => 'Country', 'airport' => 'Airport'];
 
   private static function json($data, int $status = 200) {
     return response(json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $status)->header('Content-Type', 'application/json');
@@ -361,11 +361,13 @@ class Geofences
       return 'The web hook needs an http or https URL.';
     $age = (string)$request->input('max_age');
     $fields = ['url' => $url, 'max_age' => $age !== '' && isset(self::MAX_AGES[(int)$age]) ? (int)$age : null];
-    if($fence->kind != 'place') {
+    // A change of city, region or country is one kind of event. An airport
+    // has arriving and leaving, but no passing through.
+    if($fence->kind != 'place' || $fence->place_level == 'airport') {
       $fields += [
         'on_enter' => (bool)$request->input('on_enter'),
         'on_exit' => (bool)$request->input('on_exit'),
-        'on_cross' => (bool)$request->input('on_cross'),
+        'on_cross' => $fence->kind != 'place' && $request->input('on_cross'),
       ];
       if(!$fields['on_enter'] && !$fields['on_exit'] && !$fields['on_cross'])
         return 'Choose at least one event to send the web hook for.';
@@ -437,7 +439,7 @@ class Geofences
     $event = (object)[
       'id' => 0, 'type' => 'test', 'event_at' => gmdate('Y-m-d H:i:s'), 'delayed' => false,
       'lat' => $lat, 'lng' => $lng, 'accuracy' => null,
-      'from_value' => null, 'from_label' => null, 'to_value' => $fence->value, 'to_label' => $fence->value_label,
+      'from_value' => null, 'from_label' => null, 'to_value' => $fence->value === '' ? null : $fence->value, 'to_label' => $fence->value_label,
     ];
     $status = Webhook::send($hook->url, Webhook::payload($event, $fence, $db), Webhook::secret($db));
     if($status >= 200 && $status < 300)

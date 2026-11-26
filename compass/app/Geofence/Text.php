@@ -32,22 +32,32 @@ class Text {
     return match($fence->kind) {
       'circle' => 'Circle, '.$this->distance((int)$fence->radius),
       'polygon' => 'Shape',
-      default => 'The '.$fence->place_level.' you are in',
+      default => $fence->place_level == 'airport' ? 'The airport you are at' : 'The '.$fence->place_level.' you are in',
     };
   }
 
   // Where the device is in relation to the place
   public function status(object $fence): string {
     $since = $fence->state_since ? ' since '.$this->when($fence->state_since) : '';
+    if($fence->kind == 'place' && $fence->place_level == 'airport' && $fence->value === '')
+      return 'Not at an airport'.$since;
+    if($fence->kind == 'place' && $fence->place_level == 'airport' && $fence->value_label)
+      return self::airport($fence->value, $fence->value_label).$since;
     if($fence->kind == 'place')
       return $fence->value_label ? $fence->value_label.$since : 'Not known yet';
     return $fence->state == 'unknown' ? 'Not known yet' : ucfirst($fence->state).$since;
   }
 
+  // "PDX (Portland International Airport)"
+  public static function airport(?string $code, string $name): string {
+    return $code ? $code.' ('.$name.')' : $name;
+  }
+
   public function event(object $event): string {
     return match($event->type) {
-      'enter' => 'Arrived',
-      'exit' => 'Left',
+      // Only an airport's events say where
+      'enter' => 'Arrived'.(($event->to_label ?? null) ? ' at '.self::airport($event->to_value, $event->to_label) : ''),
+      'exit' => 'Left'.(($event->from_label ?? null) ? ' '.self::airport($event->from_value, $event->from_label) : ''),
       'cross' => 'Passed through',
       default => ($event->from_label ?: '?').' → '.($event->to_label ?: '?'),
     };
@@ -114,8 +124,15 @@ class Text {
 
   // Which events a web hook is sent for
   public function hook(object $hook, object $fence): string {
-    if($fence->kind == 'place')
+    if($fence->kind == 'place' && $fence->place_level != 'airport')
       return 'When the '.$fence->place_level.' changes';
+    if($fence->kind == 'place')
+      return match(true) {
+        $hook->on_enter && $hook->on_exit => 'When I arrive at or leave an airport',
+        (bool)$hook->on_enter => 'When I arrive at an airport',
+        (bool)$hook->on_exit => 'When I leave an airport',
+        default => 'Never',
+      };
     $parts = array_keys(array_filter(['arrive' => $hook->on_enter, 'leave' => $hook->on_exit, 'pass through' => $hook->on_cross]));
     return $parts ? 'When I '.implode(' or ', $parts) : 'Never';
   }

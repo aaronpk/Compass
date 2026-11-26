@@ -35,7 +35,9 @@
 
     <div class="places-side">
 
-      @if($fence->kind == 'place')
+      @if($fence->kind == 'place' && $fence->place_level == 'airport')
+        <p class="muted">Compass knows where the world's airports are and notices when you arrive at one and when you leave it. An airport counts as about {{ $text->distance(750) }} to {{ $text->distance(2500) }} around its centre, depending on its size. There is nothing to draw.</p>
+      @elseif($fence->kind == 'place')
         <p class="muted">Compass works out the {{ $fence->place_level }} you are in from each location, using its own list of places, and notices when it changes. There is nothing to draw.</p>
       @else
       <form class="card" method="post" action="/places/{{ $database->name }}/{{ $fence->id }}" data-editor="{{ $fence->kind }}" data-fence="{{ $fence->id }}">
@@ -73,7 +75,9 @@
 
       <div class="card">
         <h3>Web hooks</h3>
-        @if($fence->kind == 'place')
+        @if($fence->kind == 'place' && $fence->place_level == 'airport')
+          <p class="muted small">Each web hook is sent for the events you choose, with the airport's code and name, so arriving and leaving can go to different URLs.</p>
+        @elseif($fence->kind == 'place')
           <p class="muted small">Each web hook is sent whenever the {{ $fence->place_level }} changes, with the one you left and the one you are in now.</p>
         @else
           <p class="muted small">Each web hook is sent for the events you choose, so arriving and leaving can go to different URLs. A place works without any.</p>
@@ -139,6 +143,7 @@
 }</pre>
     <ul>
       <li><code>event</code> is <code>enter</code>, <code>exit</code>, <code>cross</code> (passed through without stopping) or, for an area change, <code>change</code> with <code>from</code> and <code>to</code>, each a <code>code</code> and a <code>name</code>.</li>
+      <li>For the airport, <code>enter</code> and <code>exit</code> have <code>airport</code>, with the <code>code</code> (PDX) and <code>name</code> of the one you arrived at or left.</li>
       <li><code>time</code> is when it happened, which is earlier than when the request is sent. <code>delayed</code> is true when the device delivered the location more than five minutes late.</li>
       <li>Answer with any 2xx status. Anything else is tried again five times over about an hour and a half.</li>
       <li>Arriving and leaving are reported once a second location confirms the first, so expect a few seconds' wait.</li>

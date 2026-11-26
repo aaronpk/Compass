@@ -157,6 +157,14 @@ The search box above the map finds a place or an address by name, moves the map 
 
 **Suggested places.** The "See suggested places" link lists the spots where you have spent the most time, worked out from the stops the stats already record, so it needs the [stats](#stats) to be built. It looks for where you slept (at least three hours between midnight and 6 am counts as a night), where your weekday working hours went, and anywhere else you kept going back to. The spot with the most nights is offered as "Home", and the one with the most weekday hours that you don't also sleep at as "Work". A spot needs five nights, or ten hours on four different days over at least two weeks, so a single trip doesn't show up. The page only suggests: nothing becomes a place until you press "Add place" on it, after adjusting the name, position and size if you want. "Not a place" hides a suggestion for good, with a list at the bottom to bring it back. It looks at the last 12 months unless you choose 3 months or all time.
 
+**Filling in the past.** A new place starts knowing nothing: it shows as inside or outside "since" the moment it was made. To work it out from the locations already stored, run
+
+```
+$ php artisan places:backfill --days=30
+```
+
+(add a database name to do just one). It goes through the last 30 days as if your places had been there all along, so each one shows how long you have really been there or away, and its history lists the arrivals and departures from before it was made. No web hook is called for any of this, and it is safe to run again.
+
 A place stands on its own: once it exists, Compass keeps track of whether you are in it, and records every arrival and departure on the Places page and in the API. Nothing else has to be set up.
 
 Web hooks are added separately. Open a place or an area to give it one or more, each with its own URL, its own choice of events (arriving, leaving, passing through) and its own limit on how late an event may be and still be sent. So "Home" is drawn once and can call one URL when you arrive and another when you leave. A web hook on an area is sent whenever that area changes. Phones sometimes deliver hours of locations at once; an event older than a web hook's limit is recorded but not sent to it.

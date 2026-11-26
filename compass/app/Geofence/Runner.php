@@ -156,6 +156,135 @@ class Runner {
     return $send;
   }
 
+  // Works out where the device has been for the last $days days from the
+  // stored day files, as if the places had existed all along. It fills in
+  // each place's state and since when, and records what happened before the
+  // place was made. No web hook is called for any of it.
+  //
+  // What a place has already recorded is left as it is. Returns counts, or null when the database has no places.
+  public static function backfill(object $database, int $days, ?callable $progress = null): ?array {
+    $rows = DB::table('geofences')->where('database_id', $database->id)->whereNull('deleted_at')->get()->keyBy('id');
+    if(!count($rows))
+      return null;
+
+    $fences = $fenceStates = $watches = $watchStates = [];
+    foreach($rows as $id => $row) {
+      if($row->kind == 'place')
+        $watches[$id] = $row->place_level;
+      elseif($fence = Shapes::fromRow($row))
+        $fences[$id] = $fence;
+    }
+
+    $reader = new PointReader(config('compass.storage_dir').$database->name);
+    $watcher = new PlaceWatcher(self::lookup());
+    $cursor = null;
+    $events = [];
+    $read = 0;
+    $feed = function(string $date) use(&$reader, $watcher, $fences, $watches, &$fenceStates, &$watchStates, &$cursor, &$events, &$read) {
+      $day = $reader->day($date);
+      if(!$day)
+        return;
+      [$accepted, $next] = Evaluator::accept($day['points'], $cursor, microtime(true));
+      $previous = $cursor['last'] ?? null;
+      [$fenceStates, $found] = Evaluator::run($fences, $fenceStates, $accepted, $previous);
+      [$watchStates, $changes] = $watcher->run($watches, $watchStates, $accepted, $previous);
+      $cursor = $next;
+      $read += count($accepted);
+      array_push($events, ...$found, ...$changes);
+    };
+
+    $today = strtotime(gmdate('Y-m-d').' UTC');
+    for($day = $today - $days * 86400; $day <= $today; $day += 86400) {
+      $feed(gmdate('Y-m-d', $day));
+      if($progress)
+        $progress();
+    }
+    if(!$cursor)
+      return ['points' => 0, 'events' => 0, 'places' => 0];
+
+    // The slow part is done. Points that arrived meanwhile are picked up
+    // with new points held back, so none falls between this and them.
+    $lock = 'compass-geofence-'.$database->id;
+    if(!DB::selectOne('SELECT GET_LOCK(?, 30) AS locked', [$lock])->locked)
+      throw new \RuntimeException('The places of '.$database->name.' are busy, try again');
+    try {
+      // A new reader, because the first one remembers the files it has read
+      $reader = new PointReader(config('compass.storage_dir').$database->name);
+      foreach([$today - 86400, $today, $today + 86400] as $day)
+        $feed(gmdate('Y-m-d', $day));
+      usort($events, fn($a, $b) => $a['t'] <=> $b['t']);
+
+      $date = fn(?float $t) => $t === null ? null : gmdate('Y-m-d H:i:s', (int)$t);
+      $added = 0;
+      DB::transaction(function() use($database, $rows, $fenceStates, $watchStates, $events, $cursor, $date, &$added) {
+        foreach($fenceStates as $id => $state) {
+          $pending = array_filter(['candidate' => $state['candidate'], 'crossed' => $state['crossed']], fn($v) => $v !== null);
+          DB::table('geofences')->where('id', $id)->update([
+            'state' => $state['state'],
+            'state_since' => $date($state['since']),
+            'candidate' => $pending ? json_encode($pending) : null,
+          ]);
+        }
+        foreach($watchStates as $id => $state) {
+          DB::table('geofences')->where('id', $id)->update([
+            'value' => $state['value'],
+            'value_label' => $state['label'] === null ? null : mb_substr($state['label'], 0, 200),
+            'state_since' => $date($state['since']),
+            'candidate' => $state['candidate'] ? json_encode(['candidate' => $state['candidate']]) : null,
+          ]);
+        }
+        // A place's history is filled in up to where it already starts:
+        // when the place was made, or its first event if that is earlier
+        // (a point that arrived late)
+        $first = [];
+        foreach(DB::table('geofence_events')->where('database_id', $database->id)->orderByDesc('event_at')->get(['geofence_id', 'type', 'event_at']) as $row)
+          $first[$row->geofence_id] = $row;
+        $fill = [];
+        foreach($events as $event) {
+          $fence = $rows[$event['fence']];
+          $known = strtotime($fence->created_at.' UTC');
+          if(isset($first[$fence->id]))
+            $known = min($known, strtotime($first[$fence->id]->event_at.' UTC'));
+          if($event['t'] < $known)
+            $fill[$fence->id][] = $event;
+        }
+        foreach($fill as $id => $list) {
+          // Arriving twice in a row can't happen. If the last event found
+          // is the same as the first one already there, it is that event,
+          // seen a little differently.
+          $last = end($list);
+          if(isset($first[$id]) && in_array($last['type'], ['enter', 'exit']) && $last['type'] == $first[$id]->type)
+            array_pop($list);
+          foreach($list as $event) {
+            $fence = $rows[$id];
+            $added += DB::table('geofence_events')->insertOrIgnore([
+              'geofence_id' => $fence->id,
+              'type' => $event['type'],
+              'event_at' => $date($event['t']),
+              'database_id' => $database->id,
+              'created_at' => date('Y-m-d H:i:s'),
+              'lat' => round($event['lat'], 5),
+              'lng' => round($event['lng'], 5),
+              'accuracy' => $event['acc'] === null ? null : (int)round($event['acc']),
+              'from_value' => $event['from'][0] ?? null,
+              'from_label' => $event['from'][1] ?? null,
+              'to_value' => $event['to'][0] ?? null,
+              'to_label' => $event['to'][1] ?? null,
+              'delayed' => true,
+            ]);
+          }
+        }
+        // Never move the cursor back
+        $live = json_decode((string)DB::table('databases')->where('id', $database->id)->value('geofence_cursor'), true);
+        $cursor['seen'] = max($cursor['seen'], $live['seen'] ?? 0);
+        DB::table('databases')->where('id', $database->id)->update(['geofence_cursor' => json_encode($cursor)]);
+      });
+    } finally {
+      DB::select('SELECT RELEASE_LOCK(?)', [$lock]);
+    }
+    return ['points' => $read, 'events' => $added, 'places' => count($fenceStates) + count($watchStates)];
+  }
+
   // Country, region and city for a position, each as [code, name] or null,
   // from the lookup tables the stats use
   public static function lookup(): callable {

@@ -470,6 +470,29 @@ PL suggested-after-restore $BASE/places/fixture/suggested
 sed -i -E "s/[0-9,]+ (nights? and [0-9,]+ )?hours? on [0-9,]+ days?/EVIDENCE/g; s/[A-Z][a-z]{2} [0-9]{1,2}(, [0-9]{4})? to [A-Z][a-z]{2} [0-9]{1,2}, [0-9]{4}/DATES/g" "$OUT"/responses/suggested-*.txt
 mask_places "$OUT"/responses/suggested-*.txt
 
+# --- Places backfill ----------------------------------------------------------------------
+# A place made now, where the device was an hour ago, learns its history from the stored points
+PL backfill-create -d "kind=circle&name=Late&lat=45.6&lng=-122.7&radius=150" $BASE/places/fixture
+late=$(sql 'SELECT id FROM geofences WHERE name = "Late"')
+[ "$(sql "SELECT CONCAT(state, ':', state_since IS NULL) FROM geofences WHERE id = $late")" = "unknown:1" ]; check "a new place knows nothing yet" $?
+calls_before=$(grep -c . "$OUT/fixture-requests.log" 2>/dev/null || echo 0); deliveries_before=$(sql 'SELECT COUNT(*) FROM geofence_deliveries')
+seen_before=$(sql 'SELECT JSON_VALUE(geofence_cursor, "$.seen") FROM `databases` WHERE name = "fixture"')
+artisan_backfill() { (cd "$OUT/app" && $PHP "${PHPFLAGS[@]}" artisan places:backfill "$@" 2>&1); }
+artisan_backfill fixture --days=1 > "$OUT/responses/backfill-run.txt"; check "places:backfill runs" $?
+basetime=$(date -u -d @$base '+%F %T')
+[ "$(sql "SELECT CONCAT(state, ':', state_since > '$basetime' - INTERVAL 1 HOUR AND state_since < '$basetime' + INTERVAL 5 MINUTE) FROM geofences WHERE id = $late")" = "outside:1" ]; check "the backfill finds the place was left, and when" $?
+[ "$(sql "SELECT GROUP_CONCAT(CONCAT(type, ':', \`delayed\`) ORDER BY event_at) FROM geofence_events WHERE geofence_id = $late")" = "enter:1,exit:1" ] && [ "$(sql "SELECT TIMESTAMPDIFF(SECOND, event_at, '$basetime') FROM geofence_events WHERE geofence_id = $late AND type = 'enter'")" = "3005" ]; check "the arrival and departure from before the place was made are in its history" $?
+[ "$(sql 'SELECT COUNT(*) FROM geofence_deliveries')" = "$deliveries_before" ] && [ "$(grep -c . "$OUT/fixture-requests.log" 2>/dev/null || echo 0)" = "$calls_before" ]; check "the backfill calls no web hook and queues none" $?
+[ "$(sql "SELECT JSON_VALUE(geofence_cursor, '\$.seen') >= $seen_before FROM \`databases\` WHERE name = 'fixture'")" = "1" ]; check "the backfill doesn't move the cursor back" $?
+[ "$(sql 'SELECT GROUP_CONCAT(e.type ORDER BY e.event_at) FROM geofence_events e JOIN geofences f ON f.id = e.geofence_id WHERE f.name = "Tiny"')" = "enter,exit" ]; check "an arrival already in the history isn't recorded a second time" $?
+artisan_backfill fixture --days=1 > "$OUT/responses/backfill-again.txt"
+grep -q ' 0 past events added' "$OUT/responses/backfill-again.txt" && [ "$(sql "SELECT COUNT(*) FROM geofence_events WHERE geofence_id = $late")" = "2" ]; check "running the backfill again adds nothing" $?
+artisan_backfill other --days=1 > "$OUT/responses/backfill-none.txt"
+grep -q 'other: no places' "$OUT/responses/backfill-none.txt"; check "a database with no places is left alone" $?
+[ "$(sql "SELECT CONCAT(JSON_VALUE(geofence_cursor, '\$.last[1]'), ':', JSON_VALUE(geofence_cursor, '\$.last[0]') - $base) FROM \`databases\` WHERE name = 'fixture'")" = "49.35:295" ]; check "the cursor is left at the newest point, for new points to carry on from" $?
+sed -i -E 's/[0-9]+ points read/N points read/' "$OUT"/responses/backfill-*.txt
+mask_places "$OUT"/responses/backfill-*.txt
+
 # --- Logout -------------------------------------------------------------------------------
 record logout "${J[@]}" $BASE/auth/logout
 record after-logout "${J[@]}" $BASE/

@@ -70,7 +70,7 @@
             </div>
             <div class="field narrow">
               <label for="new-circle-radius">Radius (metres)</label>
-              <input type="number" id="new-circle-radius" name="radius" min="50" max="100000" step="10" value="{{ old('radius', 150) }}">
+              <input type="number" id="new-circle-radius" name="radius" min="50" max="100000" step="1" value="{{ old('radius', 150) }}">
             </div>
           </div>
           <button type="submit" class="button primary">Add circle</button>

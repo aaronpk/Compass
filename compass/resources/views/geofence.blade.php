@@ -51,7 +51,7 @@
           @if($fence->kind == 'circle')
             <div class="field narrow">
               <label for="fence-radius">Radius (metres)</label>
-              <input type="number" id="fence-radius" name="radius" min="50" max="100000" step="10" value="{{ (int)$fence->radius }}">
+              <input type="number" id="fence-radius" name="radius" min="50" max="100000" step="1" value="{{ (int)$fence->radius }}">
             </div>
           @endif
         </div>

@@ -22,6 +22,10 @@ The world map:
 
 ![The world map: hexagons filled in where time was spent](screenshots/world-map.png)
 
+The places page:
+
+![The places page: a map for drawing geofences, with the city, region and country you are in listed beside it](screenshots/places.png)
+
 Upgrading an existing install from the old Lumen version? See [UPGRADING.md](UPGRADING.md).
 
 ## Requirements

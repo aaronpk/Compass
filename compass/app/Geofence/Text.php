@@ -53,14 +53,58 @@ class Text {
     return $code ? $code.' ('.$name.')' : $name;
   }
 
+  // The day and the time of day, for the two columns of the history
+  public function day(string $date): string {
+    return $this->local($date)->format('D, M j');
+  }
+
+  public function time(string $date): string {
+    return $this->local($date)->format('g:i a');
+  }
+
+  private function local(string $date): DateTime {
+    $d = new DateTime($date, new DateTimeZone('UTC'));
+    try {
+      $d->setTimezone(new DateTimeZone($this->database->timezone));
+    } catch(\Exception $e) {
+      // An unknown timezone name: show UTC
+    }
+    return $d;
+  }
+
   public function event(object $event): string {
     return match($event->type) {
-      // Only an airport's events say where
-      'enter' => 'Arrived'.(($event->to_label ?? null) ? ' at '.self::airport($event->to_value, $event->to_label) : ''),
-      'exit' => 'Left'.(($event->from_label ?? null) ? ' '.self::airport($event->from_value, $event->from_label) : ''),
+      'enter' => 'Arrived',
+      'exit' => 'Left',
       'cross' => 'Passed through',
-      default => ($event->from_label ?: '?').' → '.($event->to_label ?: '?'),
+      default => 'Changed',
     };
+  }
+
+  // Which airport, or which city, region or country it changed from and to.
+  // Empty for a place of your own: the place is the answer.
+  public function where(object $event): string {
+    return match(true) {
+      $event->type == 'change' => ($event->from_label ?: '?').' → '.($event->to_label ?: '?'),
+      $event->type == 'enter' && $event->to_label => self::airport($event->to_value, $event->to_label),
+      $event->type == 'exit' && $event->from_label => self::airport($event->from_value, $event->from_label),
+      default => '',
+    };
+  }
+
+  // How long the stay that this event ended was: "2 h 15 min"
+  public function stayed(object $event): string {
+    if(!in_array($event->type, ['exit', 'change']) || empty($event->previous_at))
+      return '';
+    $minutes = (int)round((strtotime($event->event_at) - strtotime($event->previous_at)) / 60);
+    if($minutes < 1)
+      return 'under a minute';
+    if($minutes < 60)
+      return $minutes.' min';
+    if($minutes < 48 * 60)
+      return intdiv($minutes, 60).' h'.($minutes % 60 ? ' '.($minutes % 60).' min' : '');
+    $hours = (int)round($minutes / 60);
+    return intdiv($hours, 24).' d'.($hours % 24 ? ' '.($hours % 24).' h' : '');
   }
 
   public function delivery(object $delivery): string {

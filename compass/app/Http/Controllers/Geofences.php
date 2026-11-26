@@ -89,7 +89,12 @@ class Geofences
     $query = DB::table('geofence_events')->where('database_id', $databaseId);
     if($fenceId)
       $query->where('geofence_id', $fenceId);
-    $events = $query->orderBy('event_at', 'desc')->orderBy('id', 'desc')->limit($limit)->get();
+    // previous_at: when the stay that a departure ends began, or when the
+    // city, region or country now left was entered
+    $events = $query->select('geofence_events.*')->selectRaw(
+      "(SELECT MAX(p.event_at) FROM geofence_events p WHERE p.geofence_id = geofence_events.geofence_id
+        AND p.type = IF(geofence_events.type = 'exit', 'enter', 'change') AND p.event_at < geofence_events.event_at) AS previous_at")
+      ->orderBy('event_at', 'desc')->orderBy('id', 'desc')->limit($limit)->get();
     $deliveries = DB::table('geofence_deliveries')->whereIn('event_id', $events->pluck('id'))->orderBy('id')->get()->groupBy('event_id');
     foreach($events as $event)
       $event->deliveries = $deliveries[$event->id] ?? collect();

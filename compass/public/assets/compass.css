@@ -1577,6 +1577,53 @@ html.full, .share-page {
 .place-events .bad {
   color: var(--danger);
 }
+.place-events td {
+  vertical-align: top;
+}
+.place-events .day,
+.place-events .time,
+.place-events .stayed {
+  white-space: nowrap;
+}
+.place-events .day {
+  font-weight: 600;
+}
+/* A stronger line where a new day begins */
+.place-events tbody tr.new-day:not(:first-child) td {
+  border-top: 2px solid var(--border);
+}
+.place-events .event-kind {
+  white-space: nowrap;
+}
+.place-events .event-kind::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  border: 2px solid var(--muted);
+  box-sizing: border-box;
+}
+.place-events .kind-enter::before {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.place-events .kind-cross::before {
+  border-style: dotted;
+}
+.place-events .kind-change::before {
+  border-radius: 2px;
+  background: var(--muted);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 details.card > summary {
   cursor: pointer;
 }

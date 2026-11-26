@@ -290,7 +290,7 @@ grep -q '"speed":3.5' "$OUT/responses/share-live-current.txt"; check "share view
 
 # --- Places (geofences) ---------------------------------------------------------------
 # Times and ids differ on every run; the signature is checked and then masked
-mask_places() { sed -i -E "s/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z/TIME/g; s/sha256=[0-9a-f]{64}/sha256=SIG/g; s/[A-Z][a-z]{2} [0-9]{1,2}, [0-9]{1,2}:[0-9]{2} [ap]m/WHEN/g; s/(id=\"webhook-secret\" readonly value=\")[A-Za-z0-9]{40}/\1SECRET/" "$@"; }
+mask_places() { sed -i -E "s/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z/TIME/g; s/sha256=[0-9a-f]{64}/sha256=SIG/g; s/[A-Z][a-z]{2} [0-9]{1,2}, [0-9]{1,2}:[0-9]{2} [ap]m/WHEN/g; s/(id=\"webhook-secret\" readonly value=\")[A-Za-z0-9]{40}/\1SECRET/; s/(<td class=\"(day|time|stayed)\">|visually-hidden\">)[^<]+/\1MASKED/g" "$@"; }
 PL() { local name=$1; shift; record "$name" "${J[@]}" "$@"; }
 sql() { mysql_test -N -e "$1"; }
 record places-logged-out $BASE/places/fixture
@@ -512,7 +512,7 @@ P airport-leave w-fixture '{"locations":['"$(point $(ago 6000) -122.5 45.4)"']}'
 [ "$(hooks airport-leave '?f=airport-in')" = "0" ] && [ "$(hooks airport-leave '?f=airport-out')" = "0" ] && [ "$(sql "SELECT GROUP_CONCAT(CONCAT(e.type, ':', COALESCE(e.from_value, ''), ':', COALESCE(e.to_value, ''), ':', d.status) ORDER BY e.id) FROM geofence_events e JOIN geofence_deliveries d ON d.event_id = e.id WHERE e.geofence_id = $airport")" = "enter::PDX:sent,exit:PDX::skipped" ]; check "leaving is recorded with the airport left, and is too late for a web hook with a limit" $?
 PL airport-page $BASE/places/fixture/$airport
 PL airport-places-page $BASE/places/fixture
-grep -q 'Arrived at PDX (Portland International Airport)' "$OUT/responses/airport-page.txt" && grep -q 'Left PDX (Portland International Airport)' "$OUT/responses/airport-page.txt" && grep -q 'Not at an airport since' "$OUT/responses/airport-places-page.txt" && grep -q 'When I leave an airport' "$OUT/responses/airport-page.txt"; check "the pages say which airport, and that you are at none now" $?
+[ "$(grep -c '<td>PDX (Portland International Airport)</td>' "$OUT/responses/airport-page.txt")" = "2" ] && grep -q 'kind-enter">Arrived' "$OUT/responses/airport-page.txt" && grep -q '<td class="stayed">17 min</td>' "$OUT/responses/airport-page.txt" && grep -q 'Not at an airport since' "$OUT/responses/airport-places-page.txt" && grep -q 'When I leave an airport' "$OUT/responses/airport-page.txt"; check "the pages say which airport, and that you are at none now" $?
 record airport-api "$BASE/api/geofences?token=r-fixture"
 record airport-api-events "$BASE/api/geofence-events?token=r-fixture"
 grep -q '"level":"airport","value":""' "$OUT/responses/airport-api.txt" && grep -q '"event":"exit".*"airport":{"code":"PDX"' "$OUT/responses/airport-api-events.txt"; check "the api gives the airport and its events" $?

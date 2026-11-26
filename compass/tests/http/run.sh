@@ -56,7 +56,7 @@ EOF
 
 # --- Fresh database and cache -----------------------------------------------------
 mysql_test() { mysql -h127.0.0.1 -u"$(grep ^DB_USERNAME= "$APP/.env" | cut -d= -f2)" -p"$(grep ^DB_PASSWORD= "$APP/.env" | cut -d= -f2)" compass_test "$@"; }
-mysql_test -e 'DROP TABLE IF EXISTS users, `databases`, database_users, shares, failed_jobs, geo_cities, geo_countries, geo_cells, geo_tz_cells, stats_shards, stats_segments, stats_days, stats_day_modes, stats_day_places, stats_day_cells, geofences, geofence_events, geofence_webhooks, geofence_deliveries, geo_admin1'
+mysql_test -e 'DROP TABLE IF EXISTS users, `databases`, database_users, shares, failed_jobs, geo_cities, geo_countries, geo_cells, geo_tz_cells, stats_shards, stats_segments, stats_days, stats_day_modes, stats_day_places, stats_day_cells, geofences, geofence_events, geofence_webhooks, geofence_deliveries, geofence_dismissed, geo_admin1'
 mysql_test < "$HERE/fixtures/schema.sql"
 mysql_test < "$HERE/fixtures/schema-stats.sql"
 mysql_test < "$HERE/fixtures/fixtures.sql"
@@ -423,6 +423,52 @@ P geofence-after-delete w-fixture '{"locations":['"$(point $(ago -295) -123.2 49
 [ "$(hooks geofence-after-delete '-fail')" = "0" ] && [ "$(hooks geofence-after-delete '?f=fresh')" = "1" ]; check "a deleted place sends nothing, while the others carry on" $?
 PL place-page-deleted $BASE/places/fixture/$block
 mask_places "$OUT"/responses/geofence-*.txt "$OUT"/responses/places-*.txt "$OUT"/responses/place-*.txt "$OUT"/responses/hook-*.txt "$OUT"/responses/area-*.txt
+
+# --- Suggested places -------------------------------------------------------------------
+# Ten nights at one spot and three and a half weeks of working days at another, as the stats pipeline would have recorded them
+mysql_test -e "
+  INSERT INTO stats_segments (database_id, shard_date, seq, type, start_at, end_at, tz, local_date, duration_s, start_lat, start_lng, end_lat, end_lng)
+    SELECT 1, UTC_DATE() - INTERVAL seq DAY, 900, 'stop', (UTC_DATE() - INTERVAL seq DAY) + INTERVAL 5 HOUR, (UTC_DATE() - INTERVAL seq DAY) + INTERVAL 15 HOUR,
+      'America/Los_Angeles', UTC_DATE() - INTERVAL seq DAY, 36000, 45.55000, -122.65000, 45.55000, -122.65000 FROM seq_1_to_10;
+  INSERT INTO stats_segments (database_id, shard_date, seq, type, start_at, end_at, tz, local_date, duration_s, start_lat, start_lng, end_lat, end_lng)
+    SELECT 1, UTC_DATE() - INTERVAL seq DAY, 901, 'stop', (UTC_DATE() - INTERVAL seq DAY) + INTERVAL 17 HOUR, (UTC_DATE() - INTERVAL seq DAY) + INTERVAL 25 HOUR,
+      'America/Los_Angeles', UTC_DATE() - INTERVAL seq DAY, 28800, 45.52000, -122.68000, 45.52000, -122.68000 FROM seq_1_to_25 WHERE WEEKDAY(UTC_DATE() - INTERVAL seq DAY) < 5"
+[ "$(sql 'SELECT id FROM `databases` WHERE name = "fixture"')" = "1" ]; check "the suggestion fixtures belong to the fixture database" $?
+places_before=$(sql 'SELECT COUNT(*) FROM geofences')
+record suggested-logged-out $BASE/places/fixture/suggested
+PL suggested-no-access $BASE/places/other/suggested
+PL suggested-page $BASE/places/fixture/suggested
+PL suggested-page-3 "$BASE/places/fixture/suggested?span=3"
+PL suggested-page-all "$BASE/places/fixture/suggested?span=all"
+grep -q 'name="name" maxlength="100" value="Home"' "$OUT/responses/suggested-page.txt" && grep -q 'name="name" maxlength="100" value="Work"' "$OUT/responses/suggested-page.txt" && grep -q '10 nights and 100 hours' "$OUT/responses/suggested-page.txt"; check "the suggestions page finds home from the nights and work from the working days" $?
+grep -q 'name="lat" value="45.55"' "$OUT/responses/suggested-page.txt" && grep -q 'name="lat" value="45.52"' "$OUT/responses/suggested-page.txt"; check "each suggestion carries its position" $?
+[ "$(sql 'SELECT COUNT(*) FROM geofences')" = "$places_before" ]; check "looking at the suggestions creates nothing" $?
+grep -q 'See suggested places' "$OUT/responses/places-page.txt"; check "the places page links to the suggestions" $?
+
+# Confirming one makes a place through the usual form, and comes back for the next
+PL suggested-add -d "kind=circle&return=suggested&span=12&lat=45.55&lng=-122.65&radius=75" --data-urlencode "name=My home" $BASE/places/fixture
+grep -qi '^location: .*/places/fixture/suggested$' "$OUT/responses/suggested-add.txt" && [ "$(sql 'SELECT CONCAT(kind, ":", lat, ":", radius, ":", state) FROM geofences WHERE name = "My home"')" = "circle:45.55000:75:unknown" ]; check "adding a suggestion makes a place and returns to the suggestions" $?
+PL suggested-after-add $BASE/places/fixture/suggested
+grep -q 'Added &quot;My home&quot;' "$OUT/responses/suggested-after-add.txt" && ! grep -q 'name="lat" value="45.55"' "$OUT/responses/suggested-after-add.txt" && grep -q 'value="Work"' "$OUT/responses/suggested-after-add.txt"; check "a spot that is now a place is no longer suggested, and work is still work" $?
+PL suggested-add-bad -d "kind=circle&return=suggested&span=3&lat=&lng=&radius=75&name=Nowhere" $BASE/places/fixture
+grep -qi '^location: .*/places/fixture/suggested?span=3$' "$OUT/responses/suggested-add-bad.txt"; check "a mistake comes back to the same stretch of time" $?
+
+# "Not a place" is remembered, and can be undone
+PL suggested-dismiss -d "lat=45.52&lng=-122.68&span=12" $BASE/places/fixture/suggested/dismiss
+record suggested-dismiss-logged-out -d "lat=45.52&lng=-122.68" $BASE/places/fixture/suggested/dismiss
+PL suggested-dismiss-other-db -d "lat=45.52&lng=-122.68" $BASE/places/other/suggested/dismiss
+PL suggested-after-dismiss $BASE/places/fixture/suggested
+[ "$(sql 'SELECT GROUP_CONCAT(CONCAT(database_id, ":", lat, ":", lng)) FROM geofence_dismissed')" = "1:45.52000:-122.68000" ] && grep -q 'Nothing to suggest' "$OUT/responses/suggested-after-dismiss.txt" && grep -q 'Bring back' "$OUT/responses/suggested-after-dismiss.txt" && [ "$(sql 'SELECT COUNT(*) FROM geofences WHERE name = "Work"')" = "0" ]; check "a dismissed suggestion leaves the list and is kept for undoing, without becoming a place" $?
+dismissed=$(sql 'SELECT id FROM geofence_dismissed')
+record suggested-restore-logged-out -X POST $BASE/places/fixture/suggested/restore/$dismissed
+PL suggested-restore-other-db -X POST $BASE/places/other/suggested/restore/$dismissed
+[ "$(sql 'SELECT COUNT(*) FROM geofence_dismissed')" = "1" ]; check "only a member of the database can bring a suggestion back" $?
+PL suggested-restore -X POST $BASE/places/fixture/suggested/restore/$dismissed
+PL suggested-after-restore $BASE/places/fixture/suggested
+[ "$(sql 'SELECT COUNT(*) FROM geofence_dismissed')" = "0" ] && grep -q 'value="Work"' "$OUT/responses/suggested-after-restore.txt"; check "bringing it back suggests it again" $?
+# The counts depend on which weekday the run falls on
+sed -i -E "s/[0-9,]+ (nights? and [0-9,]+ )?hours? on [0-9,]+ days?/EVIDENCE/g; s/[A-Z][a-z]{2} [0-9]{1,2}(, [0-9]{4})? to [A-Z][a-z]{2} [0-9]{1,2}, [0-9]{4}/DATES/g" "$OUT"/responses/suggested-*.txt
+mask_places "$OUT"/responses/suggested-*.txt
 
 # --- Logout -------------------------------------------------------------------------------
 record logout "${J[@]}" $BASE/auth/logout

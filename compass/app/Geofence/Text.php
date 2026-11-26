@@ -77,6 +77,41 @@ class Text {
     return $out;
   }
 
+  // What a suggested place (see Suggester) is called until someone names it
+  public function suggestedName(array $spot): string {
+    $in = empty($spot['city']) ? '' : ' in '.$spot['city'];
+    return match($spot['kind']) {
+      'home' => 'Home',
+      'work' => 'Work',
+      // A month of nights is more than a visit
+      'overnight' => ($spot['nights'] >= 30 ? 'Home' : 'Overnight stay').$in,
+      default => 'Place'.$in,
+    };
+  }
+
+  public function suggestedKind(array $spot): string {
+    return ['home' => 'Home', 'work' => 'Work', 'overnight' => 'Overnight', 'frequent' => 'Frequent'][$spot['kind']];
+  }
+
+  // Why a spot is suggested: "142 nights and 2,310 hours on 300 days"
+  public function evidence(array $spot): string {
+    $count = fn(int $n, string $one, string $many) => number_format($n).' '.($n == 1 ? $one : $many);
+    $parts = [];
+    if($spot['nights'] > 0)
+      $parts[] = $count($spot['nights'], 'night', 'nights');
+    $parts[] = $count($spot['hours'], 'hour', 'hours');
+    return implode(' and ', $parts).' on '.$count($spot['days'], 'day', 'days');
+  }
+
+  // When that was: "Mar 2 to Nov 24, 2026", in the dates the stops fell on
+  public function between(array $spot): string {
+    $first = new DateTime($spot['first']);
+    $last = new DateTime($spot['last']);
+    if($spot['first'] == $spot['last'])
+      return $last->format('M j, Y');
+    return $first->format($first->format('Y') == $last->format('Y') ? 'M j' : 'M j, Y').' to '.$last->format('M j, Y');
+  }
+
   // Which events a web hook is sent for
   public function hook(object $hook, object $fence): string {
     if($fence->kind == 'place')

@@ -22,6 +22,9 @@ Route::post('/shares/{name}/{id}/stop', [Share::class, 'revoke'])->where('name',
 
 Route::get('/places/{name}', [Geofences::class, 'index'])->where('name', '[A-Za-z0-9]+');
 Route::post('/places/{name}', [Geofences::class, 'create'])->where('name', '[A-Za-z0-9]+');
+Route::get('/places/{name}/suggested', [Geofences::class, 'suggested'])->where('name', '[A-Za-z0-9]+');
+Route::post('/places/{name}/suggested/dismiss', [Geofences::class, 'dismissSuggestion'])->where('name', '[A-Za-z0-9]+');
+Route::post('/places/{name}/suggested/restore/{id}', [Geofences::class, 'restoreSuggestion'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');
 Route::get('/places/{name}/{id}', [Geofences::class, 'show'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');
 Route::post('/places/{name}/{id}', [Geofences::class, 'update'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');
 Route::post('/places/{name}/{id}/delete', [Geofences::class, 'delete'])->where('name', '[A-Za-z0-9]+')->where('id', '[0-9]+');

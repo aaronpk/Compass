@@ -49,6 +49,7 @@
         @else
           <p class="muted">None yet. Add your home or your office below. Compass then keeps track of whether you are there, and you can add web hooks for arriving and leaving.</p>
         @endif
+        <p class="suggested-link"><a href="/places/{{ $database->name }}/suggested">See suggested places</a> <span class="muted small">from where you have spent the most time</span></p>
       </div>
 
       <div class="card">

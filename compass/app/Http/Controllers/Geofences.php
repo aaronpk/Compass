@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use DB;
 use App\Geofence\Runner;
 use App\Geofence\Shapes;
+use App\Geofence\Suggester;
 use App\Geofence\Text;
 use App\Geofence\Webhook;
 
@@ -27,6 +28,9 @@ class Geofences
 
   // How old an event may be and still have its web hook sent
   const MAX_AGES = ['' => 'However late', 300 => 'Up to 5 minutes late', 900 => 'Up to 15 minutes late', 3600 => 'Up to 1 hour late', 21600 => 'Up to 6 hours late', 86400 => 'Up to 1 day late'];
+
+  // How much history the suggested places are worked out from
+  const SPANS = ['3' => 'Last 3 months', '12' => 'Last 12 months', 'all' => 'All time'];
 
   const LEVELS = ['city' => 'City', 'region' => 'Region', 'country' => 'Country'];
 
@@ -200,7 +204,9 @@ class Geofences
     $db = self::database($name);
     if(!$db)
       return redirect('/');
-    $back = redirect('/places/'.$name);
+    // A place confirmed from the suggestions goes back there for the next one
+    $suggested = $request->input('return') == 'suggested';
+    $back = redirect($suggested ? self::suggestedUrl($name, $request->input('span')) : '/places/'.$name);
 
     if(DB::table('geofences')->where('database_id', $db->id)->where('kind', '!=', 'place')->whereNull('deleted_at')->count() >= self::MAX_FENCES)
       return $back->with('places_error', 'A database can have at most '.self::MAX_FENCES.' places.');
@@ -211,6 +217,8 @@ class Geofences
 
     $id = DB::table('geofences')->insertGetId($fields + ['database_id' => $db->id, 'created_at' => date('Y-m-d H:i:s')]);
     Runner::start($db->id);
+    if($suggested)
+      return $back->with('places_message', 'Added "'.$fields['name'].'".')->with('places_added', $id);
     return redirect('/places/'.$name.'/'.$id)
       ->with('places_message', 'Added "'.$fields['name'].'". Compass starts tracking it with the next location your device sends.');
   }
@@ -256,6 +264,91 @@ class Geofences
       DB::table('geofence_webhooks')->where('geofence_id', $fence->id)->whereNull('deleted_at')->update(['deleted_at' => $now]);
     }
     return redirect('/places/'.$name);
+  }
+
+  ////////////////////////////////////////////////////////////
+  // Suggested places: spots with a lot of time spent at them, found in the
+  // stops the stats pipeline recorded. This only shows them. A place is made
+  // when one is confirmed, through create() like any other.
+
+  private static function suggestedUrl(string $name, $span): string {
+    return '/places/'.$name.'/suggested'.(isset(self::SPANS[(string)$span]) && (string)$span != '12' ? '?span='.$span : '');
+  }
+
+  public function suggested(Request $request, $name) {
+    $db = self::database($name);
+    if(!$db)
+      return redirect('/');
+    $span = isset(self::SPANS[(string)$request->input('span')]) ? (string)$request->input('span') : '12';
+
+    $query = DB::table('stats_segments')->where('database_id', $db->id)->where('type', 'stop');
+    if($span != 'all')
+      $query->where('start_at', '>=', gmdate('Y-m-d H:i:s', strtotime('-'.$span.' months')));
+    $stops = [];
+    foreach($query->select('start_at', 'end_at', 'start_lat', 'start_lng', 'tz', 'city_id')->orderBy('start_at')->cursor() as $row) {
+      $stops[] = [
+        (float)strtotime($row->start_at.' UTC'), (float)strtotime($row->end_at.' UTC'),
+        (float)$row->start_lat, (float)$row->start_lng, $row->tz, $row->city_id === null ? null : (int)$row->city_id,
+      ];
+    }
+
+    $fences = self::fences($db->id)->where('kind', '!=', 'place')->values();
+    $shapes = $fences->map(fn($f) => Shapes::fromRow($f))->filter()->values()->all();
+    $dismissedRows = DB::table('geofence_dismissed')->where('database_id', $db->id)->orderBy('id')->get()->keyBy('id');
+    $found = Suggester::find($stops, $shapes, $dismissedRows->map(fn($d) => [(float)$d->lat, (float)$d->lng])->all());
+
+    // Names for the cities the spots are in
+    $spots = array_merge($found['suggestions'], array_filter($found['dismissed']));
+    $names = DB::table('geo_cities')->whereIn('id', array_values(array_unique(array_filter(array_column($spots, 'city_id')))))->pluck('name', 'id')->all();
+    // A spot far from any listed city has no city
+    $city = fn(array $spot) => $spot['city_id'] === null ? null : ($names[$spot['city_id']] ?? null);
+    $text = new Text($db);
+    $number = 0;
+    $suggestions = array_map(function($spot) use($city, $text, &$number) {
+      $spot['number'] = ++$number;
+      $spot['city'] = $city($spot);
+      $spot['name'] = $text->suggestedName($spot);
+      return $spot;
+    }, $found['suggestions']);
+    $dismissed = [];
+    foreach($dismissedRows as $id => $row) {
+      $spot = $found['dismissed'][$id] ?? null;
+      if($spot)
+        $spot['city'] = $city($spot);
+      $dismissed[] = ['id' => (int)$id, 'spot' => $spot, 'name' => $spot ? $text->suggestedName($spot) : null];
+    }
+
+    return view('geofences-suggested', self::page($db, [
+      'span' => $span,
+      'spans' => self::SPANS,
+      'suggestions' => $suggestions,
+      'dismissed' => $dismissed,
+      // No stops at all means the stats were never built, not that there is nothing to suggest
+      'no_stats' => !count($stops) && !DB::table('stats_segments')->where('database_id', $db->id)->exists(),
+      'shapes' => $fences->map(fn($f) => self::describe($f) + ['url' => '/places/'.$db->name.'/'.$f->id])->all(),
+    ]));
+  }
+
+  public function dismissSuggestion(Request $request, $name) {
+    $db = self::database($name);
+    if(!$db)
+      return redirect('/');
+    $lat = $request->input('lat');
+    $lng = $request->input('lng');
+    if(is_numeric($lat) && is_numeric($lng) && $lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
+      DB::table('geofence_dismissed')->insert([
+        'database_id' => $db->id, 'lat' => round((float)$lat, 5), 'lng' => round((float)$lng, 5), 'created_at' => date('Y-m-d H:i:s'),
+      ]);
+    }
+    return redirect(self::suggestedUrl($name, $request->input('span')));
+  }
+
+  public function restoreSuggestion(Request $request, $name, $id) {
+    $db = self::database($name);
+    if(!$db)
+      return redirect('/');
+    DB::table('geofence_dismissed')->where('id', $id)->where('database_id', $db->id)->delete();
+    return redirect(self::suggestedUrl($name, $request->input('span')));
   }
 
   ////////////////////////////////////////////////////////////

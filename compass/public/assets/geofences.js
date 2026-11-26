@@ -327,6 +327,60 @@
     ['mouseleave', 'blur'].forEach(function(type){ link.addEventListener(type, function(){ highlight(id, false); }); });
   });
 
+  if(data.suggestions) {
+    // The suggestions page: every suggestion is a dashed circle with its
+    // number. Choosing one, on the map or in the list, makes it the one that
+    // can be moved and resized before it is added.
+    var dashed = { color: accent, weight: 2, opacity: 0.9, fillOpacity: 0.08, dashArray: '6 6' };
+    var items = [];
+    var chosen = null;
+
+    function choose(item, scroll) {
+      if(chosen === item) return;
+      if(chosen) {
+        chosen.card.classList.remove('selected');
+        chosen.editor.stop();
+        chosen.label.addTo(map);
+      }
+      chosen = item;
+      item.card.classList.add('selected');
+      map.removeLayer(item.label);
+      item.editor.start();
+      if(scroll) item.card.scrollIntoView({ block: 'nearest' });
+    }
+
+    document.querySelectorAll('[data-suggestion]').forEach(function(card){
+      var form = card.querySelector('form');
+      var center = L.latLng(parseFloat(form.elements.lat.value), parseFloat(form.elements.lng.value));
+      var item = { card: card, form: form };
+      item.circle = L.circle(center, Object.assign({ radius: parseFloat(form.elements.radius.value) || 100 }, dashed)).addTo(map);
+      item.label = L.marker(center, {
+        icon: L.divIcon({ className: 'suggestion-pin', html: card.dataset.suggestion, iconSize: [24, 24], iconAnchor: [12, 12] }),
+        keyboard: false
+      }).addTo(map);
+      item.editor = new CircleEditor(form, item.circle);
+      item.circle.on('click', function(e){ L.DomEvent.stopPropagation(e); choose(item, true); });
+      item.label.on('click', function(e){ L.DomEvent.stopPropagation(e); choose(item, true); });
+      card.addEventListener('click', function(){ choose(item); });
+      card.addEventListener('focusin', function(){ choose(item); });
+      items.push(item);
+    });
+
+    // Start on the first suggestion and what is around it. Showing them all
+    // at once would zoom out to the whole world after one trip abroad.
+    if(items.length) {
+      var first = items[0].circle.getLatLng();
+      var around = L.latLngBounds([]);
+      items.forEach(function(item){
+        if(map.distance(first, item.circle.getLatLng()) < 30000) around.extend(item.circle.getBounds());
+      });
+      map.fitBounds(around.pad(0.2), { maxZoom: 16 });
+    }
+    // A click on the map moves a circle only by dragging here, not by accident
+    map.off('click');
+    return;
+  }
+
   if(data.editing) {
     // The page of one place: its circle can be moved straight away, and a
     // shape is shown as it is until new GeoJSON is typed in

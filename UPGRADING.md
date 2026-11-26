@@ -19,7 +19,7 @@ tables that can be emptied and rebuilt.
 - **The framework is Laravel 13.** The web root is still `compass/public` and
   the same rewrite rule to `index.php` applies, so the web server
   configuration only needs the new PHP-FPM socket.
-- **Seven database migrations are pending.** They add tables and nullable
+- **Eight database migrations are pending.** They add tables and nullable
   columns only. Nothing existing is altered in a way the old code can't read.
 - **New pages:** yearly stats and a world map for each database, places
   (geofences) that run web hooks, a page to manage share links, and a

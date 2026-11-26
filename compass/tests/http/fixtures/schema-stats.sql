@@ -200,3 +200,12 @@ CREATE TABLE `geo_admin1` (
   `name` varchar(200) NOT NULL,
   PRIMARY KEY (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+CREATE TABLE `geofence_dismissed` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `database_id` int(10) unsigned NOT NULL,
+  `lat` decimal(8,5) NOT NULL,
+  `lng` decimal(8,5) NOT NULL,
+  `created_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `geofence_dismissed_database_id_index` (`database_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
